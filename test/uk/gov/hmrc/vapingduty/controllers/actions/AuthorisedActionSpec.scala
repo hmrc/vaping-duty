@@ -46,18 +46,18 @@ class AuthorisedActionSpec extends AnyFreeSpec
   with Results
   with ScalaFutures {
   
-  val enrolment               = "HMRC-VD-ORG"
-  val appaIdKey               = "APPAID"
-  val appaId                  = "XMADP9876543210"
+  val enrolment               = "HMRC-VPD-ORG"
+  val vpaIdKey                = "VPAID"
+  val vpaId                   = "XMADP9876543210"
   val internalId: String      = "internalId"
   val state                   = "Activated"
-  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(appaIdKey, appaId)), state)))
+  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vpaIdKey, vpaId)), state)))
   val emptyEnrolments         = Enrolments(Set.empty)
   val enrolmentsWithoutAppaId = Enrolments(Set(Enrolment(enrolment, Seq.empty, state)))
   val testContent             = "Test"
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
-  
-  val underlying: Config = ConfigFactory.load() 
+
+  val underlying: Config = ConfigFactory.load()
   val appConfig = new AppConfig(new Configuration(underlying))
   private val defaultBodyParser = stubPlayBodyParsers(NoMaterializer).defaultBodyParser
   private val mockAuthConnector: AuthConnector       = mock[AuthConnector]
@@ -115,7 +115,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
       }
     }
 
-    "execute the block and throw IllegalStateException if cannot get the APPAID enrolment" in {
+    "execute the block and throw IllegalStateException if cannot get the VPAID enrolment" in {
       when(
         mockAuthConnector.authorise(
           eqTo(

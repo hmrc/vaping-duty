@@ -84,9 +84,9 @@ class BaseAuthorisedAction @Inject() (
 
     val key = config.enrolmentIdentifierKey
 
-    val appaIdOpt: Option[String] =
+    val vpaIdOpt: Option[String] =
       adrEnrolments.getIdentifier(key).map(_.value)
-    getOrElseFailWithUnauthorised(appaIdOpt, s"Unable to retrieve $key from enrolments")
+    getOrElseFailWithUnauthorised(vpaIdOpt, s"Unable to retrieve $key from enrolments")
   }
 
   private def getOrElseFailWithUnauthorised[T](o: Option[T], failureMessage: String): T =
