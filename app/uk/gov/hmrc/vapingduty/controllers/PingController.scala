@@ -24,9 +24,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton()
-class MicroserviceHelloWorldController @Inject()(
+class PingController @Inject()(
   authorise: AuthorisedAction,
   cc: ControllerComponents
 ) extends BackendController(cc):
 
-  val hello: Action[AnyContent] = authorise.async { _ => Future.successful(Ok("Hello world")) }
+  val ping: Action[AnyContent] = authorise.async { _ => Future.successful(Ok("ping")) }

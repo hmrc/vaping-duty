@@ -24,18 +24,18 @@ import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.vapingduty.controllers.actions.FakeAuthorisedAction
 
-class MicroserviceHelloWorldControllerSpec
+class PingControllerSpec
   extends AnyWordSpec
      with Matchers:
 
   private val fakeRequest = FakeRequest("GET", "/")
 
-  private val controller  = new MicroserviceHelloWorldController(
+  private val controller  = new PingController(
     new FakeAuthorisedAction(Helpers.stubPlayBodyParsers(NoMaterializer)), 
     Helpers.stubControllerComponents()
   )
 
   "GET /" should:
     "return 200" in:
-      val result = controller.hello()(fakeRequest)
+      val result = controller.ping()(fakeRequest)
       status(result) shouldBe Status.OK
