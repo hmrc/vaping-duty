@@ -44,7 +44,7 @@ trait AuthorisedAction
 class BaseAuthorisedAction @Inject() (
   override val authConnector: AuthConnector,
   config: AppConfig,
-  val parser: BodyParser[AnyContent]
+  val parser: BodyParsers.Default
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedAction
     with BackendHeaderCarrierProvider

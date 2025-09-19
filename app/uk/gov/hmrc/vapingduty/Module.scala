@@ -17,7 +17,8 @@
 package uk.gov.hmrc.vapingduty
 
 import play.api.{Configuration, Environment}
-import play.api.inject.{Binding, Module => AppModule}
+import play.api.inject.{Binding, Module as AppModule}
+import uk.gov.hmrc.vapingduty.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 
 import java.time.Clock
 
@@ -27,5 +28,6 @@ class Module extends AppModule:
     environment  : Environment,
     configuration: Configuration
   ): Seq[Binding[_]] =
-    bind[Clock].toInstance(Clock.systemDefaultZone) :: // inject if current time needs to be controlled in unit tests
+    bind[Clock].toInstance(Clock.systemDefaultZone) ::
+    bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
     Nil

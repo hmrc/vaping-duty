@@ -59,7 +59,8 @@ class AuthorisedActionSpec extends AnyFreeSpec
 
   val underlying: Config = ConfigFactory.load()
   val appConfig = new AppConfig(new Configuration(underlying))
-  private val defaultBodyParser = stubPlayBodyParsers(NoMaterializer).defaultBodyParser
+  private val bodyParsers = stubPlayBodyParsers(NoMaterializer)
+  private val defaultBodyParser  = new BodyParsers.Default(bodyParsers)
   private val mockAuthConnector: AuthConnector       = mock[AuthConnector]
 
   val authorisedAction =

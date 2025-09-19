@@ -31,7 +31,7 @@ class PingControllerSpec
   private val fakeRequest = FakeRequest("GET", "/")
 
   private val controller  = new PingController(
-    new FakeAuthorisedAction(Helpers.stubPlayBodyParsers(NoMaterializer)), 
+    new FakeAuthorisedAction(Helpers.stubPlayBodyParsers(NoMaterializer)),
     Helpers.stubControllerComponents()
   )
 
