@@ -61,8 +61,17 @@ class BaseAuthorisedAction @Inject() (
         and Organisation
         and ConfidenceLevel.L50
     ).retrieve(internalId and authorisedEnrolments) { case optInternalId ~ enrolments =>
-      val internalId: String = getOrElseFailWithUnauthorised(optInternalId, "Unable to retrieve internalId")
-      block(IdentifierRequest(request, getVppaId(enrolments), internalId))
+      val identifiers = for {
+        internalId <- optInternalId.toRight("Unable to retrieve internalId.")
+        approvalId <- getApprovalId(enrolments, config.enrolmentIdentifierKey)
+      } yield {
+        (internalId, approvalId)
+      }
+
+      identifiers match
+        case Right((internal, approvalId)) => block(IdentifierRequest(request, approvalId, internal))
+        case Left(error) => throw AuthorisationException.fromString(error)
+        
     } recover { case e: AuthorisationException =>
       logger.debug("Got AuthorisationException:", e)
       Unauthorized(
@@ -76,23 +85,9 @@ class BaseAuthorisedAction @Inject() (
     }
   }
 
-  private def getVppaId(enrolments: Enrolments): String = {
-    val vpdEnrolments: Enrolment = getOrElseFailWithUnauthorised(
-      enrolments.enrolments.find(_.key == config.enrolmentServiceName),
-      s"Unable to retrieve enrolment: ${config.enrolmentServiceName}"
-    )
-
-    val key = config.enrolmentIdentifierKey
-
-    val vppaIdOpt: Option[String] =
-      vpdEnrolments.getIdentifier(key).map(_.value)
-    getOrElseFailWithUnauthorised(vppaIdOpt, s"Unable to retrieve $key from enrolments")
-  }
-
-  private def getOrElseFailWithUnauthorised[T](o: Option[T], failureMessage: String): T =
-    o.getOrElse {
-      logger.warn(s"Authorised Action failed with error: $failureMessage")
-      val authorisationException = AuthorisationException.fromString(failureMessage)
-      throw authorisationException
-    }
+  private def getApprovalId(enrolments: Enrolments, key: String): Either[String, String] =
+    enrolments.enrolments.find(_.key == config.enrolmentServiceName)
+      .flatMap(_.getIdentifier(key))
+      .map(_.value)
+      .toRight("Unable to retrieve $key from enrolments")
 }
