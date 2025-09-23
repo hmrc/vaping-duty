@@ -47,11 +47,11 @@ class AuthorisedActionSpec extends AnyFreeSpec
   with ScalaFutures {
   
   val enrolment               = "HMRC-VPD-ORG"
-  val vpaIdKey                = "VPAID"
-  val vpaId                   = "XMADP9876543210"
+  val vppaIdKey               = "VPPAID"
+  val vppaId                  = "XMADP9876543210"
   val internalId: String      = "internalId"
   val state                   = "Activated"
-  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vpaIdKey, vpaId)), state)))
+  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vppaIdKey, vppaId)), state)))
   val emptyEnrolments         = Enrolments(Set.empty)
   val enrolmentsWithoutAppaId = Enrolments(Set(Enrolment(enrolment, Seq.empty, state)))
   val testContent             = "Test"
@@ -94,7 +94,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
       contentAsString(result) mustBe testContent
     }
 
-    "execute the block and throw IllegalStateException if cannot get the enrolment" in {
+    "execute the block and throw AuthorisationException if cannot get the enrolment" in {
       when(
         mockAuthConnector.authorise(
           eqTo(
@@ -111,12 +111,12 @@ class AuthorisedActionSpec extends AnyFreeSpec
       )
         .thenReturn(Future(new ~(Some(internalId), emptyEnrolments)))
 
-      intercept[IllegalStateException] {
-        await(authorisedAction.invokeBlock(fakeRequest, testAction))
-      }
+      val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
+
+      status(result) mustBe UNAUTHORIZED
     }
 
-    "execute the block and throw IllegalStateException if cannot get the VPAID enrolment" in {
+    "execute the block and throw AuthorisationException if cannot get the VPPAID enrolment" in {
       when(
         mockAuthConnector.authorise(
           eqTo(
@@ -133,12 +133,12 @@ class AuthorisedActionSpec extends AnyFreeSpec
       )
         .thenReturn(Future(new ~(Some(internalId), enrolmentsWithoutAppaId)))
 
-      intercept[IllegalStateException] {
-        await(authorisedAction.invokeBlock(fakeRequest, testAction))
-      }
+      val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
+
+      status(result) mustBe UNAUTHORIZED
     }
 
-    "thrown IllegalStateException if the authConnector returns None as Internal Id" in {
+    "return 401 unauthorized if the authConnector returns None as Internal Id" in {
       when(
         mockAuthConnector.authorise(
           eqTo(
@@ -155,9 +155,9 @@ class AuthorisedActionSpec extends AnyFreeSpec
       )
         .thenReturn(Future(new ~(None, enrolments)))
 
-      intercept[IllegalStateException] {
-        await(authorisedAction.invokeBlock(fakeRequest, testAction))
-      }
+      val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
+
+      status(result) mustBe UNAUTHORIZED
     }
   }
 

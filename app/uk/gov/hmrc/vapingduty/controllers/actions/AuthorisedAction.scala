@@ -62,7 +62,7 @@ class BaseAuthorisedAction @Inject() (
         and ConfidenceLevel.L50
     ).retrieve(internalId and authorisedEnrolments) { case optInternalId ~ enrolments =>
       val internalId: String = getOrElseFailWithUnauthorised(optInternalId, "Unable to retrieve internalId")
-      block(IdentifierRequest(request, getAppaId(enrolments), internalId))
+      block(IdentifierRequest(request, getVppaId(enrolments), internalId))
     } recover { case e: AuthorisationException =>
       logger.debug("Got AuthorisationException:", e)
       Unauthorized(
@@ -76,22 +76,23 @@ class BaseAuthorisedAction @Inject() (
     }
   }
 
-  private def getAppaId(enrolments: Enrolments): String = {
-    val adrEnrolments: Enrolment = getOrElseFailWithUnauthorised(
+  private def getVppaId(enrolments: Enrolments): String = {
+    val vpdEnrolments: Enrolment = getOrElseFailWithUnauthorised(
       enrolments.enrolments.find(_.key == config.enrolmentServiceName),
       s"Unable to retrieve enrolment: ${config.enrolmentServiceName}"
     )
 
     val key = config.enrolmentIdentifierKey
 
-    val vpaIdOpt: Option[String] =
-      adrEnrolments.getIdentifier(key).map(_.value)
-    getOrElseFailWithUnauthorised(vpaIdOpt, s"Unable to retrieve $key from enrolments")
+    val vppaIdOpt: Option[String] =
+      vpdEnrolments.getIdentifier(key).map(_.value)
+    getOrElseFailWithUnauthorised(vppaIdOpt, s"Unable to retrieve $key from enrolments")
   }
 
   private def getOrElseFailWithUnauthorised[T](o: Option[T], failureMessage: String): T =
     o.getOrElse {
       logger.warn(s"Authorised Action failed with error: $failureMessage")
-      throw new IllegalStateException(failureMessage)
+      val authorisationException = AuthorisationException.fromString(failureMessage)
+      throw authorisationException
     }
 }
