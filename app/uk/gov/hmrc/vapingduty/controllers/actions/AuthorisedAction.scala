@@ -89,5 +89,5 @@ class BaseAuthorisedAction @Inject() (
     enrolments.enrolments.find(_.key == config.enrolmentServiceName)
       .flatMap(_.getIdentifier(key))
       .map(_.value)
-      .toRight("Unable to retrieve $key from enrolments")
+      .toRight(s"Unable to retrieve $key from enrolments")
 }
