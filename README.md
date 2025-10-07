@@ -1,8 +1,42 @@
+# Vaping Duty
+This is the backend microservice for the Vaping Duty service.
 
-# vaping-duty
+Backend: https://github.com/hmrc/vaping-duty-frontend
 
-Back end microservice for vaping duty management
+Stub: TCB
+
+## Requirements
+Written in Scala 3 with Play Framework and suitable to be run on JRE 21 or later.
+
+## Running the service
+
+### To run entirely under Service Manager
+```
+sm2 --start VAPING_DUTY_ALL
+```
+
+### To run locally
+Launch as if running entirely under service manager above.
+
+Stop the backend service running under Service Manager:
+```
+sm2 --stop VAPING_DUTY 
+```
+
+Start the service running locally:
+```
+sbt 'run 8141'
+```
+
+## Test the application
+
+To test the application execute:
+
+```
+sbt clean test it/test
+```
 
 ### License
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+This code is open source software licensed under the [Apache 2.0 License].
+
