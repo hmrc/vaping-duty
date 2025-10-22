@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{StringContextOps, HttpResponse, HttpReads, HeaderCarrier}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
 
 class HealthEndpointIntegrationSpec
   extends AnyWordSpec
@@ -28,9 +28,10 @@ class HealthEndpointIntegrationSpec
 
   "service health endpoint" should:
     "respond with 200 status" in:
-      val response: Future[HttpResponse] =
+      val response =
         httpClient
           .get(url"$baseUrl/ping/ping")(HeaderCarrier())
           .execute()
+          .futureValue
 
-      response.futureValue.status shouldBe 200
+      response.status shouldBe 200
