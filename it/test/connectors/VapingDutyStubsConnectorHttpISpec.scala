@@ -22,7 +22,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import play.api.Application
 import play.api.http.Status.*
 import util.WireMockHelper
-import uk.gov.hmrc.vapingduty.controllers.connectors.VapingDutyStubsConnectorHttp
+import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnectorHttp
 
 class VapingDutyStubsConnectorHttpISpec extends ISpecBase with WireMockHelper {
   override def fakeApplication(): Application = {
@@ -40,7 +40,7 @@ class VapingDutyStubsConnectorHttpISpec extends ISpecBase with WireMockHelper {
           )
 
           whenReady(connector.ping()) { result =>
-            result mustBe ()
+            result.status mustBe 200
           }
         }
 
