@@ -16,10 +16,33 @@
 
 package uk.gov.hmrc.vapingduty.connectors
 
-import uk.gov.hmrc.http.{HeaderCarrier}
+import uk.gov.hmrc.vapingduty.config.AppConfig
+import play.api.Logging
+import play.api.http.Status.{OK, UNAUTHORIZED}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.UnauthorizedException
 
-import scala.concurrent.Future
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
-trait VapingDutyStubsConnector {
-  def ping()(implicit hc: HeaderCarrier): Future[Unit]
+class VapingDutyStubsConnector @Inject()(
+                                          config: AppConfig,
+                                          implicit val httpClient: HttpClientV2
+                                        )(implicit ec: ExecutionContext)
+  extends HttpReadsInstances
+  with Logging {
+
+  def ping()(implicit hc: HeaderCarrier): Future[Unit] =
+    httpClient
+      .get(url"${config.getStubsUrl()}/ping")
+      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .map {
+        case Right(response) if response.status == OK => ()
+        case Right(response) => throw new Exception(s"Unexpected status code: ${response.status}")
+        case Left(errorResponse) if errorResponse.statusCode == UNAUTHORIZED =>
+          throw new UnauthorizedException(s"Not authorised: ${errorResponse.message}")
+        case Left(errorResponse) => throw new Exception(s"Unexpected response: ${errorResponse.message}")
+      }
 }

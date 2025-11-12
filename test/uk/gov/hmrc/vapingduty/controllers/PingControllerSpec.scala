@@ -16,61 +16,46 @@
 
 package uk.gov.hmrc.vapingduty.controllers
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.*
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status
 import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.mdc.MdcExecutionContext
-import play.api.inject.bind
+import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnector
 
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar.mock
-import org.mockito.ArgumentMatchers.any
-import scala.concurrent.Future
-import play.api.mvc.Results.Ok
-
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlMatching}
-import org.scalatest.freespec.AnyFreeSpec
-import play.api.Application
-import play.api.http.Status.*
-import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnectorHttp
-import play.inject.guice.GuiceApplicationBuilder
-import org.scalatestplus.mockito.MockitoSugar.mock
+import scala.concurrent.{ExecutionContext, Future}
 
 class PingControllerSpec extends AnyWordSpec
-     with Matchers {
+  with Matchers {
 
-
-  private val fakeRequest              = FakeRequest("GET", "/ping")
-  implicit val ec: ExecutionContext    = MdcExecutionContext()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  private val fakeRequest = FakeRequest("GET", routes.PingController.ping().url)
+  implicit val ec: ExecutionContext = MdcExecutionContext()
   private val vapingDutyStubsConnector = mock[VapingDutyStubsConnector]
-  private val controller               = new PingController(
-                                          vapingDutyStubsConnector,
-                                          Helpers.stubControllerComponents(),
-                                          HeaderCarrier()
-                                        )
+
+  private val controller = PingController(
+    vapingDutyStubsConnector,
+    Helpers.stubControllerComponents()
+  )
 
 
-    "GET /ping" must {
-      "return 200" in {
-        val application = new GuiceApplicationBuilder()
-                            .overrides(
-                              bind[VapingDutyStubsConnector].toInstance(vapingDutyStubsConnector),
-                            )
-                            .build()
-        running(application) {
-        when(vapingDutyStubsConnector.ping()(any()))
-          .thenReturn(Future.successful(
-            Ok("ping")
-          ))
+  "GET /ping" must {
 
-        val result = controller.ping()(fakeRequest)
-        status(result) shouldBe Status.OK
-        }
-      }
+    "return 200" in {
+      when(vapingDutyStubsConnector.ping()(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(
+          ()
+        ))
+
+      val result = controller.ping()(fakeRequest)
+
+      status(result) shouldBe Status.OK
     }
+  }
 }
+
