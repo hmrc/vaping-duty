@@ -16,26 +16,33 @@
 
 package uk.gov.hmrc.vapingduty.controllers
 
-import org.apache.pekko.stream.testkit.NoMaterializer
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status
 import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
-import uk.gov.hmrc.vapingduty.controllers.actions.FakeAuthorisedAction
+import uk.gov.hmrc.vapingduty.controllers.connectors.VapingDutyStubsConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.mdc.MdcExecutionContext
 
-class PingControllerSpec
-  extends AnyWordSpec
-     with Matchers:
+import org.mockito.Mockito._
+import play.api.test._
 
-  private val fakeRequest = FakeRequest("GET", "/")
+class PingControllerSpec extends AnyWordSpec
+     with Matchers {
 
-  private val controller  = new PingController(
-    new FakeAuthorisedAction(Helpers.stubPlayBodyParsers(NoMaterializer)),
-    Helpers.stubControllerComponents()
+  private val fakeRequest              = FakeRequest("GET", "/ping")
+  implicit val ec: ExecutionContext    = MdcExecutionContext()
+  private val vapingDutyStubsConnector = mock(classOf[VapingDutyStubsConnector])
+  private val controller               = new PingController(
+                                          vapingDutyStubsConnector,
+                                          Helpers.stubControllerComponents(),
+                                          HeaderCarrier()
   )
 
-  "GET /" should:
+  "GET /ping" should:
     "return 200" in:
       val result = controller.ping()(fakeRequest)
       status(result) shouldBe Status.OK
+}
