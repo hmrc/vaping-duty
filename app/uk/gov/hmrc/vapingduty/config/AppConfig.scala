@@ -18,10 +18,20 @@ package uk.gov.hmrc.vapingduty.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration):
-
+class AppConfig @Inject()(
+          config: Configuration,
+          servicesConfig: ServicesConfig
+  ) {
   val appName: String = config.get[String]("appName")
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
   val enrolmentIdentifierKey: String = config.get[String]("enrolment.identifierKey")
+
+  private val vdStubsHost: String = servicesConfig.baseUrl("vaping-duty-stubs")
+
+  def getStubsUrl(): String = {
+    s"$vdStubsHost/vaping-duty-stubs/ping"
+  }
+}
