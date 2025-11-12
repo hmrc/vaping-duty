@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.vapingduty.controllers.connectors.VapingDutyStubsConnector
+import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
