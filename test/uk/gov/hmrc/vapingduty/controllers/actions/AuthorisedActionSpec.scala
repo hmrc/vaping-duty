@@ -35,6 +35,7 @@ import play.api.Configuration
 import play.api.mvc.*
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import play.api.test.FakeRequest
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -58,7 +59,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
   val underlying: Config = ConfigFactory.load()
-  val appConfig = new AppConfig(new Configuration(underlying))
+  val appConfig = new AppConfig(new Configuration(underlying), ServicesConfig(new Configuration(underlying)))
   private val bodyParsers = stubPlayBodyParsers(NoMaterializer)
   private val defaultBodyParser  = new BodyParsers.Default(bodyParsers)
   private val mockAuthConnector: AuthConnector       = mock[AuthConnector]
