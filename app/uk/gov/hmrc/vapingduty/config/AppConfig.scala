@@ -32,6 +32,6 @@ class AppConfig @Inject()(
   private val vdStubsHost: String = servicesConfig.baseUrl("vaping-duty-stubs")
 
   def getStubsUrl(): String = {
-    s"$vdStubsHost/vaping-duty-stubs/ping"
+    s"$vdStubsHost/vaping-duty-stubs"
   }
 }
