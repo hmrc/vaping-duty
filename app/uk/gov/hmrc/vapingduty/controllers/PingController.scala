@@ -18,15 +18,23 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.vapingduty.controllers.connectors.VapingDutyStubsConnector
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 @Singleton()
 class PingController @Inject()(
-  authorise: AuthorisedAction,
-  cc: ControllerComponents
-) extends BackendController(cc):
+                                 vapingDutyStubsConnector: VapingDutyStubsConnector,
+                                 cc: ControllerComponents,
+                                 hc: HeaderCarrier
+)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  val ping: Action[AnyContent] = authorise.async { _ => Future.successful(Ok("ping")) }
+  def ping(): Action[AnyContent] = Action.async {
+      request =>
+      vapingDutyStubsConnector.ping()(hc) .map ( _ =>
+        Ok("ping")
+      )
+  }
+}
