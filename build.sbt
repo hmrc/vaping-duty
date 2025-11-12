@@ -13,10 +13,14 @@ lazy val microservice = Project("vaping-duty", file("."))
     // suppress warnings in generated routes files
     scalacOptions += "-Wconf:src=routes/.*:s",
   )
-  .settings(CodeCoverageSettings.settings: _*)
+  .settings(CodeCoverageSettings.settings *)
 
 lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test")
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
+
+addCommandAlias("runAllChecks", ";clean;compile;coverage;test;it/test;coverageReport")
+
+addCommandAlias("runLocalChecks", ";clean;compile;coverage;test;coverageReport")
