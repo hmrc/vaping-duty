@@ -32,7 +32,7 @@ class VapingDutyStubsConnector @Inject()(
                                           implicit val httpClient: HttpClientV2
                                         )(implicit ec: ExecutionContext)
   extends HttpReadsInstances
-  with Logging {
+    with Logging {
 
   def ping()(implicit hc: HeaderCarrier): Future[Unit] =
     httpClient

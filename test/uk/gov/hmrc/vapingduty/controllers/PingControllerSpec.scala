@@ -34,8 +34,9 @@ class PingControllerSpec extends AnyWordSpec
   with Matchers {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val fakeRequest = FakeRequest("GET", routes.PingController.ping().url)
   implicit val ec: ExecutionContext = MdcExecutionContext()
+
+  private val fakeRequest = FakeRequest("GET", routes.PingController.ping().url)
   private val vapingDutyStubsConnector = mock[VapingDutyStubsConnector]
 
   private val controller = PingController(
@@ -43,14 +44,11 @@ class PingControllerSpec extends AnyWordSpec
     Helpers.stubControllerComponents()
   )
 
-
   "GET /ping" must {
 
     "return 200" in {
       when(vapingDutyStubsConnector.ping()(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(
-          ()
-        ))
+        .thenReturn(Future.successful(()))
 
       val result = controller.ping()(fakeRequest)
 
@@ -58,4 +56,3 @@ class PingControllerSpec extends AnyWordSpec
     }
   }
 }
-

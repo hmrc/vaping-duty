@@ -25,13 +25,13 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class PingController @Inject()(
-                                 vapingDutyStubsConnector: VapingDutyStubsConnector,
-                                 cc: ControllerComponents
+                                vapingDutyStubsConnector: VapingDutyStubsConnector,
+                                cc: ControllerComponents
                               )(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def ping(): Action[AnyContent] = Action.async { implicit request =>
-        vapingDutyStubsConnector.ping().map (_ =>
-          Ok("ping")
-        )
+    vapingDutyStubsConnector.ping().map(_ =>
+      Ok("ping")
+    )
   }
 }
