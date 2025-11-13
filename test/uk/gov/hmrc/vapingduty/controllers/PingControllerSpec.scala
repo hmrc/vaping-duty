@@ -22,11 +22,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status
+import play.api.mvc.PlayBodyParsers
 import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mdc.MdcExecutionContext
 import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnector
+import uk.gov.hmrc.vapingduty.controllers.actions.FakeAuthorisedAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,10 +38,14 @@ class PingControllerSpec extends AnyWordSpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val ec: ExecutionContext = MdcExecutionContext()
 
-  private val fakeRequest = FakeRequest("GET", routes.PingController.ping().url)
+  private val bodyParsers = mock[PlayBodyParsers]
   private val vapingDutyStubsConnector = mock[VapingDutyStubsConnector]
 
+  private val fakeAuthorisedAction = new FakeAuthorisedAction(bodyParsers)
+  private val fakeRequest = FakeRequest("GET", routes.PingController.ping().url)
+
   private val controller = PingController(
+    fakeAuthorisedAction,
     vapingDutyStubsConnector,
     Helpers.stubControllerComponents()
   )
