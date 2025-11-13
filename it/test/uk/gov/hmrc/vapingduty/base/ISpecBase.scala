@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package base
+package uk.gov.hmrc.vapingduty.base
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
@@ -25,9 +25,9 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mdc.MdcExecutionContext
 
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.mdc.MdcExecutionContext
 
 trait ISpecBase
     extends AnyFreeSpec

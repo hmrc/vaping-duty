@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package connectors
+package uk.gov.hmrc.vapingduty.connectors
 
-import base.ISpecBase
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlMatching}
 import org.scalatest.freespec.AnyFreeSpec
 import play.api.Application
 import play.api.http.Status.*
-import uk.gov.hmrc.vapingduty.connectors.VapingDutyStubsConnector
-import util.WireMockHelper
+import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.util.WireMockHelper
 
 class VapingDutyStubsConnectorISpec extends ISpecBase with WireMockHelper {
 
