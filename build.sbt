@@ -22,6 +22,6 @@ lazy val it = project
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
 
-addCommandAlias("runAllChecks", ";clean;compile;coverage;test;it/test;coverageReport")
+addCommandAlias("runAllChecks", ";clean;compile;coverage;test;it/test;scalastyle;coverageReport")
 
-addCommandAlias("runLocalChecks", ";clean;compile;coverage;test;coverageReport")
+addCommandAlias("runLocalChecks", ";clean;compile;coverage;test;scalastyle;coverageReport")
