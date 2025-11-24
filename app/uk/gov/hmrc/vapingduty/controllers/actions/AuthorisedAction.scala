@@ -68,10 +68,11 @@ class BaseAuthorisedAction @Inject() (
         (internalId, approvalId)
       }
 
-      identifiers match
+      identifiers match {
         case Right((internal, approvalId)) => block(IdentifierRequest(request, approvalId, internal))
         case Left(error) => throw AuthorisationException.fromString(error)
-        
+      }
+
     } recover { case e: AuthorisationException =>
       logger.debug("Got AuthorisationException:", e)
       Unauthorized(

@@ -17,17 +17,18 @@
 package uk.gov.hmrc.vapingduty
 
 import play.api.{Configuration, Environment}
-import play.api.inject.{Binding, Module as AppModule}
+import play.api.inject.{Binding, Module => AppModule}
 import uk.gov.hmrc.vapingduty.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 
 import java.time.Clock
 
-class Module extends AppModule:
+class Module extends AppModule {
 
   override def bindings(
-    environment  : Environment,
-    configuration: Configuration
-  ): Seq[Binding[_]] =
-    bind[Clock].toInstance(Clock.systemDefaultZone) ::
-    bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
-    Nil
+                         environment: Environment,
+                         configuration: Configuration
+                       ): Seq[Binding[_]] =
+      bind[Clock].toInstance(Clock.systemDefaultZone) ::
+      bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
+      Nil
+}
