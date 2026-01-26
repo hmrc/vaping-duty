@@ -49,7 +49,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   
   val enrolment               = "HMRC-VPD-ORG"
   val vpdIdKey                = "ZVPD"
-  val vpdId                  = "XMADP9876543210"
+  val vpdId                   = "XMADP9876543210"
   val internalId: String      = "internalId"
   val state                   = "Activated"
   val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vpdIdKey, vpdId)), state)))
