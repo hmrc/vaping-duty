@@ -48,11 +48,11 @@ class AuthorisedActionSpec extends AnyFreeSpec
   with ScalaFutures {
   
   val enrolment               = "HMRC-VPD-ORG"
-  val vppaIdKey               = "VPPAID"
-  val vppaId                  = "XMADP9876543210"
+  val vpdIdKey                = "ZVPD"
+  val vpdId                  = "XMADP9876543210"
   val internalId: String      = "internalId"
   val state                   = "Activated"
-  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vppaIdKey, vppaId)), state)))
+  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(vpdIdKey, vpdId)), state)))
   val emptyEnrolments         = Enrolments(Set.empty)
   val enrolmentsWithoutAppaId = Enrolments(Set(Enrolment(enrolment, Seq.empty, state)))
   val testContent             = "Test"
@@ -117,7 +117,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
       status(result) mustBe UNAUTHORIZED
     }
 
-    "execute the block and throw AuthorisationException if cannot get the VPPAID enrolment" in {
+    "execute the block and throw AuthorisationException if cannot get the ZVPD enrolment" in {
       when(
         mockAuthConnector.authorise(
           eqTo(
