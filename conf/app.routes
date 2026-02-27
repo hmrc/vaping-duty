@@ -1,3 +1,1 @@
 # microservice specific routes
-
-GET        /ping             uk.gov.hmrc.vapingduty.controllers.PingController.ping()
