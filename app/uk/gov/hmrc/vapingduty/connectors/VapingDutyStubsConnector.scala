@@ -34,6 +34,7 @@ class VapingDutyStubsConnector @Inject()(
   extends HttpReadsInstances
     with Logging {
 
+  @SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
   def ping()(implicit hc: HeaderCarrier): Future[Unit] =
     httpClient
       .get(url"${config.getStubsUrl()}/ping")

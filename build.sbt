@@ -22,6 +22,10 @@ lazy val it = project
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
 
-addCommandAlias("runAllChecks", ";clean;compile;coverage;test;it/test;scalastyle;coverageReport")
+commands ++= Seq(
+  Command.command("runAllChecks") { state => "clean" :: "compile" :: "scalafixAll --check" :: "coverage" :: "test" :: "it/test" :: "coverageReport" :: state },
 
-addCommandAlias("runLocalChecks", ";clean;compile;coverage;test;scalastyle;coverageReport")
+  Command.command("runLocalChecks") { state => "clean" :: "compile" :: "scalafixAll --check" :: "coverage" :: "test" :: "coverageReport" :: state },
+
+  Command.command("lint") { state => "clean" :: "compile" :: "scalafixAll" :: state }
+)
