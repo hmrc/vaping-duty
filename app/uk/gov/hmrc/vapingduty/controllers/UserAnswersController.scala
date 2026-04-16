@@ -17,16 +17,13 @@
 package uk.gov.hmrc.vapingduty.controllers
 
 import com.google.inject.Inject
-import org.apache.pekko.util.ByteString
 import play.api.Logging
-import play.api.http.HttpEntity
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.UserAnswers
-import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
+import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
 import java.time.Clock
@@ -41,7 +38,7 @@ class UserAnswersController @Inject()(
                                        clock: Clock
                                       )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def getUserAnswers(internalId: InternalId): Action[AnyContent] = (authorise).async { _ =>
+  def getUserAnswers(internalId: InternalId): Action[AnyContent] = authorise.async { _ =>
     userAnswersRepository.get(internalId).map {
       case Some(ua) => Ok(Json.toJson(ua))
       case None     => NotFound
@@ -54,11 +51,6 @@ class UserAnswersController @Inject()(
         case JsSuccess(ua, _) => userAnswersRepository.set(ua).map(_ => NoContent)
         case JsError(errors) => Future.successful(BadRequest)
   }
-
-  def error(errorResponse: ErrorResponse): Result = Result(
-    header = ResponseHeader(errorResponse.statusCode),
-    body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(errorResponse))), Some("application/json"))
-  )
 
   def clear(internalId: InternalId): Action[AnyContent] = (authorise).async {
     userAnswersRepository.clear(internalId.toString).map(_ => Results.NoContent)
