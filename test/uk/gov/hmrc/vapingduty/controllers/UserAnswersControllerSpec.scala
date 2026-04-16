@@ -18,16 +18,18 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
-import play.api.libs.json.{Json, JsObject}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
+import play.api.http.HttpEntity.*
 import play.api.test.Helpers.*
 import play.api.test.FakeRequest
-import uk.gov.hmrc.vapingduty.SpecBase
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
+import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.models.UserAnswers
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
-import java.time.Instant
 
+import java.time.Instant
 import scala.concurrent.Future
 
 class UserAnswersControllerSpec extends SpecBase {
@@ -78,11 +80,10 @@ class UserAnswersControllerSpec extends SpecBase {
 
       val result: Future[Result] =
         controller.set()(
-          fakeRequestWithJsonBody(Json.toJson(returnsUserAnswers.copy(lastUpdated = Instant.now().plusSeconds(1))))
+          fakeRequestWithJsonBody(Json.toJson(returnsUserAnswers))
         )
 
       status(result)        mustBe NO_CONTENT
-      contentAsJson(result) mustBe Json.toJson(returnsUserAnswers)
     }
 
     "return 404 Not Found if the repository returns an error" in {
@@ -102,6 +103,16 @@ class UserAnswersControllerSpec extends SpecBase {
       when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(true))
 
       val result: Future[Result] = controller.clear(internalId)(FakeRequest())
+
+      status(result) mustBe NO_CONTENT
+    }
+  }
+
+  "keepAlive must" - {
+    "return 204 NO_CONTENT when UserRepository is kept alive" in {
+      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(true))
+
+      val result: Future[Result] = controller.keepAlive(internalId)(FakeRequest())
 
       status(result) mustBe NO_CONTENT
     }
