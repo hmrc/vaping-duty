@@ -48,8 +48,8 @@ class UserAnswersRepositoryISpec
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  private val userAnswers = UserAnswers("id", Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
-  private val internalId = InternalId(userAnswers.id)
+  private val internalId = InternalId("Int-")
+  private val userAnswers = UserAnswers(internalId.toString, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.timeToLive) thenReturn 1L
@@ -58,8 +58,8 @@ class UserAnswersRepositoryISpec
 
   protected override val repository: UserAnswersRepository = new UserAnswersRepository(
     mongoComponent = mongoComponent,
-    appConfig      = mockAppConfig,
-    clock          = stubClock
+    appConfig = mockAppConfig,
+    clock = stubClock
   )
 
   ".set" - {
@@ -68,10 +68,11 @@ class UserAnswersRepositoryISpec
 
       val expectedResult = userAnswers copy (lastUpdated = instant)
 
-      val _     = repository.set(userAnswers).futureValue
-      val updatedRecord = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
+      val result = repository.set(userAnswers.copy(lastUpdated = instant)).futureValue
+      val updatedRecord = find(Filters.equal("_id", internalId.toString)).futureValue.headOption.value
 
       updatedRecord mustEqual expectedResult
+      result mustBe UpdateSuccess
     }
 
     mustPreserveMdc(repository.set(userAnswers))
@@ -85,7 +86,7 @@ class UserAnswersRepositoryISpec
 
         insert(userAnswers).futureValue
 
-        val result         = repository.get(internalId).futureValue
+        val result = repository.get(internalId).futureValue
         val expectedResult = userAnswers copy (lastUpdated = instant)
 
         result.value mustEqual expectedResult
@@ -109,15 +110,17 @@ class UserAnswersRepositoryISpec
 
       insert(userAnswers).futureValue
 
-      val _ = repository.clear(userAnswers.id).futureValue
+      val result = repository.clear(userAnswers.id).futureValue
 
       repository.get(internalId).futureValue must not be defined
+
+      result mustBe UpdateSuccess
     }
 
     "must return true when there is no record to remove" in {
       val result = repository.clear("id that does not exist").futureValue
 
-      result mustEqual true
+      result mustEqual UpdateFailure
     }
 
     mustPreserveMdc(repository.clear(userAnswers.id))
@@ -131,12 +134,13 @@ class UserAnswersRepositoryISpec
 
         insert(userAnswers).futureValue
 
-        val _ = repository.keepAlive(internalId).futureValue
+        val result = repository.keepAlive(internalId).futureValue
 
         val expectedUpdatedAnswers = userAnswers copy (lastUpdated = instant)
 
         val updatedAnswers = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
         updatedAnswers mustEqual expectedUpdatedAnswers
+        result mustBe UpdateSuccess
       }
     }
 
@@ -144,7 +148,9 @@ class UserAnswersRepositoryISpec
 
       "must return true" in {
 
-        repository.keepAlive(InternalId("id that does not exist")).futureValue mustEqual true
+        val result = repository.keepAlive(InternalId("id that does not exist")).futureValue
+
+        result mustEqual UpdateFailure
       }
     }
 

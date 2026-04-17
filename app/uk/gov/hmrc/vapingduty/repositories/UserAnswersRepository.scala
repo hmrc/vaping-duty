@@ -24,12 +24,13 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.UserAnswers
+import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateResult, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.models.identifiers.*
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.impl.Promise
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -54,43 +55,45 @@ class UserAnswersRepository @Inject()(
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def byId(id: InternalId): Bson = Filters.equal("_id", id.toString)
+  private def byInternalId(id: InternalId): Bson = Filters.equal("_id", id.toString)
 
-  def keepAlive(id: InternalId): Future[Boolean] =
+  def keepAlive(id: InternalId): Future[UpdateResult] =
     collection
       .updateOne(
-        filter = byId(id),
+        filter = byInternalId(id),
         update = Updates.set("lastUpdated", Instant.now(clock))
       )
       .toFuture()
-      .map(_ => true)
+      .map(res => if (res.getModifiedCount > 0) UpdateSuccess else UpdateFailure)
 
   def get(id: InternalId): Future[Option[UserAnswers]] =
     keepAlive(id).flatMap { _ =>
       Mdc.preservingMdc {
         collection
-          .find(byId(id))
+          .find(byInternalId(id))
           .headOption()
       }
     }
 
-  def set(answers: UserAnswers): Future[Boolean] = {
+  def set(answers: UserAnswers): Future[UpdateResult] = {
 
     val updatedAnswers = answers copy (lastUpdated = Instant.now(clock))
 
     collection
       .replaceOne(
-        filter = byId(InternalId(updatedAnswers.id)),
+        filter = byInternalId(InternalId(updatedAnswers.id)),
         replacement = updatedAnswers,
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => true)
+      .map(res =>
+        if (!res.getUpsertedId.isNull | res.getModifiedCount > 0) UpdateSuccess else UpdateFailure
+      )
   }
 
-  def clear(id: String): Future[Boolean] =
+  def clear(id: String): Future[UpdateResult] =
     collection
-      .deleteOne(byId(InternalId(id)))
+      .deleteOne(byInternalId(InternalId(id)))
       .toFuture()
-      .map(_ => true)
+      .map(res => if (res.getDeletedCount > 0) UpdateSuccess else UpdateFailure)
 }

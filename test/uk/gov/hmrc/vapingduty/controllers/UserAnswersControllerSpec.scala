@@ -20,14 +20,12 @@ import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
-import play.api.http.HttpEntity.*
-import play.api.test.Helpers.*
 import play.api.test.FakeRequest
-import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
+import play.api.test.Helpers.*
 import uk.gov.hmrc.vapingduty.base.SpecBase
-import uk.gov.hmrc.vapingduty.models.UserAnswers
-import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
+import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
+import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -40,8 +38,7 @@ class UserAnswersControllerSpec extends SpecBase {
   val controller = new UserAnswersController(
     cc,
     mockUserAnswersRepository,
-    fakeAuthorisedAction,
-    clock
+    fakeAuthorisedAction
   )
 
   val returnsUserAnswers = UserAnswers(
@@ -76,7 +73,7 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "set must" - {
     "return NO_CONTENT with the user answers that was updated" in {
-      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(true))
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
 
       val result: Future[Result] =
         controller.set()(
@@ -87,7 +84,7 @@ class UserAnswersControllerSpec extends SpecBase {
     }
 
     "return 404 Not Found if the repository returns an error" in {
-      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(false))
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateFailure))
 
       val result: Future[Result] =
         controller.set()(
@@ -100,21 +97,37 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "clear must" - {
     "return 204 NO_CONTENT" in {
-      when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(true))
+      when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(UpdateSuccess))
 
       val result: Future[Result] = controller.clear(internalId)(FakeRequest())
 
       status(result) mustBe NO_CONTENT
     }
+
+    "return NOT_MODIFIED is no change was made" in {
+      when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(UpdateFailure))
+
+      val result: Future[Result] = controller.clear(internalId)(FakeRequest())
+
+      status(result) mustBe NOT_MODIFIED
+    }
   }
 
   "keepAlive must" - {
     "return 204 NO_CONTENT when UserRepository is kept alive" in {
-      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(true))
+      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(UpdateSuccess))
 
       val result: Future[Result] = controller.keepAlive(internalId)(FakeRequest())
 
       status(result) mustBe NO_CONTENT
+    }
+
+    "return NOT_MODIFIED is no change was made" in {
+      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(UpdateFailure))
+
+      val result: Future[Result] = controller.keepAlive(internalId)(FakeRequest())
+
+      status(result) mustBe NOT_MODIFIED
     }
   }
 }
