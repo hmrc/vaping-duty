@@ -24,13 +24,12 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateResult, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.models.identifiers.*
+import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateResult, UpdateSuccess, UserAnswers}
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.impl.Promise
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
