@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.concurrent.duration.Duration
+
 @Singleton
 class AppConfig @Inject()(
           config: Configuration,
@@ -34,4 +36,6 @@ class AppConfig @Inject()(
   def getStubsUrl(): String = {
     s"$vdStubsHost/vaping-duty-stubs"
   }
+
+  def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 }

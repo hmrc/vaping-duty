@@ -21,7 +21,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import play.api.Application
 import play.api.http.Status.*
 import uk.gov.hmrc.vapingduty.base.ISpecBase
-import uk.gov.hmrc.vapingduty.util.WireMockHelper
+import uk.gov.hmrc.vapingduty.utils.WireMockHelper
 
 class VapingDutyStubsConnectorISpec extends ISpecBase with WireMockHelper {
 

@@ -1,1 +1,6 @@
 # microservice specific routes
+
+PUT          /user-answers                            uk.gov.hmrc.vapingduty.controllers.UserAnswersController.set()
+GET          /user-answers/:internalId                uk.gov.hmrc.vapingduty.controllers.UserAnswersController.getUserAnswers(internalId: InternalId)
+DELETE       /user-answers/clear/:internalId          uk.gov.hmrc.vapingduty.controllers.UserAnswersController.clear(internalId: InternalId)
+POST         /user-answers/keep-alive/:internalId     uk.gov.hmrc.vapingduty.controllers.UserAnswersController.keepAlive(internalId: InternalId)
