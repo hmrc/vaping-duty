@@ -16,13 +16,10 @@
 
 package uk.gov.hmrc.vapingduty.repositories
 
-import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.*
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalactic.source.Position
-import org.scalatest.OptionValues
+import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
@@ -31,8 +28,11 @@ import org.slf4j.MDC
 import play.api.libs.json.Json
 import uk.gov.hmrc.mdc.MdcExecutionContext
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.models.*
+import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 
-import java.time.temporal.ChronoUnit
+import java.time.temporal.{ChronoUnit, TemporalAmount}
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +43,8 @@ class UserAnswersRepositoryISpec
     with ScalaFutures
     with IntegrationPatience
     with OptionValues
-    with MockitoSugar {
+    with MockitoSugar
+    with BeforeAndAfterAll {
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
@@ -62,6 +63,8 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
+  override def beforeEach(): Unit = repository.clear(userAnswers.id)
+
   ".set" - {
 
     "must set the last updated time on the supplied user answers to `now`, and save them" in {
@@ -73,6 +76,28 @@ class UserAnswersRepositoryISpec
 
       updatedRecord mustEqual expectedResult
       result mustBe UpdateSuccess
+    }
+
+    "must return UpdateSuccess when updating an existing document" in {
+
+      val result = repository.set(userAnswers.copy(data = Json.obj(), lastUpdated = instant)).futureValue
+
+      result mustBe UpdateSuccess
+
+      val updatedResult = repository.set(userAnswers.copy(data = Json.obj("foo" -> "bar"))).futureValue
+
+      updatedResult mustBe UpdateSuccess
+    }
+
+    "must return UpdateFailure when updating an existing document that is identical" in {
+
+      val result = repository.set(userAnswers.copy(data = Json.obj())).futureValue
+
+      result mustBe UpdateSuccess
+
+      val updatedResult = repository.set(userAnswers.copy(data = Json.obj())).futureValue
+
+      updatedResult mustBe UpdateFailure
     }
 
     mustPreserveMdc(repository.set(userAnswers))
@@ -117,7 +142,7 @@ class UserAnswersRepositoryISpec
       result mustBe UpdateSuccess
     }
 
-    "must return true when there is no record to remove" in {
+    "must return UpdateFailure when there is no record to remove" in {
       val result = repository.clear("id that does not exist").futureValue
 
       result mustEqual UpdateFailure
