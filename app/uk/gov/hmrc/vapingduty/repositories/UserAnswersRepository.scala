@@ -56,15 +56,6 @@ class UserAnswersRepository @Inject()(
 
   private def byInternalId(id: InternalId): Bson = Filters.equal("_id", id.toString)
 
-  def keepAlive(id: InternalId): Future[UpdateResult] =
-    collection
-      .updateOne(
-        filter = byInternalId(id),
-        update = Updates.set("lastUpdated", Instant.now(clock))
-      )
-      .toFuture()
-      .map(res => if (res.getModifiedCount > 0) UpdateSuccess else UpdateFailure)
-
   def get(id: InternalId): Future[Option[UserAnswers]] =
     keepAlive(id).flatMap { _ =>
       Mdc.preservingMdc {
@@ -86,9 +77,18 @@ class UserAnswersRepository @Inject()(
       )
       .toFuture()
       .map(res =>
-        if (!res.getUpsertedId.isNull | res.getModifiedCount > 0) UpdateSuccess else UpdateFailure
+        if (Option(res.getUpsertedId).isDefined || res.getModifiedCount > 0) UpdateSuccess else UpdateFailure
       )
   }
+
+  def keepAlive(id: InternalId): Future[UpdateResult] =
+    collection
+      .updateOne(
+        filter = byInternalId(id),
+        update = Updates.set("lastUpdated", Instant.now(clock))
+      )
+      .toFuture()
+      .map(res => if (res.getModifiedCount > 0) UpdateSuccess else UpdateFailure)
 
   def clear(id: String): Future[UpdateResult] =
     collection

@@ -83,6 +83,17 @@ class UserAnswersControllerSpec extends SpecBase {
       status(result)        mustBe NO_CONTENT
     }
 
+    "return 304 Not Modified if the repository returns an error" in {
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateFailure))
+
+      val result: Future[Result] =
+        controller.set()(
+          fakeRequestWithJsonBody(Json.toJson(returnsUserAnswers))
+        )
+
+      status(result) mustBe NOT_MODIFIED
+    }
+
     "return 404 Not Found if the repository returns an error" in {
       when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateFailure))
 
