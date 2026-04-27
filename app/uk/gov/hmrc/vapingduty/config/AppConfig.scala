@@ -22,6 +22,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 
+@SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
 @Singleton
 class AppConfig @Inject()(
           config: Configuration,

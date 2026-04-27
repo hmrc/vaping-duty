@@ -37,8 +37,8 @@ class ReturnsControllerSpec extends SpecBase {
     fakeAuthorisedAction
   )
 
-  "submitContactPreferences must" - {
-    "return 200 OK when the connector successfully submits preferences" in {
+  "submitReturn must" - {
+    "return 200 OK when the connector successfully submits returns" in {
       when(mockConnector.submitReturn(eqTo(returnCreateRequestRegular), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
 
@@ -48,8 +48,18 @@ class ReturnsControllerSpec extends SpecBase {
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
     }
 
+    "return 200 OK when the connector successfully submits nil return" in {
+      when(mockConnector.submitReturn(eqTo(returnCreateRequestNil), eqTo(vpdId))(any()))
+        .thenReturn(Future.successful(returnCreateResponseMinimal.success))
+
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnCreateRequestNil)))
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(returnCreateResponseMinimal.success)
+    }
+
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
-      val errorMessage = "Failed to submit contact preferences"
+      val errorMessage = "Failed to submit VPD return"
       when(mockConnector.submitReturn(eqTo(returnCreateRequestRegular), eqTo(vpdId))(any()))
         .thenReturn(Future.failed(InternalServerException(errorMessage)))
 
