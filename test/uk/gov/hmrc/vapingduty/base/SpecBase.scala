@@ -29,10 +29,10 @@ import play.api.libs.json.JsValue
 import play.api.mvc.*
 import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeHeaders, FakeRequest, ResultExtractors}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.controllers.actions.FakeAuthorisedAction
-import uk.gov.hmrc.http.HeaderCarrier
-import java.time.Clock
+import utils.TestData
 
 import scala.concurrent.ExecutionContext
 
@@ -50,7 +50,8 @@ trait SpecBase
     with GuiceOneAppPerSuite
     with MockitoSugar
     with BeforeAndAfterEach
-    with IntegrationPatience {
+    with IntegrationPatience 
+    with TestData {
 
   def configOverrides: Map[String, Any] = Map()
 
@@ -69,7 +70,6 @@ trait SpecBase
   val appConfig: AppConfig                             = app.injector.instanceOf[AppConfig]
   val bodyParsers: PlayBodyParsers                     = app.injector.instanceOf[PlayBodyParsers]
   val fakeAuthorisedAction                             = new FakeAuthorisedAction(bodyParsers)
-  val clock: Clock                                     = Clock.systemUTC()
 
   def fakeRequestWithJsonBody(json: JsValue): FakeRequest[JsValue] = FakeRequest("", "/", FakeHeaders(), json)
 
