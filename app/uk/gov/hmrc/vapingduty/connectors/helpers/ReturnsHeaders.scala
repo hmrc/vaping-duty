@@ -29,12 +29,12 @@ class ReturnsHeaders @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: 
   private val xReceiptDateHeader: String = "X-Receipt-Date"
   private val xRegimeHeader: String = "X-Regime"
   private val xTransmittingSystemHeader: String = "X-Transmitting-System"
-  private val X_ZVPD_HEADER                = "X-ZVPD"
+  private val X_ZVPD_HEADER = "X-ZVPD"
 
   private val messageType = "VPDReturnCreate"
-  private val mdtp    = "MDTP"
-  private val regime            = "VPD"
-  private val hip    = "HIP"
+  private val mdtp = "MDTP"
+  private val regime = "VPD"
+  private val hip = "HIP"
 
   def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
     Seq(

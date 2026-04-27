@@ -18,16 +18,15 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import com.google.inject.Inject
 import play.api.Logging
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.vapingduty.connectors.ReturnsConnector
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.ReturnCreateRequest
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject()(
                                       cc: ControllerComponents,
