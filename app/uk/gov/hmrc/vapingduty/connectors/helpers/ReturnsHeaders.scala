@@ -27,7 +27,7 @@ class ReturnsHeaders @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: 
   private val xMessageTypeHeader: String = "X-Message-Type"
   private val xOriginatingSystemHeader: String = "X-Originating-System"
   private val xReceiptDateHeader: String = "X-Receipt-Date"
-  private val xRegimeHeader: String = "X-Regime"
+  private val xRegimeHeader: String = "X-Regime-Type"
   private val xTransmittingSystemHeader: String = "X-Transmitting-System"
   private val X_ZVPD_HEADER = "X-ZVPD"
 
