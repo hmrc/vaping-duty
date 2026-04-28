@@ -50,14 +50,6 @@ trait ConnectorTestHelpers extends HttpClientV2Support with WireMockHelper with 
       )
       .build()
 
-    val appWithHttpClientV2WithRetry: Application = new GuiceApplicationBuilder()
-      .configure(getWireMockAppConfigWithRetry(Seq(endpointName)))
-      .overrides(
-        bind[HttpClientV2].toInstance(httpClientV2),
-        bind[Clock].toInstance(clock)
-      )
-      .build()
-
     protected implicit val hc: HeaderCarrier = HeaderCarrier()
   }
 }

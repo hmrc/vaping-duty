@@ -38,17 +38,6 @@ trait WireMockHelper extends WireMockSupport {
       )
       .toMap
 
-  protected def getWireMockAppConfigWithRetry(endpointNames: Seq[String]): Map[String, Any] =
-    endpointNames
-      .flatMap(endpointName =>
-        Seq(
-          s"$endpointConfigurationPath.$endpointName.host"   -> wireMockHost,
-          s"$endpointConfigurationPath.$endpointName.port"   -> wireMockPort,
-          s"$endpointConfigurationPath.retry.retry-attempts" -> 1
-        )
-      )
-      .toMap
-
   private def stripToPath(url: String) =
     if (url.startsWith("http://") || url.startsWith("https://")) {
       url.dropWhile(_ != '/').dropWhile(_ == '/').dropWhile(_ != '/')
@@ -118,22 +107,11 @@ trait WireMockHelper extends WireMockSupport {
     }
     wireMockServer.verify(requestPatternWithHeaders)
   }
-
-  def verifyGetWithoutRetry(url: String): Unit =
-    wireMockServer.verify(1, getRequestedFor(urlEqualTo(stripToPath(url))))
-
-  def verifyGetWithRetry(url: String): Unit =
-    wireMockServer.verify(2, getRequestedFor(urlEqualTo(stripToPath(url))))
-
+  
   def verifyPost(url: String): Unit =
     wireMockServer.verify(postRequestedFor(urlEqualTo(stripToPath(url))))
 
   def verifyPut(url: String): Unit =
     wireMockServer.verify(putRequestedFor(urlEqualTo(stripToPath(url))))
-
-  def verifyPutWithoutRetry(url: String): Unit =
-    wireMockServer.verify(1, putRequestedFor(urlEqualTo(stripToPath(url))))
-
-  def verifyPutWithRetry(url: String): Unit =
-    wireMockServer.verify(2, putRequestedFor(urlEqualTo(stripToPath(url))))
+  
 }
