@@ -60,7 +60,6 @@ trait TestData {
     taxType = "351",
     dutyRate = BigDecimal("2.50"),
     amountProducedLiquid = BigDecimal("1000.50"),
-    amountProducedSolid = BigDecimal("500.25"),
     dutyDue = BigDecimal("3751.88")
   )
 
@@ -68,7 +67,6 @@ trait TestData {
     taxType = "352",
     dutyRate = BigDecimal("5.00"),
     amountProducedLiquid = BigDecimal("2000.00"),
-    amountProducedSolid = BigDecimal("1000.00"),
     dutyDue = BigDecimal("15000.00")
   )
 
@@ -76,7 +74,6 @@ trait TestData {
     taxType = "353",
     dutyRate = BigDecimal("1.25"),
     amountProducedLiquid = BigDecimal("100.00"),
-    amountProducedSolid = BigDecimal("50.00"),
     dutyDue = BigDecimal("187.50")
   )
 
