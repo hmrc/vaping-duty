@@ -20,7 +20,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlMatch
 import org.scalatest.freespec.AnyFreeSpec
 import play.api.Application
 import play.api.http.Status.*
+import play.api.libs.json.Json
 import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
+import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.WireMockHelper
 
 class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
@@ -29,18 +32,20 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
     applicationBuilder().configure("microservice.services.obligations.port" -> server.port()).build()
   }
 
+  val vpdId = VpdId(id = "vpdId")
+
   "ObligationsConnector" - {
     "get" - {
       "must successfully ping the vaping duty stubs service" in new Setup {
         server.stubFor(
           get(urlMatching(url))
             .willReturn(
-              aResponse()
+              aResponse().withBody(Json.toJson(ObligationsResponse(Seq.empty)).toString)
             )
         )
 
         whenReady(connector.getObligations(vpdId)) { result =>
-          result mustBe()
+          result mustBe ObligationsResponse(Seq.empty)
         }
       }
 
@@ -53,8 +58,8 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
             )
         )
 
-        whenReady(connector.ping().failed) { e =>
-          e.getMessage must include("Not authorised")
+        whenReady(connector.getObligations(vpdId).failed) { e =>
+          e.getMessage must include("Failed to get obligations")
         }
       }
 
@@ -67,8 +72,8 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
             )
         )
 
-        whenReady(connector.ping().failed) { e =>
-          e.getMessage must include("Unexpected status code: 201")
+        whenReady(connector.getObligations(vpdId).failed) { e =>
+          e.getMessage must include("Failed to get obligations")
         }
       }
 
@@ -82,9 +87,8 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
             )
         )
 
-        whenReady(connector.ping().failed) { e =>
-          e.getMessage must include("Unexpected response")
-          e.getMessage must include("returned 500")
+        whenReady(connector.getObligations(vpdId).failed) { e =>
+          e.getMessage must include("Failed to get obligations")
         }
       }
     }
@@ -92,6 +96,6 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
 
   class Setup {
     val connector = app.injector.instanceOf[ObligationsConnector]
-    val url = "/vaping-duty/obligations"
+    val url = s"/etmp/RESTAdapter/cross-regime/taxpayer-obligations\\?displayRequest=A&referenceNumber=vpdId&referenceType=ZVPD"
   }
 }

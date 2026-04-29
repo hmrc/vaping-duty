@@ -20,7 +20,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 import java.time.LocalDate
-import scala.math.Fractional.Implicits.infixFractionalOps
 
 class ObligationDetailsSpec extends SpecBase {
   val obligationDetails: ObligationDetails = ObligationDetails(

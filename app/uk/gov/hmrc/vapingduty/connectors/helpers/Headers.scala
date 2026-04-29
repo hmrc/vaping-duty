@@ -37,16 +37,17 @@ class Headers @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: Clock) 
   private val regime = "VPD"
   private val hip = "HIP"
 
-  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
-    Seq(
-      (correlationIdHeader, randomUUIDGenerator.uuid),
-      (xMessageTypeHeader, returnCreateMessage),
-      (xOriginatingSystemHeader, mdtp),
-      (xReceiptDateHeader, DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
-      (xRegimeHeader, regime),
-      (xTransmittingSystemHeader, hip),
-      (X_ZVPD_HEADER, vpdId.toString)
-    )
+  // Used when returns branch has been merged
+//  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
+//    Seq(
+//      (correlationIdHeader, randomUUIDGenerator.uuid),
+//      (xMessageTypeHeader, returnCreateMessage),
+//      (xOriginatingSystemHeader, mdtp),
+//      (xReceiptDateHeader, DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
+//      (xRegimeHeader, regime),
+//      (xTransmittingSystemHeader, hip),
+//      (X_ZVPD_HEADER, vpdId.toString)
+//    )
 
   private val getObligationsMessage = "GetObligations"
 

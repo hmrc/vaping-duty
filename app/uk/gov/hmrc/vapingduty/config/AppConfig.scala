@@ -43,7 +43,7 @@ class AppConfig @Inject()(
   private def obligationsQueryString(vpdId: VpdId) =
     s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=$enrolmentIdentifierKey"
 
-  def getObligationsUrl(vpdId: VpdId): String = s"$obligationsHost$obligationsUrl/${obligationsQueryString(vpdId)}"
+  def getObligationsUrl(vpdId: VpdId): String = s"$obligationsHost$obligationsUrl${obligationsQueryString(vpdId)}"
 
   def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 
