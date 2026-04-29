@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.utils
+package uk.gov.hmrc.vapingduty.models.obligations
 
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import play.api.libs.json.{Json, OFormat}
 
-object DateTimeHelper {
-  def formatISOInstantSeconds(now: Instant): String =
-    DateTimeFormatter.ISO_INSTANT.format(now.truncatedTo(ChronoUnit.SECONDS))
+import java.time.LocalDate
+
+case class ObligationDetails(
+  openOrFulfilledStatus: String,
+  iCFromDate: LocalDate,
+  iCToDate: LocalDate,
+  iCDateReceived: Option[LocalDate],
+  iCDueDate: LocalDate,
+  periodKey: String
+)
+
+object ObligationDetails {
+  given OFormat[ObligationDetails] = Json.format[ObligationDetails]
 }
