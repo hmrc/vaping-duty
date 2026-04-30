@@ -127,7 +127,7 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
   }
 
   abstract class SetUp extends ConnectorFixture {
-    val connector       = appWithHttpClientV2.injector.instanceOf[ReturnsConnector]
+    val connector       = app.injector.instanceOf[ReturnsConnector]
     val submitReturnUrl = config.submitReturnUrl()
   }
 }
