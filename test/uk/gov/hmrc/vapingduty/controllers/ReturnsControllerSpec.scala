@@ -49,17 +49,6 @@ class ReturnsControllerSpec extends SpecBase {
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
     }
 
-    /**
-     * val returnSubmittedResponseFull: ReturnSubmittedResponse = ReturnSubmittedResponse(
-     * processingDate = Instant.now(clock),
-     * vpdReferenceNumber = vpdReferenceNumber,
-     * submissionID = Some(submissionId),
-     * chargeReference = Some(chargeReference),
-     * amount = BigDecimal("3676.88"),
-     * paymentDueDate = Some(LocalDate.of(2026, 6, 30))
-     * )
-     */
-
     "return 200 OK when the connector successfully submits nil return" in {
       val nilReturn = returnCreateResponseSuccess.success.copy(
         submissionID = None,
