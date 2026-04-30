@@ -24,6 +24,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.ReturnsConnector
+import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 
 import scala.concurrent.Future
 
@@ -39,30 +40,55 @@ class ReturnsControllerSpec extends SpecBase {
 
   "submitReturn must" - {
     "return 200 OK when the connector successfully submits returns" in {
-      when(mockConnector.submitReturn(eqTo(returnCreateRequestRegular), eqTo(vpdId))(any()))
+      when(mockConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnCreateRequestRegular)))
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
     }
 
-    "return 200 OK when the connector successfully submits nil return" in {
-      when(mockConnector.submitReturn(eqTo(returnCreateRequestNil), eqTo(vpdId))(any()))
-        .thenReturn(Future.successful(returnCreateResponseMinimal.success))
+    /**
+     * val returnSubmittedResponseFull: ReturnSubmittedResponse = ReturnSubmittedResponse(
+     * processingDate = Instant.now(clock),
+     * vpdReferenceNumber = vpdReferenceNumber,
+     * submissionID = Some(submissionId),
+     * chargeReference = Some(chargeReference),
+     * amount = BigDecimal("3676.88"),
+     * paymentDueDate = Some(LocalDate.of(2026, 6, 30))
+     * )
+     */
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnCreateRequestNil)))
+    "return 200 OK when the connector successfully submits nil return" in {
+      val nilReturn = returnCreateResponseSuccess.success.copy(
+        submissionID = None,
+        chargeReference = None,
+        amount = BigDecimal("0.0"),
+        paymentDueDate = None,
+      )
+      val nullRequest = returnsCreateRequest.copy(
+        vapingProductsProduced = VapingProductsProduced(
+          nilReturn = Seq(nilReturnNoProducts),
+          regularReturn = Seq.empty
+        ),
+        totalDutyDue = totalDutyDueNil
+      )
+
+      when(mockConnector.submitReturn(eqTo(nullRequest), eqTo(vpdId))(any()))
+        .thenReturn(Future.successful(nilReturn))
+
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nullRequest)))
 
       status(result) mustBe OK
-      contentAsJson(result) mustBe Json.toJson(returnCreateResponseMinimal.success)
+      contentAsJson(result) mustBe Json.toJson(nilReturn)
     }
 
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
-      when(mockConnector.submitReturn(eqTo(returnCreateRequestRegular), eqTo(vpdId))(any()))
+      when(mockConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.failed(InternalServerException("")))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnCreateRequestRegular)))
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)          mustBe INTERNAL_SERVER_ERROR
     }

@@ -56,25 +56,20 @@ trait TestData {
     vapingProductsProduced = "No"
   )
 
-  val regularReturnStandard: RegularReturn = RegularReturn(
-    taxType = "351",
-    dutyRate = BigDecimal("2.50"),
+  val regularReturn: RegularReturn = RegularReturn(
+    taxType = "641",
+    dutyRate = BigDecimal("2.20"),
     amountProducedLiquid = BigDecimal("1000.50"),
-    dutyDue = BigDecimal("3751.88")
+    dutyDue = BigDecimal("2201.10")
   )
 
-  val regularReturnHighDuty: RegularReturn = RegularReturn(
-    taxType = "352",
-    dutyRate = BigDecimal("5.00"),
-    amountProducedLiquid = BigDecimal("2000.00"),
-    dutyDue = BigDecimal("15000.00")
-  )
-
-  val regularReturnLowDuty: RegularReturn = RegularReturn(
-    taxType = "353",
-    dutyRate = BigDecimal("1.25"),
-    amountProducedLiquid = BigDecimal("100.00"),
-    dutyDue = BigDecimal("187.50")
+  val totalDutyDue: TotalDutyDue = TotalDutyDue(
+    totalDutyDueVapingProducts = BigDecimal("3751.88"),
+    totalDutyOverDeclaration = BigDecimal("100.00"),
+    totalDutyUnderDeclaration = BigDecimal("50.00"),
+    totalDutySpoiltProduct = BigDecimal("25.00"),
+    adjustmentAmount = BigDecimal("-75.00"),
+    totalDutyDue = BigDecimal("3676.88")
   )
 
   val totalDutyDueNil: TotalDutyDue = TotalDutyDue(
@@ -86,69 +81,18 @@ trait TestData {
     totalDutyDue = BigDecimal("0.00")
   )
 
-  val totalDutyDueStandard: TotalDutyDue = TotalDutyDue(
-    totalDutyDueVapingProducts = BigDecimal("3751.88"),
-    totalDutyOverDeclaration = BigDecimal("100.00"),
-    totalDutyUnderDeclaration = BigDecimal("50.00"),
-    totalDutySpoiltProduct = BigDecimal("25.00"),
-    adjustmentAmount = BigDecimal("-75.00"),
-    totalDutyDue = BigDecimal("3676.88")
-  )
-
-  val totalDutyDueWithAdjustments: TotalDutyDue = TotalDutyDue(
-    totalDutyDueVapingProducts = BigDecimal("15187.50"),
-    totalDutyOverDeclaration = BigDecimal("500.00"),
-    totalDutyUnderDeclaration = BigDecimal("200.00"),
-    totalDutySpoiltProduct = BigDecimal("100.00"),
-    adjustmentAmount = BigDecimal("-400.00"),
-    totalDutyDue = BigDecimal("14787.50")
-  )
-
-  val vapingProductsProducedNil: VapingProductsProduced = VapingProductsProduced(
-    nilReturn = Seq(nilReturnNoProducts),
-    regularReturn = Seq.empty
-  )
-
   val vapingProductsProducedRegular: VapingProductsProduced = VapingProductsProduced(
     nilReturn = Seq.empty,
-    regularReturn = Seq(regularReturnStandard)
+    regularReturn = Seq(regularReturn)
   )
 
-  val vapingProductsProducedMultiple: VapingProductsProduced = VapingProductsProduced(
-    nilReturn = Seq.empty,
-    regularReturn = Seq(regularReturnStandard, regularReturnHighDuty, regularReturnLowDuty)
-  )
-
-  val vapingProductsProducedMixed: VapingProductsProduced = VapingProductsProduced(
-    nilReturn = Seq(nilReturnNoProducts),
-    regularReturn = Seq(regularReturnStandard, regularReturnHighDuty)
-  )
-
-  val returnCreateRequestNil: ReturnCreateRequest = ReturnCreateRequest(
-    periodKey = periodKey,
-    vapingProductsProduced = vapingProductsProducedNil,
-    totalDutyDue = totalDutyDueNil
-  )
-
-  val returnCreateRequestRegular: ReturnCreateRequest = ReturnCreateRequest(
+  val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
     periodKey = periodKey,
     vapingProductsProduced = vapingProductsProducedRegular,
-    totalDutyDue = totalDutyDueStandard
+    totalDutyDue = totalDutyDue
   )
 
-  val returnCreateRequestMultiple: ReturnCreateRequest = ReturnCreateRequest(
-    periodKey = periodKey,
-    vapingProductsProduced = vapingProductsProducedMultiple,
-    totalDutyDue = totalDutyDueWithAdjustments
-  )
-
-  val returnCreateRequestMixed: ReturnCreateRequest = ReturnCreateRequest(
-    periodKey = periodKey,
-    vapingProductsProduced = vapingProductsProducedMixed,
-    totalDutyDue = totalDutyDueWithAdjustments
-  )
-
-  val returnSubmittedResponseFull: ReturnSubmittedResponse = ReturnSubmittedResponse(
+  val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
     processingDate = Instant.now(clock),
     vpdReferenceNumber = vpdReferenceNumber,
     submissionID = Some(submissionId),
@@ -157,33 +101,7 @@ trait TestData {
     paymentDueDate = Some(LocalDate.of(2026, 6, 30))
   )
 
-  val returnSubmittedResponseMinimal: ReturnSubmittedResponse = ReturnSubmittedResponse(
-    processingDate = Instant.now(clock),
-    vpdReferenceNumber = vpdReferenceNumber,
-    submissionID = None,
-    chargeReference = None,
-    amount = BigDecimal("0.00"),
-    paymentDueDate = None
-  )
-
-  val returnSubmittedResponseWithPayment: ReturnSubmittedResponse = ReturnSubmittedResponse(
-    processingDate = Instant.now(clock),
-    vpdReferenceNumber = vpdReferenceNumber,
-    submissionID = Some(submissionId),
-    chargeReference = Some(chargeReference),
-    amount = BigDecimal("14787.50"),
-    paymentDueDate = Some(LocalDate.of(2026, 7, 31))
-  )
-
   val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(
-    success = returnSubmittedResponseFull
-  )
-
-  val returnCreateResponseMinimal: ReturnCreateResponse = ReturnCreateResponse(
-    success = returnSubmittedResponseMinimal
-  )
-
-  val returnCreateResponseWithPayment: ReturnCreateResponse = ReturnCreateResponse(
-    success = returnSubmittedResponseWithPayment
+    success = returnSubmittedResponse
   )
 }

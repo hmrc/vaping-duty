@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.vapingduty.connectors
 
+import com.github.tomakehurst.wiremock.http.Fault
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
@@ -31,19 +32,19 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
         stubPost(
           submitReturnUrl,
           OK,
-          Json.toJson(returnCreateRequestRegular).toString(),
+          Json.toJson(returnsCreateRequest).toString(),
           Json.toJson(returnCreateResponseSuccess).toString()
         )
-        whenReady(connector.submitReturn(returnCreateRequestRegular, vpdId)) { result =>
+        whenReady(connector.submitReturn(returnsCreateRequest, vpdId)) { result =>
           result mustBe returnCreateResponseSuccess.success
           verifyPost(submitReturnUrl)
         }
       }
 
       "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
-        stubPost(submitReturnUrl, OK, Json.toJson(returnCreateRequestRegular).toString(), "invalid")
+        stubPost(submitReturnUrl, OK, Json.toJson(returnsCreateRequest).toString(), "invalid")
 
-        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+        val result = connector.submitReturn(returnsCreateRequest, vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Parsing failed for VPD return submission response")
@@ -55,11 +56,11 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
         stubPost(
           submitReturnUrl,
           BAD_REQUEST,
-          Json.toJson(returnCreateRequestRegular).toString(),
+          Json.toJson(returnsCreateRequest).toString(),
           ""
         )
 
-        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+        val result = connector.submitReturn(returnsCreateRequest, vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to submit VPD return")
@@ -71,11 +72,11 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
         stubPost(
           submitReturnUrl,
           UNPROCESSABLE_ENTITY,
-          Json.toJson(returnCreateRequestRegular).toString(),
+          Json.toJson(returnsCreateRequest).toString(),
           ""
         )
 
-        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+        val result = connector.submitReturn(returnsCreateRequest, vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to submit VPD return")
@@ -87,11 +88,11 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
         stubPost(
           submitReturnUrl,
           INTERNAL_SERVER_ERROR,
-          Json.toJson(returnCreateRequestRegular).toString(),
+          Json.toJson(returnsCreateRequest).toString(),
           ""
         )
 
-        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+        val result = connector.submitReturn(returnsCreateRequest, vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to submit VPD return")
@@ -102,10 +103,11 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
       "fail with InternalServerException when a network fault occurs" in new SetUp {
         stubPostFault(
           submitReturnUrl,
-          Json.toJson(returnCreateRequestRegular).toString()
+          Json.toJson(returnsCreateRequest).toString(),
+          Fault.EMPTY_RESPONSE
         )
 
-        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+        val result = connector.submitReturn(returnsCreateRequest, vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to submit VPD return")
