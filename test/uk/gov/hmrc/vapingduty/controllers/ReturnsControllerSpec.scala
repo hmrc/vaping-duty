@@ -50,24 +50,25 @@ class ReturnsControllerSpec extends SpecBase {
     }
 
     "return 200 OK when the connector successfully submits nil return" in {
-      val nilReturn = returnCreateResponseSuccess.success.copy(
-        submissionID = None,
-        chargeReference = None,
-        amount = BigDecimal("0.0"),
-        paymentDueDate = None,
-      )
-      val nilRequest = returnsCreateRequest.copy(
+      val nilRequestBody = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
           nilReturn = Seq(nilReturnNoProducts),
           regularReturn = Seq.empty
         ),
         totalDutyDue = totalDutyDueNil
       )
+      
+      val nilReturn = returnCreateResponseSuccess.success.copy(
+        submissionID = None,
+        chargeReference = None,
+        amount = BigDecimal("0.0"),
+        paymentDueDate = None,
+      )
 
-      when(mockConnector.submitReturn(eqTo(nilRequest), eqTo(vpdId))(any()))
+      when(mockConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nilRequest)))
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(nilReturn)
