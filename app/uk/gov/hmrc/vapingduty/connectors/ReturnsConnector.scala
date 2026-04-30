@@ -38,6 +38,8 @@ class ReturnsConnector @Inject()(
     extends HttpReadsInstances
     with Logging {
 
+  private val parsingError = "Parsing failed for VPD return submission response"
+
   def submitReturn(returnRequest: ReturnCreateRequest, vpdId: VpdId)
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
@@ -60,8 +62,8 @@ class ReturnsConnector @Inject()(
           case Success(createResponse) =>
             Future.successful(createResponse.success)
           case Failure(_) =>
-            logger.warn("Parsing failed for VPD return submission response")
-            Future.failed(InternalServerException("Failed to submit VPD return"))
+            logger.warn(parsingError)
+            Future.failed(InternalServerException(parsingError))
         }
       case Left(error) =>
         logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode}")

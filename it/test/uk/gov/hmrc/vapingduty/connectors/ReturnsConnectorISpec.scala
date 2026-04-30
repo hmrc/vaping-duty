@@ -46,7 +46,7 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
         val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Failed to submit VPD return")
+          assertExceptionMessage(exception, "Parsing failed for VPD return submission response")
           verifyPost(submitReturnUrl)
         }
       }

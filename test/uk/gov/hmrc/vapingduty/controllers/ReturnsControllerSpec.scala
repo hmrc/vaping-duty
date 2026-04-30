@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import play.api.http.Status.*
 import play.api.libs.json.Json
-import play.api.test.Helpers.{contentAsJson, contentAsString, defaultAwaitTimeout, status}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.ReturnsConnector

@@ -21,7 +21,6 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.vapingduty.config.AppConfig
@@ -45,7 +44,6 @@ trait ConnectorTestHelpers extends HttpClientV2Support with WireMockHelper with 
     val appWithHttpClientV2: Application = new GuiceApplicationBuilder()
       .configure(getWireMockAppConfig(Seq(endpointName)))
       .overrides(
-        bind[HttpClientV2].toInstance(httpClientV2),
         bind[Clock].toInstance(clock)
       )
       .build()
