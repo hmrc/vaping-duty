@@ -56,7 +56,7 @@ trait WireMockHelper extends WireMockSupport {
       WireMock.get(urlEqualTo(stripToPath(url))).willReturn(aResponse().withStatus(status).withBody(body))
     )
 
-  def stubGetFault(url: String, fault: Fault = Fault.EMPTY_RESPONSE): Unit =
+  def stubGetFault(url: String, fault: Fault): Unit =
     wireMockServer.stubFor(
       WireMock.get(urlEqualTo(stripToPath(url))).willReturn(aResponse().withFault(fault))
     )
@@ -68,7 +68,7 @@ trait WireMockHelper extends WireMockSupport {
         .willReturn(aResponse().withStatus(status).withBody(body))
     )
 
-  def stubGetFaultWithParameters(url: String, parameters: Seq[(String, String)], fault: Fault = Fault.EMPTY_RESPONSE): Unit =
+  def stubGetFaultWithParameters(url: String, parameters: Seq[(String, String)], fault: Fault): Unit =
     wireMockServer.stubFor(
       WireMock
         .get(urlEqualTo(urlWithParameters(url, parameters)))
@@ -83,7 +83,7 @@ trait WireMockHelper extends WireMockSupport {
         .willReturn(aResponse().withStatus(status).withBody(returnBody))
     )
 
-  def stubPostFault(url: String, requestBody: String, fault: Fault = Fault.EMPTY_RESPONSE): Unit =
+  def stubPostFault(url: String, requestBody: String, fault: Fault): Unit =
     wireMockServer.stubFor(
       WireMock
         .post(urlEqualTo(stripToPath(url)))
