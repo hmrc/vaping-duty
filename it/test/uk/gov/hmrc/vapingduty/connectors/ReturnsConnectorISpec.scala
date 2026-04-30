@@ -98,6 +98,20 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
           verifyPost(submitReturnUrl)
         }
       }
+
+      "fail with InternalServerException when a network fault occurs" in new SetUp {
+        stubPostFault(
+          submitReturnUrl,
+          Json.toJson(returnCreateRequestRegular).toString()
+        )
+
+        val result = connector.submitReturn(returnCreateRequestRegular, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to submit VPD return")
+          verifyPost(submitReturnUrl)
+        }
+      }
     }
   }
 

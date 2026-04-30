@@ -45,11 +45,11 @@ class ReturnsConnector @Inject()(
       .setHeader(headers.createReturnHeaders(vpdId): _*)
       .withBody(Json.toJson(returnRequest))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
-      .flatMap(response => submitReturnParser(response))
-      .recoverWith { case _: Exception =>
-        logger.warn("An exception was returned while trying to submit VPD return")
+      .recoverWith { case e: Exception =>
+        logger.warn(s"Exception while submitting VPD return: ${e.getMessage}")
         Future.failed(InternalServerException("Failed to submit VPD return"))
       }
+      .flatMap(response => submitReturnParser(response))
 
   private def submitReturnParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ReturnSubmittedResponse] = {
     response match {

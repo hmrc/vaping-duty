@@ -36,10 +36,10 @@ class ReturnsController @Inject()(
 
   def submitReturn(vpdId: VpdId): Action[JsValue] =
     authorise(parse.json).async { implicit request =>
-      withJsonBody[ReturnCreateRequest] { VPDReturnSubmission =>
-        connector.submitReturn(VPDReturnSubmission, vpdId)
+      withJsonBody[ReturnCreateRequest] { returnSubmission =>
+        connector.submitReturn(returnSubmission, vpdId)
           .map(successResponse => Ok(Json.toJson(successResponse)))
-          .recover(errorResponse => InternalServerError(errorResponse.getMessage))
+          .recover(errorResponse => InternalServerError)
         
       }
     }

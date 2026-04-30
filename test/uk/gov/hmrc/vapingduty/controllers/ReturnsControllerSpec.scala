@@ -59,14 +59,12 @@ class ReturnsControllerSpec extends SpecBase {
     }
 
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
-      val errorMessage = "Failed to submit VPD return"
       when(mockConnector.submitReturn(eqTo(returnCreateRequestRegular), eqTo(vpdId))(any()))
-        .thenReturn(Future.failed(InternalServerException(errorMessage)))
+        .thenReturn(Future.failed(InternalServerException("")))
 
       val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnCreateRequestRegular)))
 
       status(result)          mustBe INTERNAL_SERVER_ERROR
-      contentAsString(result) mustBe errorMessage
     }
   }
 }
