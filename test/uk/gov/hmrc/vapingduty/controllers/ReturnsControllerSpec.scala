@@ -56,7 +56,7 @@ class ReturnsControllerSpec extends SpecBase {
         amount = BigDecimal("0.0"),
         paymentDueDate = None,
       )
-      val nullRequest = returnsCreateRequest.copy(
+      val nilRequest = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
           nilReturn = Seq(nilReturnNoProducts),
           regularReturn = Seq.empty
@@ -64,10 +64,10 @@ class ReturnsControllerSpec extends SpecBase {
         totalDutyDue = totalDutyDueNil
       )
 
-      when(mockConnector.submitReturn(eqTo(nullRequest), eqTo(vpdId))(any()))
+      when(mockConnector.submitReturn(eqTo(nilRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nullRequest)))
+      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nilRequest)))
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(nilReturn)
