@@ -22,17 +22,17 @@ import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.ReturnsHeaders
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
+import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
+import java.time.{Clock, Instant}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class ReturnsConnector @Inject()(
+class ReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: Clock)(
                                       config: AppConfig,
-                                      headers: ReturnsHeaders,
                                       implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
@@ -44,7 +44,7 @@ class ReturnsConnector @Inject()(
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
       .post(url"${config.submitReturnUrl()}")
-      .setHeader(headers.createReturnHeaders(vpdId): _*)
+      .setHeader(createReturnHeaders(vpdId): _*)
       .withBody(Json.toJson(returnRequest))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>
@@ -70,4 +70,15 @@ class ReturnsConnector @Inject()(
         Future.failed(InternalServerException("Failed to submit VPD return"))
     }
   }
+
+  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
+    Seq(
+      ("correlationid", randomUUIDGenerator.uuid),
+      ("X-Message-Type", "VPDReturnCreate"),
+      ("X-Originating-System", "MDTP"),
+      ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
+      ("X-Regime-Type", "VPD"),
+      ("X-Transmitting-System", "HIP"),
+      ("X-ZVPD", vpdId.toString)
+    )
 }
