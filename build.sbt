@@ -14,6 +14,7 @@ lazy val microservice = Project("vaping-duty", file("."))
     // suppress warnings in generated routes files
     scalacOptions += "-Wconf:src=routes/.*:s",
     RoutesKeys.routesImport += "uk.gov.hmrc.vapingduty.models.identifiers.InternalId",
+    RoutesKeys.routesImport += "uk.gov.hmrc.vapingduty.models.identifiers.VpdId",
     PlayKeys.playDefaultPort := 8141
   )
   .settings(CodeCoverageSettings.settings *)

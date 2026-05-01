@@ -22,20 +22,24 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.Duration
 
+@SuppressWarnings(Array("scalafix:DisableSyntax.throw"))
 @Singleton
 class AppConfig @Inject()(
           config: Configuration,
           servicesConfig: ServicesConfig
   ) {
+
+  private[config] def getConfStringAndThrowIfNotFound(key: String) =
+    servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
+    
   val appName: String = config.get[String]("appName")
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
   val enrolmentIdentifierKey: String = config.get[String]("enrolment.identifierKey")
 
-  private val vdStubsHost: String = servicesConfig.baseUrl("vaping-duty-stubs")
-
-  def getStubsUrl(): String = {
-    s"$vdStubsHost/vaping-duty-stubs"
-  }
-
   def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
+
+  private val vpdReturnHost: String = servicesConfig.baseUrl("submit-return")
+  private lazy val vpdReturnUrlPrefix = getConfStringAndThrowIfNotFound("submit-return.url.submitReturn")
+
+  def submitReturnUrl(): String = s"$vpdReturnHost$vpdReturnUrlPrefix"
 }

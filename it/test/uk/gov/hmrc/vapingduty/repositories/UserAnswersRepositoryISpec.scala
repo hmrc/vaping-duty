@@ -19,10 +19,10 @@ package uk.gov.hmrc.vapingduty.repositories
 import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters
 import org.scalactic.source.Position
-import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
+import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.MDC
 import play.api.libs.json.Json
@@ -32,7 +32,7 @@ import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.*
 import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 
-import java.time.temporal.{ChronoUnit, TemporalAmount}
+import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -26,6 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mdc.MdcExecutionContext
+import utils.TestData
 
 import scala.concurrent.ExecutionContext
 
@@ -38,7 +39,8 @@ trait ISpecBase
     with Results
     with GuiceOneAppPerSuite
     with MockitoSugar
-    with IntegrationPatience {
+    with IntegrationPatience 
+    with TestData {
   
   protected def applicationBuilder(): GuiceApplicationBuilder =
     new GuiceApplicationBuilder()

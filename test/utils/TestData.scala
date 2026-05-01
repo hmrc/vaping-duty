@@ -1,0 +1,107 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package utils
+
+import org.scalacheck.Gen
+import play.api.libs.json.{JsObject, Json, OFormat}
+import uk.gov.hmrc.vapingduty.models.*
+import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
+import uk.gov.hmrc.vapingduty.models.returns.*
+
+import java.time.*
+
+trait TestData {
+
+  def vpdIdGen: Gen[String] = Gen.listOfN(7, Gen.numChar).map(id => s"GBWK${id.mkString}WK")
+
+  val clockMillis: Long = 1718118467838L
+  val clock: Clock      = Clock.fixed(Instant.ofEpochMilli(clockMillis), ZoneId.of("UTC"))
+
+  val dummyUUID = "01234567-89ab-cdef-0123-456789abcdef"
+
+  val regime: String           = "ZVPD"
+  val vpdId: VpdId             = VpdId(id = vpdIdGen.sample.get)
+  val internalId: InternalId   = InternalId(id = "internalId")
+
+  case class DownstreamErrorDetails(code: String, message: String, logID: String)
+
+  object DownstreamErrorDetails {
+    implicit val downstreamErrorDetailsWrites: OFormat[DownstreamErrorDetails] = Json.format[DownstreamErrorDetails]
+  }
+
+  val badRequest          = DownstreamErrorDetails("400", "You messed up", "id")
+  val unprocessable       = DownstreamErrorDetails("422", "Unprocessable", "id")
+  val internalServerError = DownstreamErrorDetails("500", "Computer says No!", "id")
+
+  val periodKey = "26AB"
+  val vpdReferenceNumber = "XMVPD0000100021"
+  val submissionId = "SUB123456789"
+  val chargeReference = "CHG987654321"
+
+  val nilReturnNoProducts: NilReturn = NilReturn(
+    vapingProductsProduced = "No"
+  )
+
+  val regularReturn: RegularReturn = RegularReturn(
+    taxType = "641",
+    dutyRate = BigDecimal("2.20"),
+    amountProducedLiquid = BigDecimal("1000.50"),
+    dutyDue = BigDecimal("2201.10")
+  )
+
+  val totalDutyDue: TotalDutyDue = TotalDutyDue(
+    totalDutyDueVapingProducts = BigDecimal("3751.88"),
+    totalDutyOverDeclaration = BigDecimal("100.00"),
+    totalDutyUnderDeclaration = BigDecimal("50.00"),
+    totalDutySpoiltProduct = BigDecimal("25.00"),
+    adjustmentAmount = BigDecimal("-75.00"),
+    totalDutyDue = BigDecimal("3676.88")
+  )
+
+  val totalDutyDueNil: TotalDutyDue = TotalDutyDue(
+    totalDutyDueVapingProducts = BigDecimal("0.00"),
+    totalDutyOverDeclaration = BigDecimal("0.00"),
+    totalDutyUnderDeclaration = BigDecimal("0.00"),
+    totalDutySpoiltProduct = BigDecimal("0.00"),
+    adjustmentAmount = BigDecimal("0.00"),
+    totalDutyDue = BigDecimal("0.00")
+  )
+
+  val vapingProductsProducedRegular: VapingProductsProduced = VapingProductsProduced(
+    nilReturn = Seq.empty,
+    regularReturn = Seq(regularReturn)
+  )
+
+  val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
+    periodKey = periodKey,
+    vapingProductsProduced = vapingProductsProducedRegular,
+    totalDutyDue = totalDutyDue
+  )
+
+  val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
+    processingDate = Instant.now(clock),
+    vpdReferenceNumber = vpdReferenceNumber,
+    submissionID = Some(submissionId),
+    chargeReference = Some(chargeReference),
+    amount = BigDecimal("3676.88"),
+    paymentDueDate = Some(LocalDate.of(2026, 6, 30))
+  )
+
+  val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(
+    success = returnSubmittedResponse
+  )
+}
