@@ -36,6 +36,8 @@ class ObligationsConnector @Inject()(
   extends HttpReadsInstances
     with Logging {
 
+  private val parsingError = "Unable to parse obligations response"
+  
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] =
     httpClient
       .get(url"${config.getObligationsUrl(vpdId)}")
@@ -56,8 +58,8 @@ class ObligationsConnector @Inject()(
           case Success(obligations) =>
             Future.successful(obligations)
           case Failure(_) =>
-            logger.warn("Unable to parse obligations response")
-            Future.failed(InternalServerException("Failed to get obligations"))
+            logger.warn(parsingError)
+            Future.failed(InternalServerException(parsingError))
         }
       case Left(error) =>
         logger.warn(s"Unexpected response from obligations API. Status: ${error.statusCode}")

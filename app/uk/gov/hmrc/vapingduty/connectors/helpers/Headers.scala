@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.vapingduty.connectors.helpers
 
-import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
 import java.time.{Clock, Instant}
