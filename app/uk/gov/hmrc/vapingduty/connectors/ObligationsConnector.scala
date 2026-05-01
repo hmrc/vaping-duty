@@ -20,17 +20,19 @@ import play.api.Logging
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.Headers
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
+import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
+import java.time.{Clock, Instant}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class ObligationsConnector @Inject()(
                                       config: AppConfig,
-                                      headers: Headers,
+                                      randomUUIDGenerator: RandomUUIDGenerator,
+                                      clock: Clock,
                                       implicit val httpClient: HttpClientV2
                                     )(using ExecutionContext)
   extends HttpReadsInstances
@@ -41,7 +43,7 @@ class ObligationsConnector @Inject()(
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] =
     httpClient
       .get(url"${config.getObligationsUrl(vpdId)}")
-      .setHeader(headers.createObligationsHeaders: _*)
+      .setHeader(createObligationHeaders: _*)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .flatMap(response => responseParser(response))
       .recoverWith { case _: Exception =>
@@ -66,4 +68,14 @@ class ObligationsConnector @Inject()(
         Future.failed(InternalServerException("Failed to get obligations"))
     }
   }
+
+  private def createObligationHeaders: Seq[(String, String)] =
+    Seq(
+      ("correlationid", randomUUIDGenerator.uuid),
+      ("X-Message-Type", "GetObligations"),
+      ("X-Originating-System", "MDTP"),
+      ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
+      ("X-Regime", "VPD"),
+      ("X-Transmitting-System", "HIP")
+    )
 }

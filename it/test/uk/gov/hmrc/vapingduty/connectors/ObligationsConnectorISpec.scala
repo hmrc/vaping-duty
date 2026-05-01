@@ -22,22 +22,19 @@ import play.api.Application
 import play.api.http.Status.*
 import play.api.libs.json.Json
 import uk.gov.hmrc.vapingduty.base.ISpecBase
-import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.WireMockHelper
 
 class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
 
   override def fakeApplication(): Application = {
-    applicationBuilder().configure("microservice.services.obligations.port" -> server.port()).build()
+    applicationBuilder().configure("microservice.services.obligations.port" -> wireMockServer.port()).build()
   }
-
-  val vpdId = VpdId(id = "vpdId")
 
   "ObligationsConnector" - {
     "get" - {
-      "must successfully ping the vaping duty stubs service" in new Setup {
-        server.stubFor(
+      "must successfully get obligations" in new Setup {
+        wireMockServer.stubFor(
           get(urlMatching(url))
             .willReturn(
               aResponse().withBody(Json.toJson(ObligationsResponse(Seq.empty)).toString)
@@ -50,7 +47,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
       }
 
       "must fail when authorisation fails" in new Setup {
-        server.stubFor(
+        wireMockServer.stubFor(
           get(urlMatching(url))
             .willReturn(
               aResponse()
@@ -64,7 +61,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
       }
 
       "must fail when an unexpected status code is returned" in new Setup {
-        server.stubFor(
+        wireMockServer.stubFor(
           get(urlMatching(url))
             .willReturn(
               aResponse()
@@ -78,7 +75,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
       }
 
       "must fail with an Exception when an internal server error status code is returned" in new Setup {
-        server.stubFor(
+        wireMockServer.stubFor(
           get(urlMatching(url))
             .willReturn(
               aResponse()
@@ -95,7 +92,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
   }
 
   class Setup {
-    val connector = app.injector.instanceOf[ObligationsConnector]
-    val url = s"/etmp/RESTAdapter/cross-regime/taxpayer-obligations\\?displayRequest=A&referenceNumber=vpdId&referenceType=ZVPD"
+    val connector: ObligationsConnector = app.injector.instanceOf[ObligationsConnector]
+    val url = s"/etmp/RESTAdapter/cross-regime/taxpayer-obligations\\?displayRequest=A&referenceNumber=$vpdId&referenceType=ZVPD"
   }
 }
