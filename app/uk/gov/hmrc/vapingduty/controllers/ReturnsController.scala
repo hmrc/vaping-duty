@@ -20,8 +20,10 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.vapingduty.connectors.ReturnsConnector
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.ReturnCreateRequest
@@ -29,18 +31,29 @@ import uk.gov.hmrc.vapingduty.models.returns.ReturnCreateRequest
 import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject()(
-                                      cc: ControllerComponents,
-                                      connector: ReturnsConnector,
-                                      authorise: AuthorisedAction
-)(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+                                   cc: ControllerComponents,
+                                   submitConnector: SubmitReturnsConnector,
+                                   getConnector: GetReturnsConnector,
+                                   authorise: AuthorisedAction
+                                 )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def submitReturn(vpdId: VpdId): Action[JsValue] =
+  def getReturn(periodKey: String, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
+    given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
+
+    getConnector.getReturn(periodKey, vpdId)
+      .map(returns => Ok(Json.toJson(returns)))
+      .recover { _ => InternalServerError("There was an issue retrieving returns data") }
+
+  }
+  
+  def submitReturn(vpdId: VpdId): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
       withJsonBody[ReturnCreateRequest] { returnSubmission =>
-        connector.submitReturn(returnSubmission, vpdId)
+        submitConnector.submitReturn(returnSubmission, vpdId)
           .map(successResponse => Ok(Json.toJson(successResponse)))
           .recover(errorResponse => InternalServerError)
-        
+
       }
     }
+  }
 }

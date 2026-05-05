@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
-class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
+class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
   protected val endpointName = "submit-return"
 
   "ReturnsConnector when" - {
@@ -127,7 +127,7 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
   }
 
   abstract class SetUp extends ConnectorFixture {
-    val connector       = app.injector.instanceOf[ReturnsConnector]
+    val connector       = app.injector.instanceOf[SubmitReturnsConnector]
     val submitReturnUrl = config.submitReturnUrl()
   }
 }

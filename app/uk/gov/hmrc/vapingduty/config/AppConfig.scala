@@ -51,4 +51,5 @@ class AppConfig @Inject()(
   private lazy val vpdReturnUrlPrefix = getConfStringAndThrowIfNotFound("submit-return.url.submitReturn")
 
   def submitReturnUrl(): String = s"$vpdReturnHost$vpdReturnUrlPrefix"
+  def getReturnUrl(vpdReference: VpdId, periodKey: String): String = s"$vpdReturnHost$vpdReturnUrlPrefix/$vpdReference/$periodKey"
 }
