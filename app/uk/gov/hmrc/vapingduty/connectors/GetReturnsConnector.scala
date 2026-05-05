@@ -43,7 +43,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
   def getReturn(periodKey: String, vpdId: VpdId)
                   (implicit hc: HeaderCarrier): Future[VapingProductsProduced] =
     httpClient
-      .get(url"${config.getReturnUrl(vpdId, "periodKey")}")
+      .get(url"${config.getReturnUrl(vpdId, periodKey)}")
       .setHeader(createReturnHeaders(vpdId): _*)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>

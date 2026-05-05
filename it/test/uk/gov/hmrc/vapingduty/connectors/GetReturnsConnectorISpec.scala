@@ -26,7 +26,7 @@ import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
 class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
-  protected val endpointName = "getReturns"
+  protected val endpointName = "submit-return"
 
   "GetReturnsConnector when" - {
     "getReturns is called must" - {
@@ -37,80 +37,80 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
           Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
         )
         whenReady(connector.getReturn(periodKey, vpdId)) { result =>
-          result mustBe ObligationsResponse(Seq.empty)
+          result mustBe VapingProductsProduced(Seq.empty, Seq.empty)
           verifyGet(url)
         }
       }
 
-//      "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
-//        stubGet(url, OK, Json.toJson("invalid").toString)
-//
-//        val result = connector.getReturn(periodKey, vpdId)
-//
-//        whenReady(result.failed) { exception =>
-//          assertExceptionMessage(exception, "Unable to parse returns response")
-//          verifyGet(url)
-//        }
-//      }
-//
-//      "fail with InternalServerException if the call returns a 400 response" in new SetUp {
-//        stubGet(
-//          url,
-//          BAD_REQUEST,
-//          Json.toJson(ObligationsResponse(Seq.empty)).toString(),
-//        )
-//
-//        val result = connector.getObligations(vpdId)
-//
-//        whenReady(result.failed) { exception =>
-//          assertExceptionMessage(exception, "Failed to get obligations")
-//          verifyGet(url)
-//        }
-//      }
-//
-//      "fail with InternalServerException if the call returns a 422 response" in new SetUp {
-//        stubGet(
-//          url,
-//          UNPROCESSABLE_ENTITY,
-//          Json.toJson(ObligationsResponse(Seq.empty)).toString()
-//        )
-//
-//        val result = connector.getObligations(vpdId)
-//
-//        whenReady(result.failed) { exception =>
-//          assertExceptionMessage(exception, "Failed to get obligations")
-//          verifyGet(url)
-//        }
-//      }
-//
-//      "fail with InternalServerException if the call returns a 500 response" in new SetUp {
-//        stubGet(
-//          url,
-//          INTERNAL_SERVER_ERROR,
-//          Json.toJson(ObligationsResponse(Seq.empty)).toString()
-//        )
-//
-//        val result = connector.getObligations(vpdId)
-//
-//        whenReady(result.failed) { exception =>
-//          assertExceptionMessage(exception, "Failed to get obligations")
-//          verifyGet(url)
-//        }
-//      }
-//
-//      "fail with InternalServerException when a network fault occurs" in new SetUp {
-//        stubGetFault(
-//          url,
-//          Fault.EMPTY_RESPONSE
-//        )
-//
-//        val result = connector.getObligations(vpdId)
-//
-//        whenReady(result.failed) { exception =>
-//          assertExceptionMessage(exception, "Failed to get obligations")
-//          verifyGet(url)
-//        }
-//      }
+      "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
+        stubGet(url, OK, Json.toJson("invalid").toString)
+
+        val result = connector.getReturn(periodKey, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Parsing failed for VPD return get response")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException if the call returns a 400 response" in new SetUp {
+        stubGet(
+          url,
+          BAD_REQUEST,
+          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString(),
+        )
+
+        val result = connector.getReturn(periodKey, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException if the call returns a 422 response" in new SetUp {
+        stubGet(
+          url,
+          UNPROCESSABLE_ENTITY,
+          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
+        )
+
+        val result = connector.getReturn(periodKey, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException if the call returns a 500 response" in new SetUp {
+        stubGet(
+          url,
+          INTERNAL_SERVER_ERROR,
+          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
+        )
+
+        val result = connector.getReturn(periodKey, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException when a network fault occurs" in new SetUp {
+        stubGetFault(
+          url,
+          Fault.EMPTY_RESPONSE
+        )
+
+        val result = connector.getReturn(periodKey, vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get return")
+          verifyGet(url)
+        }
+      }
     }
   }
 
@@ -125,6 +125,6 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
 
   abstract class SetUp extends ConnectorFixture {
     val connector       = app.injector.instanceOf[GetReturnsConnector]
-    val url             = config.getObligationsUrl(vpdId)
+    val url             = config.getReturnUrl(vpdId, periodKey)
   }
 }
