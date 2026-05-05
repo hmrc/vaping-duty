@@ -5,4 +5,5 @@ GET          /user-answers/:internalId                uk.gov.hmrc.vapingduty.con
 DELETE       /user-answers/clear/:internalId          uk.gov.hmrc.vapingduty.controllers.UserAnswersController.clear(internalId: InternalId)
 POST         /user-answers/keep-alive/:internalId     uk.gov.hmrc.vapingduty.controllers.UserAnswersController.keepAlive(internalId: InternalId)
 
+GET          /obligations/:vpdId                             uk.gov.hmrc.vapingduty.controllers.ObligationsController.get(vpdId: VpdId)
 POST         /vpd-return/:vpdId                       uk.gov.hmrc.vapingduty.controllers.ReturnsController.submitReturn(vpdId: VpdId)

@@ -19,6 +19,7 @@ package uk.gov.hmrc.vapingduty.config
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 
 import scala.concurrent.duration.Duration
 
@@ -31,10 +32,18 @@ class AppConfig @Inject()(
 
   private[config] def getConfStringAndThrowIfNotFound(key: String) =
     servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
-    
+
   val appName: String = config.get[String]("appName")
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
   val enrolmentIdentifierKey: String = config.get[String]("enrolment.identifierKey")
+
+  private val obligationsHost: String = servicesConfig.baseUrl("obligations")
+  private val obligationsUrl: String = config.get[String]("microservice.services.obligations.url")
+  private val allObligations = "A"
+  private def obligationsQueryString(vpdId: VpdId) =
+    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=$enrolmentIdentifierKey"
+
+  def getObligationsUrl(vpdId: VpdId): String = s"$obligationsHost$obligationsUrl${obligationsQueryString(vpdId)}"
 
   def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
 
