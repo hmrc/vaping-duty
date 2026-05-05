@@ -45,11 +45,11 @@ class ObligationsConnector @Inject()(
       .get(url"${config.getObligationsUrl(vpdId)}")
       .setHeader(createObligationHeaders: _*)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
-      .flatMap(response => responseParser(response))
       .recoverWith { case _: Exception =>
         logger.warn("An exception was returned while trying to fetch obligations")
         Future.failed(InternalServerException("Failed to get obligations"))
       }
+      .flatMap(response => responseParser(response))
 
   private def responseParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ObligationsResponse] = {
     response match {

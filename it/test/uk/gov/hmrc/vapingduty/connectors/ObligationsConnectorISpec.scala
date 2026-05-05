@@ -16,83 +16,114 @@
 
 package uk.gov.hmrc.vapingduty.connectors
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlMatching}
-import org.scalatest.freespec.AnyFreeSpec
-import play.api.Application
-import play.api.http.Status.*
+import com.github.tomakehurst.wiremock.http.Fault
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
-import uk.gov.hmrc.vapingduty.utils.WireMockHelper
+import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
-class ObligationsConnectorISpec extends ISpecBase with WireMockHelper {
+class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
+  protected val endpointName = "obligations"
 
-  override def fakeApplication(): Application = {
-    applicationBuilder().configure("microservice.services.obligations.port" -> wireMockServer.port()).build()
-  }
-
-  "ObligationsConnector" - {
-    "get" - {
-      "must successfully get obligations" in new Setup {
-        wireMockServer.stubFor(
-          get(urlMatching(url))
-            .willReturn(
-              aResponse().withBody(Json.toJson(ObligationsResponse(Seq.empty)).toString)
-            )
+  "ObligationsConnector when" - {
+    "getObligations is called must" - {
+      "successfully get obligations" in new SetUp {
+        stubGet(
+          url,
+          OK,
+          Json.toJson(ObligationsResponse(Seq.empty)).toString()
         )
-
         whenReady(connector.getObligations(vpdId)) { result =>
           result mustBe ObligationsResponse(Seq.empty)
+          verifyGet(url)
         }
       }
 
-      "must fail when authorisation fails" in new Setup {
-        wireMockServer.stubFor(
-          get(urlMatching(url))
-            .willReturn(
-              aResponse()
-                .withStatus(UNAUTHORIZED)
-            )
-        )
+      "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
+        stubGet(url, OK, Json.toJson("invalid").toString)
 
-        whenReady(connector.getObligations(vpdId).failed) { e =>
-          e.getMessage must include("Failed to get obligations")
+        val result = connector.getObligations(vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Unable to parse obligations response")
+          verifyGet(url)
         }
       }
 
-      "must fail when an unexpected status code is returned" in new Setup {
-        wireMockServer.stubFor(
-          get(urlMatching(url))
-            .willReturn(
-              aResponse()
-                .withStatus(CREATED)
-            )
+      "fail with InternalServerException if the call returns a 400 response" in new SetUp {
+        stubGet(
+          url,
+          BAD_REQUEST,
+          Json.toJson(ObligationsResponse(Seq.empty)).toString(),
         )
 
-        whenReady(connector.getObligations(vpdId).failed) { e =>
-          e.getMessage must include("Failed to get obligations")
+        val result = connector.getObligations(vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get obligations")
+          verifyGet(url)
         }
       }
 
-      "must fail with an Exception when an internal server error status code is returned" in new Setup {
-        wireMockServer.stubFor(
-          get(urlMatching(url))
-            .willReturn(
-              aResponse()
-                .withStatus(INTERNAL_SERVER_ERROR)
-                .withStatusMessage("<test error message>")
-            )
+      "fail with InternalServerException if the call returns a 422 response" in new SetUp {
+        stubGet(
+          url,
+          UNPROCESSABLE_ENTITY,
+          Json.toJson(ObligationsResponse(Seq.empty)).toString()
         )
 
-        whenReady(connector.getObligations(vpdId).failed) { e =>
-          e.getMessage must include("Failed to get obligations")
+        val result = connector.getObligations(vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get obligations")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException if the call returns a 500 response" in new SetUp {
+        stubGet(
+          url,
+          INTERNAL_SERVER_ERROR,
+          Json.toJson(ObligationsResponse(Seq.empty)).toString()
+        )
+
+        val result = connector.getObligations(vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get obligations")
+          verifyGet(url)
+        }
+      }
+
+      "fail with InternalServerException when a network fault occurs" in new SetUp {
+        stubGetFault(
+          url,
+          Fault.EMPTY_RESPONSE
+        )
+
+        val result = connector.getObligations(vpdId)
+
+        whenReady(result.failed) { exception =>
+          assertExceptionMessage(exception, "Failed to get obligations")
+          verifyGet(url)
         }
       }
     }
   }
 
-  class Setup {
-    val connector: ObligationsConnector = app.injector.instanceOf[ObligationsConnector]
-    val url = s"/etmp/RESTAdapter/cross-regime/taxpayer-obligations\\?displayRequest=A&referenceNumber=$vpdId&referenceType=ZVPD"
+  private def assertExceptionMessage(exception: Throwable, expectedMessage: String) = {
+    exception match {
+      case ex: InternalServerException =>
+        ex.getMessage must include(expectedMessage)
+      case _ =>
+        fail(s"Expected an InternalServerException but got ${exception.getClass.getSimpleName}")
+    }
+  }
+
+  abstract class SetUp extends ConnectorFixture {
+    val connector       = app.injector.instanceOf[ObligationsConnector]
+    val url             = config.getObligationsUrl(vpdId)
   }
 }
