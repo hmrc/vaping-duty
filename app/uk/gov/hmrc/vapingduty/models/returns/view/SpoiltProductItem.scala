@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.returns
+package uk.gov.hmrc.vapingduty.models.returns.view
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.{Instant, LocalDate}
-
-case class ReturnSubmittedResponse(
-  processingDate: Instant,
-  vpdReferenceNumber: String,
-  submissionID: Option[String],
-  chargeReference: Option[String],
-  amount: BigDecimal,
-  paymentDueDate: Option[LocalDate]
+final case class SpoiltProductItem(
+  returnPeriodAffected: String,
+  taxType: String,
+  dutyRate: BigDecimal,
+  amountSpoilt: BigDecimal,
+  dutyDue: BigDecimal
 )
 
-object ReturnSubmittedResponse {
-  given OFormat[ReturnSubmittedResponse] = Json.format[ReturnSubmittedResponse]
+object SpoiltProductItem {
+  given OFormat[SpoiltProductItem] = Json.format[SpoiltProductItem]
 }

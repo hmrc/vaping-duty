@@ -21,6 +21,8 @@ import play.api.libs.json.{JsObject, Json, OFormat}
 import uk.gov.hmrc.vapingduty.models.*
 import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.*
+import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
+import uk.gov.hmrc.vapingduty.models.returns.view.*
 
 import java.time.*
 
@@ -103,5 +105,87 @@ trait TestData {
 
   val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(
     success = returnSubmittedResponse
+  )
+
+  // GET endpoint test data
+  val idDetails: IdDetails = IdDetails(
+    vpdReference = vpdReferenceNumber,
+    submissionId = Some(submissionId)
+  )
+
+  val chargeDetails: ChargeDetails = ChargeDetails(
+    periodKey = periodKey,
+    chargeReference = Some(chargeReference),
+    periodFrom = LocalDate.of(2026, 6, 1),
+    periodTo = LocalDate.of(2026, 6, 30),
+    receiptDate = Instant.now(clock)
+  )
+
+  val overDeclarationProduct: OverDeclarationProduct = OverDeclarationProduct(
+    returnPeriodAffected = "26AA",
+    taxType = "641",
+    dutyRate = BigDecimal("2.20"),
+    amountOverDeclaration = BigDecimal("50.00"),
+    dutyDue = BigDecimal("110.00")
+  )
+
+  val overDeclaration: OverDeclaration = OverDeclaration(
+    overDeclFilled = "1",
+    reasonForOverDecl = Some("Correction needed"),
+    overDeclarationProducts = Some(Seq(overDeclarationProduct))
+  )
+
+  val underDeclarationProduct: UnderDeclarationProduct = UnderDeclarationProduct(
+    returnPeriodAffected = "26AA",
+    taxType = "641",
+    dutyRate = BigDecimal("2.20"),
+    amountUnderDeclaration = BigDecimal("25.00"),
+    dutyDue = BigDecimal("55.00")
+  )
+
+  val underDeclaration: UnderDeclaration = UnderDeclaration(
+    underDeclFilled = "1",
+    reasonForUnderDec = Some("Additional products found"),
+    underDeclarationProducts = Some(Seq(underDeclarationProduct))
+  )
+
+  val spoiltProductItem: SpoiltProductItem = SpoiltProductItem(
+    returnPeriodAffected = "26AA",
+    taxType = "641",
+    dutyRate = BigDecimal("2.20"),
+    amountSpoilt = BigDecimal("10.00"),
+    dutyDue = BigDecimal("-22.00")
+  )
+
+  val spoiltProduct: SpoiltProduct = SpoiltProduct(
+    spoiltProductFilled = "1",
+    spoiltProducts = Some(Seq(spoiltProductItem))
+  )
+
+  val otherOptions: OtherOptions = OtherOptions(
+    otherOptions = "1",
+    vapingProdManufactured = Some("01"),
+    otherVapingProduct = Some("1"),
+    destroyed = Some(BigDecimal("5.00")),
+    imported = Some(BigDecimal("100.00")),
+    exported = Some(BigDecimal("50.00")),
+    amtRecieved = Some(BigDecimal("200.00"))
+  )
+
+  val returnDisplaySuccess: ReturnDisplaySuccess = ReturnDisplaySuccess(
+    processingDate = Instant.now(clock),
+    idDetails = Some(idDetails),
+    chargeDetails = Some(chargeDetails),
+    vapingProductsProduced = Some(vapingProductsProducedRegular),
+    overDeclaration = Some(overDeclaration),
+    underDeclaration = Some(underDeclaration),
+    spoiltProduct = Some(spoiltProduct),
+    totalDutyDue = Some(totalDutyDue),
+    totalDutyDueByTaxType = Some(totalDutyDue),
+    otherOptions = Some(otherOptions)
+  )
+
+  val returnDisplayResponse: ReturnDisplayResponse = ReturnDisplayResponse(
+    success = returnDisplaySuccess
   )
 }
