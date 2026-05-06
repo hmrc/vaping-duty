@@ -34,10 +34,10 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
         stubGet(
           url,
           OK,
-          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
+          Json.toJson(returnDisplayResponse).toString()
         )
         whenReady(connector.getReturn(periodKey, vpdId)) { result =>
-          result mustBe VapingProductsProduced(Seq.empty, Seq.empty)
+          result mustBe returnDisplayResponse
           verifyGet(url)
         }
       }
@@ -57,7 +57,7 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
         stubGet(
           url,
           BAD_REQUEST,
-          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString(),
+          Json.toJson(returnDisplayResponse).toString(),
         )
 
         val result = connector.getReturn(periodKey, vpdId)
@@ -72,7 +72,7 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
         stubGet(
           url,
           UNPROCESSABLE_ENTITY,
-          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
+          Json.toJson(returnDisplayResponse).toString()
         )
 
         val result = connector.getReturn(periodKey, vpdId)
@@ -87,7 +87,7 @@ class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connec
         stubGet(
           url,
           INTERNAL_SERVER_ERROR,
-          Json.toJson(VapingProductsProduced(Seq.empty, Seq.empty)).toString()
+          Json.toJson(returnDisplayResponse).toString()
         )
 
         val result = connector.getReturn(periodKey, vpdId)

@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
-import uk.gov.hmrc.vapingduty.models.returns.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
+import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
 import java.time.{Clock, Instant}

@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
-import uk.gov.hmrc.vapingduty.models.returns.ReturnCreateRequest
+import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
 
 import scala.concurrent.ExecutionContext
 

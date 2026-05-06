@@ -88,12 +88,12 @@ class ReturnsControllerSpec extends SpecBase {
   "GetReturns must" - {
     "return 200 OK when the connector successfully gets returns" in {
       when(mockGetConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))
-        .thenReturn(Future.successful(vapingProductsProducedRegular))
+        .thenReturn(Future.successful(returnDisplayResponse))
 
       val result = controller.getReturn(periodKey, vpdId)(fakeRequest)
 
       status(result)        mustBe OK
-      contentAsJson(result) mustBe Json.toJson(vapingProductsProducedRegular)
+      contentAsJson(result) mustBe Json.toJson(returnDisplayResponse)
     }
 
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {

@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
-import uk.gov.hmrc.vapingduty.models.returns.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse, VapingProductsProduced}
+import uk.gov.hmrc.vapingduty.models.returns.view.ReturnDisplayResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
 import java.time.{Clock, Instant}
@@ -41,7 +41,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
   private val parsingError = "Parsing failed for VPD return get response"
 
   def getReturn(periodKey: String, vpdId: VpdId)
-                  (implicit hc: HeaderCarrier): Future[VapingProductsProduced] =
+                  (implicit hc: HeaderCarrier): Future[ReturnDisplayResponse] =
     httpClient
       .get(url"${config.getReturnUrl(vpdId, periodKey)}")
       .setHeader(createReturnHeaders(vpdId): _*)
@@ -52,11 +52,11 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
       }
       .flatMap(response => getReturnParser(response))
 
-  private def getReturnParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[VapingProductsProduced] = {
+  private def getReturnParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ReturnDisplayResponse] = {
     response match {
       case Right(response) =>
         Try {
-          response.json.as[VapingProductsProduced]
+          response.json.as[ReturnDisplayResponse]
         } match {
           case Success(getResponse) =>
             Future.successful(getResponse)
