@@ -27,7 +27,7 @@ class UserAnswersSpec extends SpecBase {
   private val internalId: InternalId = InternalId("Int-4435-242342-dsfsdf-5345")
 
   private val returnsUserAnswers = UserAnswers(
-    id = internalId.toString,
+    vpdId = internalId.toString,
     startedTime = Instant.parse("2026-04-16T13:22:11.503Z"),
     lastUpdated = Instant.parse("2026-04-16T13:22:11.503Z")
   )

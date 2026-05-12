@@ -46,7 +46,7 @@ class ReturnsController @Inject()(
 
   }
   
-  def submitReturn(vpdId: VpdId): Action[JsValue] = {
+  def submitReturn(vpdId: VpdId, periodKey: String): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
       withJsonBody[ReturnCreateRequest] { returnSubmission =>
         submitConnector.submitReturn(returnSubmission, vpdId)

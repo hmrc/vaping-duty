@@ -63,7 +63,7 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
-  override def beforeEach(): Unit = repository.clear(userAnswers.id)
+  override def beforeEach(): Unit = repository.clear(userAnswers.vpdId)
 
   ".set" - {
 
@@ -126,7 +126,7 @@ class UserAnswersRepositoryISpec
       }
     }
 
-    mustPreserveMdc(repository.get(InternalId(userAnswers.id)))
+    mustPreserveMdc(repository.get(InternalId(userAnswers.vpdId)))
   }
 
   ".clear" - {
@@ -135,7 +135,7 @@ class UserAnswersRepositoryISpec
 
       insert(userAnswers).futureValue
 
-      val result = repository.clear(userAnswers.id).futureValue
+      val result = repository.clear(userAnswers.vpdId).futureValue
 
       repository.get(internalId).futureValue must not be defined
 
@@ -148,7 +148,7 @@ class UserAnswersRepositoryISpec
       result mustEqual UpdateFailure
     }
 
-    mustPreserveMdc(repository.clear(userAnswers.id))
+    mustPreserveMdc(repository.clear(userAnswers.vpdId))
   }
 
   ".keepAlive" - {
@@ -163,7 +163,7 @@ class UserAnswersRepositoryISpec
 
         val expectedUpdatedAnswers = userAnswers copy (lastUpdated = instant)
 
-        val updatedAnswers = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
+        val updatedAnswers = find(Filters.equal("_id", userAnswers.vpdId)).futureValue.headOption.value
         updatedAnswers mustEqual expectedUpdatedAnswers
         result mustBe UpdateSuccess
       }

@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
+import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
@@ -34,8 +34,8 @@ class UserAnswersController @Inject()(
                                        authorise: AuthorisedAction
                                      )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def getUserAnswers(internalId: InternalId): Action[AnyContent] = authorise.async { _ =>
-    userAnswersRepository.get(internalId).map {
+  def getUserAnswers(vpdId: VpdId, periodKey: String): Action[AnyContent] = authorise.async { _ =>
+    userAnswersRepository.get(vpdId: VpdId, periodKey: String).map {
       case Some(ua) => Ok(Json.toJson(ua))
       case None     => NotFound
     }
@@ -51,15 +51,15 @@ class UserAnswersController @Inject()(
         case JsError(errors) => Future.successful(BadRequest)
   }
 
-  def clear(internalId: InternalId): Action[AnyContent] = authorise.async {
-    userAnswersRepository.clear(internalId.toString).map {
+  def clear(vpdId: VpdId, periodKey: String): Action[AnyContent] = authorise.async {
+    userAnswersRepository.clear(vpdId, periodKey).map {
       case UpdateSuccess => NoContent
       case UpdateFailure => NotModified
     }
   }
 
-  def keepAlive(internalId: InternalId): Action[AnyContent] = authorise.async {
-    userAnswersRepository.keepAlive(internalId).map {
+  def keepAlive(vpdId: VpdId, periodKey: String): Action[AnyContent] = authorise.async {
+    userAnswersRepository.keepAlive(vpdId, periodKey).map {
       case UpdateSuccess => NoContent
       case UpdateFailure => NotModified
     }

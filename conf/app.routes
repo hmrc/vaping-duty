@@ -1,11 +1,11 @@
 # microservice specific routes
 
-PUT          /user-answers                            uk.gov.hmrc.vapingduty.controllers.UserAnswersController.set()
-GET          /user-answers/:internalId                uk.gov.hmrc.vapingduty.controllers.UserAnswersController.getUserAnswers(internalId: InternalId)
-DELETE       /user-answers/clear/:internalId          uk.gov.hmrc.vapingduty.controllers.UserAnswersController.clear(internalId: InternalId)
-POST         /user-answers/keep-alive/:internalId     uk.gov.hmrc.vapingduty.controllers.UserAnswersController.keepAlive(internalId: InternalId)
+PUT          /user-answers                                  uk.gov.hmrc.vapingduty.controllers.UserAnswersController.set()
+GET          /user-answers/:vpdId/:periodKey                uk.gov.hmrc.vapingduty.controllers.UserAnswersController.getUserAnswers(vpdId: VpdId, periodKey: String)
+DELETE       /user-answers/clear/:vpdId/:periodKey          uk.gov.hmrc.vapingduty.controllers.UserAnswersController.clear(vpdId: VpdId, periodKey: String)
+POST         /user-answers/keep-alive/:vpdId/:periodKey     uk.gov.hmrc.vapingduty.controllers.UserAnswersController.keepAlive(vpdId: VpdId, periodKey: String)
 
-GET          /obligations/:vpdId                      uk.gov.hmrc.vapingduty.controllers.ObligationsController.get(vpdId: VpdId)
+GET          /obligations/:vpdId                            uk.gov.hmrc.vapingduty.controllers.ObligationsController.get(vpdId: VpdId)
 
-POST         /vpd-return/:vpdId                       uk.gov.hmrc.vapingduty.controllers.ReturnsController.submitReturn(vpdId: VpdId)
-GET          /vpd-return/:periodKey/:vpdId            uk.gov.hmrc.vapingduty.controllers.ReturnsController.getReturn(periodKey: String, vpdId: VpdId)
+POST         /vpd-return/:vpdId/:periodKey                  uk.gov.hmrc.vapingduty.controllers.ReturnsController.submitReturn(vpdId: VpdId, periodKey: String)
+GET          /vpd-return/:periodKey/:vpdId                  uk.gov.hmrc.vapingduty.controllers.ReturnsController.getReturn(periodKey: String, vpdId: VpdId)
