@@ -31,7 +31,6 @@ import java.time.Instant
 import scala.concurrent.Future
 
 class UserAnswersControllerSpec extends SpecBase {
-  private val internalId = InternalId("Int-52455-52524353f-34r34r43r")
 
   val mockUserAnswersRepository: UserAnswersRepository = mock[UserAnswersRepository]
 
@@ -42,7 +41,8 @@ class UserAnswersControllerSpec extends SpecBase {
   )
 
   val returnsUserAnswers = UserAnswers(
-    vpdId = internalId.toString,
+    vpdId = vpdId.toString,
+    periodKey = periodKey,
     data = JsObject.empty,
     startedTime = Instant.now(),
     lastUpdated = Instant.now()
@@ -50,22 +50,22 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "getUserAnswers must" - {
     "return 200 OK with an existing user answers when there is one for the id" in {
-      when(mockUserAnswersRepository.get(eqTo(internalId)))
+      when(mockUserAnswersRepository.get(eqTo(vpdId), eqTo(periodKey)))
         .thenReturn(Future.successful(Some(returnsUserAnswers)))
 
       val result: Future[Result] =
-        controller.getUserAnswers(internalId)(fakeRequest)
+        controller.getUserAnswers(vpdId, periodKey)(fakeRequest)
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnsUserAnswers)
     }
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
-      when(mockUserAnswersRepository.get(eqTo(internalId)))
+      when(mockUserAnswersRepository.get(eqTo(vpdId), eqTo(periodKey)))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] =
-        controller.getUserAnswers(internalId)(fakeRequest)
+        controller.getUserAnswers(vpdId, periodKey)(fakeRequest)
 
       status(result) mustBe NOT_FOUND
     }
@@ -108,17 +108,17 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "clear must" - {
     "return 204 NO_CONTENT" in {
-      when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(UpdateSuccess))
+      when(mockUserAnswersRepository.clear(any(), any())).thenReturn(Future.successful(UpdateSuccess))
 
-      val result: Future[Result] = controller.clear(internalId)(FakeRequest())
+      val result: Future[Result] = controller.clear(vpdId, periodKey)(FakeRequest())
 
       status(result) mustBe NO_CONTENT
     }
 
     "return NOT_MODIFIED is no change was made" in {
-      when(mockUserAnswersRepository.clear(any())).thenReturn(Future.successful(UpdateFailure))
+      when(mockUserAnswersRepository.clear(any(), any())).thenReturn(Future.successful(UpdateFailure))
 
-      val result: Future[Result] = controller.clear(internalId)(FakeRequest())
+      val result: Future[Result] = controller.clear(vpdId, periodKey)(FakeRequest())
 
       status(result) mustBe NOT_MODIFIED
     }
@@ -126,17 +126,17 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "keepAlive must" - {
     "return 204 NO_CONTENT when UserRepository is kept alive" in {
-      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(UpdateSuccess))
+      when(mockUserAnswersRepository.keepAlive(any(), any())).thenReturn(Future.successful(UpdateSuccess))
 
-      val result: Future[Result] = controller.keepAlive(internalId)(FakeRequest())
+      val result: Future[Result] = controller.keepAlive(vpdId, periodKey)(FakeRequest())
 
       status(result) mustBe NO_CONTENT
     }
 
     "return NOT_MODIFIED is no change was made" in {
-      when(mockUserAnswersRepository.keepAlive(any())).thenReturn(Future.successful(UpdateFailure))
+      when(mockUserAnswersRepository.keepAlive(any(), any())).thenReturn(Future.successful(UpdateFailure))
 
-      val result: Future[Result] = controller.keepAlive(internalId)(FakeRequest())
+      val result: Future[Result] = controller.keepAlive(vpdId, periodKey)(FakeRequest())
 
       status(result) mustBe NOT_MODIFIED
     }

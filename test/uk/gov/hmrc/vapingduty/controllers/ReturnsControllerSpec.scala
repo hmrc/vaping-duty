@@ -45,7 +45,7 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
@@ -70,7 +70,7 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(nilReturn)
@@ -80,7 +80,7 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.failed(InternalServerException("")))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)          mustBe INTERNAL_SERVER_ERROR
     }
