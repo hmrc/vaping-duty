@@ -73,7 +73,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
   def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
     Seq(
       ("correlationid", randomUUIDGenerator.uuid),
-      ("X-Message-Type", "VPDReturnCreate"),
+      ("X-Message-Type", "VPDReturnDisplay"),
       ("X-Originating-System", "MDTP"),
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
