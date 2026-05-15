@@ -50,23 +50,27 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
         logger.warn(s"Exception while getting return: ${e.getMessage}")
         Future.failed(InternalServerException("Failed to get return"))
       }
-      .flatMap(response => getReturnParser(response))
+      .flatMap(getReturn)
+      .flatMap(parseJson)
 
-  private def getReturnParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ReturnDisplayResponse] = {
+  private def getReturn(response: Either[UpstreamErrorResponse, HttpResponse]): Future[HttpResponse] = {
     response match {
-      case Right(response) =>
-        Try {
-          response.json.as[ReturnDisplayResponse]
-        } match {
-          case Success(getResponse) =>
-            Future.successful(getResponse)
-          case Failure(_) =>
-            logger.warn(parsingError)
-            Future.failed(InternalServerException(parsingError))
-        }
+      case Right(response) => Future.successful(response)
       case Left(error) =>
         logger.warn(s"Unexpected response from VPD return get API. Status: ${error.statusCode}")
         Future.failed(InternalServerException("Failed to get VPD return"))
+    }
+  }
+
+  private def parseJson(response: HttpResponse) = {
+    Try {
+      response.json.as[ReturnDisplayResponse]
+    } match {
+      case Success(getResponse) =>
+        Future.successful(getResponse)
+      case Failure(_) =>
+        logger.warn(parsingError)
+        Future.failed(InternalServerException(parsingError))
     }
   }
 
