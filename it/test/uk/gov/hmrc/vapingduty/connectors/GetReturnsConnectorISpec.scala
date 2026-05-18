@@ -21,97 +21,94 @@ import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSAB
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
+import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
-class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
+class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
   protected val endpointName = "submit-return"
 
-  "ReturnsConnector when" - {
-    "submitReturn is called must" - {
-      "successfully submit a return" in new SetUp {
-        stubPost(
-          submitReturnUrl,
+  "GetReturnsConnector when" - {
+    "getReturns is called must" - {
+      "successfully get returns" in new SetUp {
+        stubGet(
+          url,
           OK,
-          Json.toJson(returnsCreateRequest).toString(),
-          Json.toJson(returnCreateResponseSuccess).toString()
+          Json.toJson(returnDisplayResponse).toString()
         )
-        whenReady(connector.submitReturn(returnsCreateRequest, vpdId)) { result =>
-          result mustBe returnCreateResponseSuccess.success
-          verifyPost(submitReturnUrl)
+        whenReady(connector.getReturn(periodKey, vpdId)) { result =>
+          result mustBe returnDisplayResponse
+          verifyGet(url)
         }
       }
 
       "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
-        stubPost(submitReturnUrl, OK, Json.toJson(returnsCreateRequest).toString(), "invalid")
+        stubGet(url, OK, Json.toJson("invalid").toString)
 
-        val result = connector.submitReturn(returnsCreateRequest, vpdId)
+        val result = connector.getReturn(periodKey, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Parsing failed for VPD return submission response")
-          verifyPost(submitReturnUrl)
+          assertExceptionMessage(exception, "Parsing failed for VPD return get response")
+          verifyGet(url)
         }
       }
 
       "fail with InternalServerException if the call returns a 400 response" in new SetUp {
-        stubPost(
-          submitReturnUrl,
+        stubGet(
+          url,
           BAD_REQUEST,
-          Json.toJson(returnsCreateRequest).toString(),
-          ""
+          Json.toJson(returnDisplayResponse).toString(),
         )
 
-        val result = connector.submitReturn(returnsCreateRequest, vpdId)
+        val result = connector.getReturn(periodKey, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Failed to submit VPD return")
-          verifyPost(submitReturnUrl)
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
         }
       }
 
       "fail with InternalServerException if the call returns a 422 response" in new SetUp {
-        stubPost(
-          submitReturnUrl,
+        stubGet(
+          url,
           UNPROCESSABLE_ENTITY,
-          Json.toJson(returnsCreateRequest).toString(),
-          ""
+          Json.toJson(returnDisplayResponse).toString()
         )
 
-        val result = connector.submitReturn(returnsCreateRequest, vpdId)
+        val result = connector.getReturn(periodKey, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Failed to submit VPD return")
-          verifyPost(submitReturnUrl)
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
         }
       }
 
       "fail with InternalServerException if the call returns a 500 response" in new SetUp {
-        stubPost(
-          submitReturnUrl,
+        stubGet(
+          url,
           INTERNAL_SERVER_ERROR,
-          Json.toJson(returnsCreateRequest).toString(),
-          ""
+          Json.toJson(returnDisplayResponse).toString()
         )
 
-        val result = connector.submitReturn(returnsCreateRequest, vpdId)
+        val result = connector.getReturn(periodKey, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Failed to submit VPD return")
-          verifyPost(submitReturnUrl)
+          assertExceptionMessage(exception, "Failed to get VPD return")
+          verifyGet(url)
         }
       }
 
       "fail with InternalServerException when a network fault occurs" in new SetUp {
-        stubPostFault(
-          submitReturnUrl,
-          Json.toJson(returnsCreateRequest).toString(),
+        stubGetFault(
+          url,
           Fault.EMPTY_RESPONSE
         )
 
-        val result = connector.submitReturn(returnsCreateRequest, vpdId)
+        val result = connector.getReturn(periodKey, vpdId)
 
         whenReady(result.failed) { exception =>
-          assertExceptionMessage(exception, "Failed to submit VPD return")
-          verifyPost(submitReturnUrl)
+          assertExceptionMessage(exception, "Failed to get return")
+          verifyGet(url)
         }
       }
     }
@@ -127,7 +124,7 @@ class ReturnsConnectorISpec extends ISpecBase with WireMockHelper with Connector
   }
 
   abstract class SetUp extends ConnectorFixture {
-    val connector       = app.injector.instanceOf[ReturnsConnector]
-    val submitReturnUrl = config.submitReturnUrl()
+    val connector       = app.injector.instanceOf[GetReturnsConnector]
+    val url             = config.getReturnUrl(vpdId, periodKey)
   }
 }

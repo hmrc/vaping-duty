@@ -30,7 +30,8 @@ import uk.gov.hmrc.mdc.MdcExecutionContext
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.*
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
+import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
+import utils.TestData
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -44,13 +45,13 @@ class UserAnswersRepositoryISpec
     with IntegrationPatience
     with OptionValues
     with MockitoSugar
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+    with TestData {
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  private val internalId = InternalId("Int-")
-  private val userAnswers = UserAnswers(internalId.toString, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
+  private val userAnswers = UserAnswers(vpdId.toString, periodKey, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.timeToLive) thenReturn 1L
@@ -63,7 +64,7 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
-  override def beforeEach(): Unit = repository.clear(userAnswers.id)
+  override def beforeEach(): Unit = repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey)
 
   ".set" - {
 
@@ -72,7 +73,10 @@ class UserAnswersRepositoryISpec
       val expectedResult = userAnswers copy (lastUpdated = instant)
 
       val result = repository.set(userAnswers.copy(lastUpdated = instant)).futureValue
-      val updatedRecord = find(Filters.equal("_id", internalId.toString)).futureValue.headOption.value
+      val updatedRecord = find(Filters.and(
+        Filters.equal("vpdId", userAnswers.vpdId),
+        Filters.equal("periodKey", periodKey)
+      )).futureValue.headOption.value
 
       updatedRecord mustEqual expectedResult
       result mustBe UpdateSuccess
@@ -89,7 +93,7 @@ class UserAnswersRepositoryISpec
       updatedResult mustBe UpdateSuccess
     }
 
-    "must return UpdateFailure when updating an existing document that is identical" in {
+    "must return UpdateSuccess when updating an existing document that is identical" in {
 
       val result = repository.set(userAnswers.copy(data = Json.obj())).futureValue
 
@@ -97,11 +101,13 @@ class UserAnswersRepositoryISpec
 
       val updatedResult = repository.set(userAnswers.copy(data = Json.obj())).futureValue
 
-      updatedResult mustBe UpdateFailure
+      updatedResult mustBe UpdateSuccess
     }
 
     mustPreserveMdc(repository.set(userAnswers))
   }
+
+  private val badKey = "badKey"
 
   ".get" - {
 
@@ -111,7 +117,7 @@ class UserAnswersRepositoryISpec
 
         insert(userAnswers).futureValue
 
-        val result = repository.get(internalId).futureValue
+        val result = repository.get(vpdId, periodKey).futureValue
         val expectedResult = userAnswers copy (lastUpdated = instant)
 
         result.value mustEqual expectedResult
@@ -122,11 +128,11 @@ class UserAnswersRepositoryISpec
 
       "must return None" in {
 
-        repository.get(InternalId("id that does not exist")).futureValue must not be defined
+        repository.get(vpdId, badKey).futureValue must not be defined
       }
     }
 
-    mustPreserveMdc(repository.get(InternalId(userAnswers.id)))
+    mustPreserveMdc(repository.get(vpdId, badKey))
   }
 
   ".clear" - {
@@ -135,20 +141,20 @@ class UserAnswersRepositoryISpec
 
       insert(userAnswers).futureValue
 
-      val result = repository.clear(userAnswers.id).futureValue
+      val result = repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey).futureValue
 
-      repository.get(internalId).futureValue must not be defined
+      repository.get(vpdId, periodKey).futureValue must not be defined
 
       result mustBe UpdateSuccess
     }
 
     "must return UpdateFailure when there is no record to remove" in {
-      val result = repository.clear("id that does not exist").futureValue
+      val result = repository.clear(vpdId, badKey).futureValue
 
       result mustEqual UpdateFailure
     }
 
-    mustPreserveMdc(repository.clear(userAnswers.id))
+    mustPreserveMdc(repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey))
   }
 
   ".keepAlive" - {
@@ -159,11 +165,15 @@ class UserAnswersRepositoryISpec
 
         insert(userAnswers).futureValue
 
-        val result = repository.keepAlive(internalId).futureValue
+        val result = repository.keepAlive(vpdId, periodKey).futureValue
 
         val expectedUpdatedAnswers = userAnswers copy (lastUpdated = instant)
 
-        val updatedAnswers = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
+        val updatedAnswers = find(Filters.and(
+          Filters.equal("vpdId", userAnswers.vpdId),
+          Filters.equal("periodKey", periodKey)
+        )).futureValue.headOption.value
+
         updatedAnswers mustEqual expectedUpdatedAnswers
         result mustBe UpdateSuccess
       }
@@ -173,13 +183,13 @@ class UserAnswersRepositoryISpec
 
       "must return true" in {
 
-        val result = repository.keepAlive(InternalId("id that does not exist")).futureValue
+        val result = repository.keepAlive(vpdId, badKey).futureValue
 
         result mustEqual UpdateFailure
       }
     }
 
-    mustPreserveMdc(repository.keepAlive(internalId))
+    mustPreserveMdc(repository.keepAlive(vpdId, periodKey))
   }
 
   private def mustPreserveMdc[A](f: => Future[A])(implicit pos: Position): Unit =

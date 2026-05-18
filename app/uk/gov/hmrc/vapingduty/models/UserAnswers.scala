@@ -23,16 +23,17 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import java.time.Instant
 
 final case class UserAnswers(
-  id: String,
-  data: JsObject = Json.obj(),
-  startedTime: Instant,
-  lastUpdated: Instant
+                              vpdId: String,
+                              periodKey: String,
+                              data: JsObject = Json.obj(),
+                              startedTime: Instant,
+                              lastUpdated: Instant
 )
 
 object UserAnswers {
 
   implicit val format: OFormat[UserAnswers] = (
-      (__ \ "_id").format[String] and
+      (__ \ "vpdId").format[String] and (__ \ "periodKey").format[String] and
       (__ \ "data").formatWithDefault[JsObject](Json.obj()) and
       (__ \ "startedTime").format(MongoJavatimeFormats.instantFormat) and
       (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)

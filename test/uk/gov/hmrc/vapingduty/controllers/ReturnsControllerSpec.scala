@@ -23,27 +23,29 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
-import uk.gov.hmrc.vapingduty.connectors.ReturnsConnector
+import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 
 import scala.concurrent.Future
 
 class ReturnsControllerSpec extends SpecBase {
 
-  val mockConnector: ReturnsConnector = mock[ReturnsConnector]
+  val mockSubmitConnector: SubmitReturnsConnector = mock[SubmitReturnsConnector]
+  val mockGetConnector: GetReturnsConnector = mock[GetReturnsConnector]
 
   val controller = new ReturnsController(
     cc,
-    mockConnector,
+    mockSubmitConnector,
+    mockGetConnector,
     fakeAuthorisedAction
   )
 
   "submitReturn must" - {
     "return 200 OK when the connector successfully submits returns" in {
-      when(mockConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
+      when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
@@ -65,20 +67,40 @@ class ReturnsControllerSpec extends SpecBase {
         paymentDueDate = None,
       )
 
-      when(mockConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
+      when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(nilReturn)
     }
 
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
-      when(mockConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
+      when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.failed(InternalServerException("")))
 
-      val result = controller.submitReturn(vpdId)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+
+      status(result)          mustBe INTERNAL_SERVER_ERROR
+    }
+  }
+  "GetReturns must" - {
+    "return 200 OK when the connector successfully gets returns" in {
+      when(mockGetConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))
+        .thenReturn(Future.successful(returnDisplayResponse))
+
+      val result = controller.getReturn(periodKey, vpdId)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(returnDisplayResponse)
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
+      when(mockGetConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))
+        .thenReturn(Future.failed(InternalServerException("")))
+
+      val result = controller.getReturn(periodKey, vpdId)(fakeRequest)
 
       status(result)          mustBe INTERNAL_SERVER_ERROR
     }

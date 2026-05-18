@@ -44,23 +44,37 @@ class UserAnswersRepository @Inject()(
     domainFormat = UserAnswers.format,
     indexes = Seq(
       IndexModel(
+        Indexes.compoundIndex(
+          Indexes.ascending("vpdId"),
+          Indexes.ascending("periodKey")
+        ),
+        IndexOptions()
+          .name("vpdIdPeriodKeyIdx")
+          .unique(true)
+      ),
+      IndexModel(
         Indexes.ascending("lastUpdated"),
         IndexOptions()
           .name("lastUpdatedIdx")
           .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
       )
-    )
+    ),
+    replaceIndexes = true
   ) {
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def byInternalId(id: InternalId): Bson = Filters.equal("_id", id.toString)
+  private def byVpdIdPeriod(vpdId: VpdId, periodKey: String): Bson = Filters.and(
+    Filters.equal("vpdId", vpdId.toString),
+    Filters.equal("periodKey", periodKey)
+  )
+  
 
-  def get(id: InternalId): Future[Option[UserAnswers]] =
-    keepAlive(id).flatMap { _ =>
+  def get(vpdId: VpdId, periodKey: String): Future[Option[UserAnswers]] =
+    keepAlive(vpdId, periodKey).flatMap { _ =>
       Mdc.preservingMdc {
         collection
-          .find(byInternalId(id))
+          .find(byVpdIdPeriod(vpdId, periodKey))
           .headOption()
       }
     }
@@ -71,7 +85,7 @@ class UserAnswersRepository @Inject()(
 
     collection
       .replaceOne(
-        filter = byInternalId(InternalId(updatedAnswers.id)),
+        filter = byVpdIdPeriod(VpdId(answers.vpdId), answers.periodKey),
         replacement = updatedAnswers,
         options = ReplaceOptions().upsert(true)
       )
@@ -81,18 +95,18 @@ class UserAnswersRepository @Inject()(
       )
   }
 
-  def keepAlive(id: InternalId): Future[UpdateResult] =
+  def keepAlive(vpdId: VpdId, periodKey: String): Future[UpdateResult] =
     collection
       .updateOne(
-        filter = byInternalId(id),
+        filter = byVpdIdPeriod(vpdId, periodKey),
         update = Updates.set("lastUpdated", Instant.now(clock))
       )
       .toFuture()
       .map(res => if (res.getModifiedCount > 0) UpdateSuccess else UpdateFailure)
 
-  def clear(id: String): Future[UpdateResult] =
+  def clear(vpdId: VpdId, periodKey: String): Future[UpdateResult] =
     collection
-      .deleteOne(byInternalId(InternalId(id)))
+      .deleteOne(byVpdIdPeriod(vpdId, periodKey))
       .toFuture()
       .map(res => if (res.getDeletedCount > 0) UpdateSuccess else UpdateFailure)
 }

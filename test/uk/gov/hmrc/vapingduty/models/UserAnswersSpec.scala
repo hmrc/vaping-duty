@@ -23,11 +23,10 @@ import play.api.libs.json.{JsError, JsPath, Json, JsonValidationError, JsObject}
 import java.time.Instant
 
 class UserAnswersSpec extends SpecBase {
-
-  private val internalId: InternalId = InternalId("Int-4435-242342-dsfsdf-5345")
-
+  
   private val returnsUserAnswers = UserAnswers(
-    id = internalId.toString,
+    vpdId = vpdId.toString,
+    periodKey = periodKey,
     startedTime = Instant.parse("2026-04-16T13:22:11.503Z"),
     lastUpdated = Instant.parse("2026-04-16T13:22:11.503Z")
   )
@@ -36,7 +35,7 @@ class UserAnswersSpec extends SpecBase {
     val json = Json.toJson(returnsUserAnswers).toString
 
     val errorJson =
-      s"""{"_id":"$internalId","lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}}}"""
+      s"""{"vpdId":"$vpdId","periodKey":"$periodKey","lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}}}"""
 
     "must show errors if json is not in the correct structure" in {
       val result = Json.parse(errorJson).validate[UserAnswers]
