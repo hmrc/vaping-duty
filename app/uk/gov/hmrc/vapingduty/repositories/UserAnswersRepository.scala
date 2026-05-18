@@ -59,7 +59,7 @@ class UserAnswersRepository @Inject()(
           .expireAfter(appConfig.timeToLive, TimeUnit.DAYS)
       )
     ),
-    replaceIndexes = true
+    replaceIndexes = false
   ) {
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
