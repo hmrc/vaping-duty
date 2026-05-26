@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, PeriodKey, VpdId}
+import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 

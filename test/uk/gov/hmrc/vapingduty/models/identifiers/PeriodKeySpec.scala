@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.vapingduty.models.identifiers
 
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.vapingduty.base.SpecBase
 

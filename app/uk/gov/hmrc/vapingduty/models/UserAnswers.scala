@@ -26,7 +26,7 @@ import java.time.Instant
 final case class UserAnswers(
                               vpdId: VpdId,
                               periodKey: PeriodKey,
-                              JsObject: JsObject = Json.obj(),
+                              data: JsObject = Json.obj(),
                               startedTime: Instant,
                               lastUpdated: Instant
 )

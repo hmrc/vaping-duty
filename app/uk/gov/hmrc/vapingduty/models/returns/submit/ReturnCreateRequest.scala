@@ -18,7 +18,6 @@ package uk.gov.hmrc.vapingduty.models.returns.submit
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.vapingduty.models.returns.{TotalDutyDue, VapingProductsProduced}
-import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
 
 case class ReturnCreateRequest(
   periodKey: String,

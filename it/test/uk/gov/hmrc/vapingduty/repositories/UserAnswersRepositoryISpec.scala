@@ -30,7 +30,7 @@ import uk.gov.hmrc.mdc.MdcExecutionContext
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.*
-import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
+import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, PeriodKey, VpdId}
 import utils.TestData
 
 import java.time.temporal.ChronoUnit
@@ -51,7 +51,7 @@ class UserAnswersRepositoryISpec
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  private val userAnswers = UserAnswers(vpdId.toString, periodKey, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
+  private val userAnswers = UserAnswers(vpdId, periodKey, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.timeToLive) thenReturn 1L
@@ -64,7 +64,7 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
-  override def beforeEach(): Unit = repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey)
+  override def beforeEach(): Unit = repository.clear(userAnswers.vpdId, userAnswers.periodKey)
 
   ".set" - {
 
@@ -74,8 +74,8 @@ class UserAnswersRepositoryISpec
 
       val result = repository.set(userAnswers.copy(lastUpdated = instant)).futureValue
       val updatedRecord = find(Filters.and(
-        Filters.equal("vpdId", userAnswers.vpdId),
-        Filters.equal("periodKey", periodKey)
+        Filters.equal("vpdId", userAnswers.vpdId.id),
+        Filters.equal("periodKey", periodKey.value)
       )).futureValue.headOption.value
 
       updatedRecord mustEqual expectedResult
@@ -107,7 +107,7 @@ class UserAnswersRepositoryISpec
     mustPreserveMdc(repository.set(userAnswers))
   }
 
-  private val badKey = "badKey"
+  private val badKey = PeriodKey("99ZZ")
 
   ".get" - {
 
@@ -141,7 +141,7 @@ class UserAnswersRepositoryISpec
 
       insert(userAnswers).futureValue
 
-      val result = repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey).futureValue
+      val result = repository.clear(userAnswers.vpdId, userAnswers.periodKey).futureValue
 
       repository.get(vpdId, periodKey).futureValue must not be defined
 
@@ -154,7 +154,7 @@ class UserAnswersRepositoryISpec
       result mustEqual UpdateFailure
     }
 
-    mustPreserveMdc(repository.clear(VpdId(userAnswers.vpdId), userAnswers.periodKey))
+    mustPreserveMdc(repository.clear(userAnswers.vpdId, userAnswers.periodKey))
   }
 
   ".keepAlive" - {
@@ -170,8 +170,8 @@ class UserAnswersRepositoryISpec
         val expectedUpdatedAnswers = userAnswers copy (lastUpdated = instant)
 
         val updatedAnswers = find(Filters.and(
-          Filters.equal("vpdId", userAnswers.vpdId),
-          Filters.equal("periodKey", periodKey)
+          Filters.equal("vpdId", userAnswers.vpdId.id),
+          Filters.equal("periodKey", periodKey.value)
         )).futureValue.headOption.value
 
         updatedAnswers mustEqual expectedUpdatedAnswers
@@ -202,4 +202,3 @@ class UserAnswersRepositoryISpec
       }.futureValue mustEqual Some("foo")
     }
 }
-

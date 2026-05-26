@@ -17,7 +17,6 @@
 package uk.gov.hmrc.vapingduty.models.obligations
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.vapingduty.models.identifiers.PeriodKey
 
 import java.time.LocalDate
 
@@ -27,7 +26,7 @@ case class ObligationDetails(
   iCToDate: LocalDate,
   iCDateReceived: Option[LocalDate],
   iCDueDate: LocalDate,
-  periodKey: PeriodKey
+  periodKey: String
 )
 
 object ObligationDetails {

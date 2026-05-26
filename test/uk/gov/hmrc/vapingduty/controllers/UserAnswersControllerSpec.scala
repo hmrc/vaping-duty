@@ -23,7 +23,6 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
 import uk.gov.hmrc.vapingduty.base.SpecBase
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
@@ -41,7 +40,7 @@ class UserAnswersControllerSpec extends SpecBase {
   )
 
   val returnsUserAnswers = UserAnswers(
-    vpdId = vpdId.toString,
+    vpdId = vpdId,
     periodKey = periodKey,
     data = JsObject.empty,
     startedTime = Instant.now(),

@@ -24,8 +24,6 @@ case class PeriodKey(value: String) {
 }
 
 object PeriodKey {
-  // Pattern: 2-digit year + 2 uppercase letters (AA-AL for Jan-Dec)
-  // Example: 24AA (Jan 2024), 24AB (Feb 2024), 24AL (Dec 2024)
   private val periodKeyPattern = "^\\d{2}[A-Z]{2}$".r
 
   given PathBindable[PeriodKey] = new PathBindable[PeriodKey] {
