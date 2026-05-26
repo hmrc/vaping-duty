@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
+import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
 
 import scala.concurrent.ExecutionContext
@@ -37,7 +37,7 @@ class ReturnsController @Inject()(
                                    authorise: AuthorisedAction
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def getReturn(periodKey: String, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
+  def getReturn(periodKey: PeriodKey, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
 
     getConnector.getReturn(periodKey, vpdId)
@@ -46,7 +46,7 @@ class ReturnsController @Inject()(
 
   }
   
-  def submitReturn(vpdId: VpdId, periodKey: String): Action[JsValue] = {
+  def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
       withJsonBody[ReturnCreateRequest] { returnSubmission =>
         submitConnector.submitReturn(returnSubmission, vpdId)

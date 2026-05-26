@@ -15,6 +15,7 @@ lazy val microservice = Project("vaping-duty", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s",
     RoutesKeys.routesImport += "uk.gov.hmrc.vapingduty.models.identifiers.InternalId",
     RoutesKeys.routesImport += "uk.gov.hmrc.vapingduty.models.identifiers.VpdId",
+    RoutesKeys.routesImport += "uk.gov.hmrc.vapingduty.models.identifiers.PeriodKey",
     PlayKeys.playDefaultPort := 8141
   )
   .settings(CodeCoverageSettings.settings *)

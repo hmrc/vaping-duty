@@ -19,13 +19,14 @@ package uk.gov.hmrc.vapingduty.models
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 
 import java.time.Instant
 
 final case class UserAnswers(
-                              vpdId: String,
-                              periodKey: String,
-                              data: JsObject = Json.obj(),
+                              vpdId: VpdId,
+                              periodKey: PeriodKey,
+                              JsObject: JsObject = Json.obj(),
                               startedTime: Instant,
                               lastUpdated: Instant
 )
@@ -33,7 +34,7 @@ final case class UserAnswers(
 object UserAnswers {
 
   implicit val format: OFormat[UserAnswers] = (
-      (__ \ "vpdId").format[String] and (__ \ "periodKey").format[String] and
+      (__ \ "vpdId").format[VpdId] and (__ \ "periodKey").format[PeriodKey] and
       (__ \ "data").formatWithDefault[JsObject](Json.obj()) and
       (__ \ "startedTime").format(MongoJavatimeFormats.instantFormat) and
       (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)
