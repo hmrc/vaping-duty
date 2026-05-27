@@ -24,8 +24,8 @@ import java.time.Instant
 class UserAnswersSpec extends SpecBase {
   
   private val returnsUserAnswers = UserAnswers(
-    vpdId = vpdId,
-    periodKey = periodKey,
+    vpdId = vpdId.id,
+    periodKey = periodKey.value,
     startedTime = Instant.parse("2026-04-16T13:22:11.503Z"),
     lastUpdated = Instant.parse("2026-04-16T13:22:11.503Z")
   )
@@ -34,7 +34,7 @@ class UserAnswersSpec extends SpecBase {
     val json = Json.toJson(returnsUserAnswers).toString
 
     val errorJson =
-      s"""{"vpdId":{"id":"${vpdId.id}"},"periodKey":{"value":"${periodKey.value}"},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}}}"""
+      s"""{"vpdId":"${vpdId.id}","periodKey":"${periodKey.value}","lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}}}"""
 
     "must show errors if json is not in the correct structure" in {
       val result = Json.parse(errorJson).validate[UserAnswers]

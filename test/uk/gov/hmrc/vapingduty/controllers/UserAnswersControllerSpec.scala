@@ -40,8 +40,8 @@ class UserAnswersControllerSpec extends SpecBase {
   )
 
   val returnsUserAnswers = UserAnswers(
-    vpdId = vpdId,
-    periodKey = periodKey,
+    vpdId = vpdId.toString,
+    periodKey = periodKey.toString,
     data = JsObject.empty,
     startedTime = Instant.now(),
     lastUpdated = Instant.now()

@@ -66,7 +66,7 @@ class UserAnswersRepository @Inject()(
 
   private def byVpdIdPeriod(vpdId: VpdId, periodKey: PeriodKey): Bson = Filters.and(
     Filters.equal("vpdId", vpdId.toString),
-    Filters.equal("periodKey", periodKey.value)
+    Filters.equal("periodKey", periodKey.toString)
   )
   
 
@@ -85,7 +85,7 @@ class UserAnswersRepository @Inject()(
 
     collection
       .replaceOne(
-        filter = byVpdIdPeriod(answers.vpdId, answers.periodKey),
+        filter = byVpdIdPeriod(VpdId(answers.vpdId), PeriodKey(answers.periodKey)),
         replacement = updatedAnswers,
         options = ReplaceOptions().upsert(true)
       )
