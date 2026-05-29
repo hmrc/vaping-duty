@@ -45,14 +45,11 @@ class UserAnswersController @Inject()(
     authorise(parse.json).async { implicit request =>
       request.body.validate[UserAnswers] match
         case JsSuccess(ua, _) =>
-          println(ua)
           userAnswersRepository.set(ua).map {
           case UpdateSuccess => NoContent
           case UpdateFailure => NotModified
         }
-        case JsError(errors) =>
-          println("ERRORS&&&&&&&&&&" + errors)
-          Future.successful(BadRequest)
+        case JsError(errors) => Future.successful(BadRequest)
   }
 
   def clear(vpdId: VpdId, periodKey: PeriodKey): Action[AnyContent] = authorise.async {
