@@ -48,7 +48,7 @@ class UserAnswersRepositoryISpec
     with BeforeAndAfterAll
     with TestData {
 
-  private val stubClock: Clock = clock  // Use the fixed clock from TestData
+  private val stubClock: Clock = clock
   private val instant = Instant.now(stubClock).truncatedTo(ChronoUnit.MILLIS)
 
   private val testVpdId = VpdId("GBWK0000000WK")
