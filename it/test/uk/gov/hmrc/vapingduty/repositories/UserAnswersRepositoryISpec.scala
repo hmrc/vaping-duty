@@ -66,10 +66,8 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
-  //override def beforeEach(): Unit = repository.clear(userAnswers.vpdId, userAnswers.periodKey)
-
-  //override def beforeAll(): Unit = super.beforeAll()
-
+  override def beforeEach(): Unit = repository.clear(VpdId(userAnswers.vpdId), PeriodKey(userAnswers.periodKey))
+  
   ".set" - {
 
     "must set the last updated time on the supplied user answers to `now`, and save them" in {
@@ -84,7 +82,6 @@ class UserAnswersRepositoryISpec
       )).futureValue.headOption.value
 
       updatedRecord mustEqual expectedResult
-      //result mustBe UpdateSuccess
     }
 
     "must return UpdateSuccess when updating an existing document" in {
