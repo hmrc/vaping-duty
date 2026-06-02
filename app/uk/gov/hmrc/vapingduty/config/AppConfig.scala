@@ -19,7 +19,7 @@ package uk.gov.hmrc.vapingduty.config
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
+import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 
 import scala.concurrent.duration.Duration
 
@@ -51,5 +51,5 @@ class AppConfig @Inject()(
   private lazy val vpdReturnUrlPrefix = getConfStringAndThrowIfNotFound("submit-return.url.submitReturn")
 
   def submitReturnUrl(): String = s"$vpdReturnHost$vpdReturnUrlPrefix"
-  def getReturnUrl(vpdReference: VpdId, periodKey: String): String = s"$vpdReturnHost$vpdReturnUrlPrefix/$vpdReference/$periodKey"
+  def getReturnUrl(vpdReference: VpdId, periodKey: PeriodKey): String = s"$vpdReturnHost$vpdReturnUrlPrefix/$vpdReference/$periodKey"
 }

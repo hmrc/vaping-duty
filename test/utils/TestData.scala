@@ -19,7 +19,7 @@ package utils
 import org.scalacheck.Gen
 import play.api.libs.json.{JsObject, Json, OFormat}
 import uk.gov.hmrc.vapingduty.models.*
-import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, VpdId}
+import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.*
 import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.models.returns.view.*
@@ -49,7 +49,7 @@ trait TestData {
   val unprocessable       = DownstreamErrorDetails("422", "Unprocessable", "id")
   val internalServerError = DownstreamErrorDetails("500", "Computer says No!", "id")
 
-  val periodKey = "26AB"
+  val periodKey = PeriodKey("26AB")
   val vpdReferenceNumber = "XMVPD0000100021"
   val submissionId = "SUB123456789"
   val chargeReference = "CHG987654321"
@@ -89,7 +89,7 @@ trait TestData {
   )
 
   val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
-    periodKey = periodKey,
+    periodKey = periodKey.value,
     vapingProductsProduced = vapingProductsProducedRegular,
     totalDutyDue = totalDutyDue
   )
@@ -114,7 +114,7 @@ trait TestData {
   )
 
   val chargeDetails: ChargeDetails = ChargeDetails(
-    periodKey = periodKey,
+    periodKey = periodKey.value,
     chargeReference = Some(chargeReference),
     periodFrom = LocalDate.of(2026, 6, 1),
     periodTo = LocalDate.of(2026, 6, 30),

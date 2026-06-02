@@ -17,12 +17,10 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
-import play.api.libs.json.Json
-import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
+import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.view.ReturnDisplayResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
@@ -40,7 +38,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
 
   private val parsingError = "Parsing failed for VPD return get response"
 
-  def getReturn(periodKey: String, vpdId: VpdId)
+  def getReturn(periodKey: PeriodKey, vpdId: VpdId)
                   (implicit hc: HeaderCarrier): Future[ReturnDisplayResponse] =
     httpClient
       .get(url"${config.getReturnUrl(vpdId, periodKey)}")

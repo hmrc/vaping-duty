@@ -64,13 +64,13 @@ class UserAnswersRepository @Inject()(
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def byVpdIdPeriod(vpdId: VpdId, periodKey: String): Bson = Filters.and(
+  private def byVpdIdPeriod(vpdId: VpdId, periodKey: PeriodKey): Bson = Filters.and(
     Filters.equal("vpdId", vpdId.toString),
-    Filters.equal("periodKey", periodKey)
+    Filters.equal("periodKey", periodKey.toString)
   )
   
 
-  def get(vpdId: VpdId, periodKey: String): Future[Option[UserAnswers]] =
+  def get(vpdId: VpdId, periodKey: PeriodKey): Future[Option[UserAnswers]] =
     keepAlive(vpdId, periodKey).flatMap { _ =>
       Mdc.preservingMdc {
         collection
@@ -85,7 +85,7 @@ class UserAnswersRepository @Inject()(
 
     collection
       .replaceOne(
-        filter = byVpdIdPeriod(VpdId(answers.vpdId), answers.periodKey),
+        filter = byVpdIdPeriod(VpdId(answers.vpdId), PeriodKey(answers.periodKey)),
         replacement = updatedAnswers,
         options = ReplaceOptions().upsert(true)
       )
@@ -95,7 +95,7 @@ class UserAnswersRepository @Inject()(
       )
   }
 
-  def keepAlive(vpdId: VpdId, periodKey: String): Future[UpdateResult] =
+  def keepAlive(vpdId: VpdId, periodKey: PeriodKey): Future[UpdateResult] =
     collection
       .updateOne(
         filter = byVpdIdPeriod(vpdId, periodKey),
@@ -104,7 +104,7 @@ class UserAnswersRepository @Inject()(
       .toFuture()
       .map(res => if (res.getModifiedCount > 0) UpdateSuccess else UpdateFailure)
 
-  def clear(vpdId: VpdId, periodKey: String): Future[UpdateResult] =
+  def clear(vpdId: VpdId, periodKey: PeriodKey): Future[UpdateResult] =
     collection
       .deleteOne(byVpdIdPeriod(vpdId, periodKey))
       .toFuture()

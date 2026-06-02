@@ -17,7 +17,6 @@
 package uk.gov.hmrc.vapingduty.models.returns.view
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.vapingduty.models.returns.view.SpoiltProductItem
 
 final case class SpoiltProduct(
   spoiltProductFilled: String,
