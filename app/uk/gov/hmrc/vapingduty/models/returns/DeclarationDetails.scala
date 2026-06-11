@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models
+package uk.gov.hmrc.vapingduty.models.returns
 
 import play.api.libs.json.{Json, OFormat}
 
 final case class DeclarationDetails(
   fullName: String,
   capacityInWhichSigned: String,
-  signeesEmailAddress: String,
-  declaration: DeclarationDetails
+  signeesEmailAddress: String
 )
 
 object DeclarationDetails {

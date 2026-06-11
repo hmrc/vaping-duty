@@ -17,6 +17,7 @@
 package uk.gov.hmrc.vapingduty.models.returns.submit
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.vapingduty.models.returns.DeclarationDetails
 
 import java.time.{Instant, LocalDate}
 
@@ -26,7 +27,8 @@ case class ReturnSubmittedResponse(
   submissionID: Option[String],
   chargeReference: Option[String],
   amount: BigDecimal,
-  paymentDueDate: Option[LocalDate]
+  paymentDueDate: Option[LocalDate],
+  declaration: DeclarationDetails
 )
 
 object ReturnSubmittedResponse {
