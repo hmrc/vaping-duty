@@ -88,10 +88,17 @@ trait TestData {
     regularReturn = Seq(regularReturn)
   )
 
+  val sampleDeclarationDetails: DeclarationDetails = DeclarationDetails(
+    fullName = "John Doe",
+    capacityInWhichSigned = "Director",
+    signeesEmailAddress = "john.doe@example.com"
+  )
+
   val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
     periodKey = periodKey.value,
     vapingProductsProduced = vapingProductsProducedRegular,
-    totalDutyDue = totalDutyDue
+    totalDutyDue = totalDutyDue,
+    declaration = sampleDeclarationDetails
   )
 
   val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
@@ -100,7 +107,8 @@ trait TestData {
     submissionID = Some(submissionId),
     chargeReference = Some(chargeReference),
     amount = BigDecimal("3676.88"),
-    paymentDueDate = Some(LocalDate.of(2026, 6, 30))
+    paymentDueDate = Some(LocalDate.of(2026, 6, 30)),
+    declaration = sampleDeclarationDetails
   )
 
   val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(
@@ -182,7 +190,8 @@ trait TestData {
     spoiltProduct = Some(spoiltProduct),
     totalDutyDue = Some(totalDutyDue),
     totalDutyDueByTaxType = Some(totalDutyDue),
-    otherOptions = Some(otherOptions)
+    otherOptions = Some(otherOptions),
+    declaration = sampleDeclarationDetails
   )
 
   val returnDisplayResponse: ReturnDisplayResponse = ReturnDisplayResponse(
