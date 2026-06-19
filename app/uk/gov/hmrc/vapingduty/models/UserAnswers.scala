@@ -26,6 +26,8 @@ import java.time.Instant
 final case class UserAnswers(
                               vpdId: String,
                               periodKey: String,
+                              returnPeriod: Option[String] = None,
+                              year: Option[String] = None,
                               data: JsObject = Json.obj(),
                               startedTime: Instant,
                               lastUpdated: Instant
@@ -36,6 +38,8 @@ object UserAnswers {
   implicit val format: OFormat[UserAnswers] = (
       (__ \ "vpdId").format[String] and
       (__ \ "periodKey").format[String] and
+      (__ \ "returnPeriod").formatNullable[String] and
+      (__ \ "year").formatNullable[String] and
       (__ \ "data").formatWithDefault[JsObject](Json.obj()) and
       (__ \ "startedTime").format(MongoJavatimeFormats.instantFormat) and
       (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)
