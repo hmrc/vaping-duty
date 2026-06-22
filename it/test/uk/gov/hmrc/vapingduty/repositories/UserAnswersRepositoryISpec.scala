@@ -34,7 +34,7 @@ import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import utils.TestData
 
 import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant}
+import java.time.{Clock, Instant, Month}
 import scala.concurrent.{ExecutionContext, Future}
 
 class UserAnswersRepositoryISpec
@@ -53,7 +53,7 @@ class UserAnswersRepositoryISpec
 
   private val testVpdId = VpdId("GBWK0000000WK")
   private val testPeriodKey = PeriodKey("26AB")
-  private val userAnswers = UserAnswers(testVpdId.id, testPeriodKey.value, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
+  private val userAnswers = UserAnswers(testVpdId.id, testPeriodKey.value, Some(Month.JUNE), Some("2027"), Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1), Instant.ofEpochSecond(1))
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.timeToLive) thenReturn 1L
