@@ -117,8 +117,8 @@ trait TestData {
 
   // GET endpoint test data
   val idDetails: IdDetails = IdDetails(
-    vpdReference = vpdReferenceNumber,
-    submissionId = Some(submissionId)
+    vpdReferenceNumber = vpdReferenceNumber,
+    submissionId = submissionId
   )
 
   val chargeDetails: ChargeDetails = ChargeDetails(
@@ -133,7 +133,7 @@ trait TestData {
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
-    amountOverDeclaration = BigDecimal("50.00"),
+    amountOverDeclared = BigDecimal("50.00"),
     dutyDue = BigDecimal("110.00")
   )
 
@@ -147,13 +147,13 @@ trait TestData {
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
-    amountUnderDeclaration = BigDecimal("25.00"),
+    amountUnderDeclared = BigDecimal("25.00"),
     dutyDue = BigDecimal("55.00")
   )
 
   val underDeclaration: UnderDeclaration = UnderDeclaration(
     underDeclFilled = "1",
-    reasonForUnderDec = Some("Additional products found"),
+    reasonForUnderDecl = Some("Additional products found"),
     underDeclarationProducts = Some(Seq(underDeclarationProduct))
   )
 
@@ -171,13 +171,9 @@ trait TestData {
   )
 
   val otherOptions: OtherOptions = OtherOptions(
-    otherOptions = "1",
-    vapingProdManufactured = Some("01"),
-    otherVapingProduct = Some("1"),
-    destroyed = Some(BigDecimal("5.00")),
-    imported = Some(BigDecimal("100.00")),
-    exported = Some(BigDecimal("50.00")),
-    amtRecieved = Some(BigDecimal("200.00"))
+    vapingProductUnderDutySuspense = "1",
+    volumeMovedFromDutySuspense = Some(BigDecimal("300.00")),
+    volumeMovedToDutySuspense = Some(BigDecimal("150.00"))
   )
 
   val returnDisplaySuccess: ReturnDisplaySuccess = ReturnDisplaySuccess(
@@ -189,7 +185,6 @@ trait TestData {
     underDeclaration = Some(underDeclaration),
     spoiltProduct = Some(spoiltProduct),
     totalDutyDue = Some(totalDutyDue),
-    totalDutyDueByTaxType = Some(totalDutyDue),
     otherOptions = Some(otherOptions),
     declaration = sampleDeclarationDetails
   )

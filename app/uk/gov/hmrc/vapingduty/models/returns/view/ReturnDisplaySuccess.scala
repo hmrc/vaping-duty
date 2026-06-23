@@ -30,7 +30,6 @@ final case class ReturnDisplaySuccess(
   underDeclaration: Option[UnderDeclaration],
   spoiltProduct: Option[SpoiltProduct],
   totalDutyDue: Option[TotalDutyDue],
-  totalDutyDueByTaxType: Option[TotalDutyDue],
   otherOptions: Option[OtherOptions],
   declaration: DeclarationDetails
 )
