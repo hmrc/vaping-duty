@@ -19,8 +19,8 @@ package uk.gov.hmrc.vapingduty.models.returns
 import play.api.libs.json.{Json, OFormat}
 
 case class VapingProductsProduced(
-  nilReturn: Seq[NilReturn],
-  regularReturn: Seq[RegularReturn]
+  vapingProdManufactured: String,
+  returns: Seq[RegularReturn]
 )
 
 object VapingProductsProduced {

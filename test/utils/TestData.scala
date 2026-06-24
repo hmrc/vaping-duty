@@ -71,7 +71,7 @@ trait TestData {
     totalDutyUnderDeclaration = BigDecimal("50.00"),
     totalDutySpoiltProduct = BigDecimal("25.00"),
     adjustmentAmount = BigDecimal("-75.00"),
-    totalDutyDue = BigDecimal("3676.88")
+    totalDue = BigDecimal("3676.88")
   )
 
   val totalDutyDueNil: TotalDutyDue = TotalDutyDue(
@@ -80,12 +80,12 @@ trait TestData {
     totalDutyUnderDeclaration = BigDecimal("0.00"),
     totalDutySpoiltProduct = BigDecimal("0.00"),
     adjustmentAmount = BigDecimal("0.00"),
-    totalDutyDue = BigDecimal("0.00")
+    totalDue = BigDecimal("0.00")
   )
 
   val vapingProductsProducedRegular: VapingProductsProduced = VapingProductsProduced(
-    nilReturn = Seq.empty,
-    regularReturn = Seq(regularReturn)
+    vapingProdManufactured = "1",
+    returns = Seq(regularReturn)
   )
 
   val sampleDeclarationDetails: DeclarationDetails = DeclarationDetails(
@@ -104,11 +104,10 @@ trait TestData {
   val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
     processingDate = Instant.now(clock),
     vpdReferenceNumber = vpdReferenceNumber,
-    submissionID = Some(submissionId),
+    submissionId = Some(submissionId),
     chargeReference = Some(chargeReference),
     amount = BigDecimal("3676.88"),
-    paymentDueDate = Some(LocalDate.of(2026, 6, 30)),
-    declaration = sampleDeclarationDetails
+    paymentDueDate = Some(LocalDate.of(2026, 6, 30))
   )
 
   val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(

@@ -54,17 +54,17 @@ class ReturnsControllerSpec extends SpecBase {
     "return 200 OK when the connector successfully submits nil return" in {
       val nilRequestBody = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
-          nilReturn = Seq(nilReturnNoProducts),
-          regularReturn = Seq.empty
+          vapingProdManufactured = "0",
+          returns = Seq.empty
         ),
         totalDutyDue = totalDutyDueNil
       )
       
       val nilReturn = returnCreateResponseSuccess.success.copy(
-        submissionID = None,
+        submissionId = None,
         chargeReference = None,
         amount = BigDecimal("0.0"),
-        paymentDueDate = None,
+        paymentDueDate = None
       )
 
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
