@@ -57,7 +57,7 @@ class ReturnsControllerSpec extends SpecBase {
           vapingProdManufactured = "0",
           returns = Seq.empty
         ),
-        totalDutyDue = totalDutyDueNil
+        totalDutyDue = Some(totalDutyDueNil)
       )
       
       val nilReturn = returnCreateResponseSuccess.success.copy(
@@ -85,6 +85,7 @@ class ReturnsControllerSpec extends SpecBase {
       status(result)          mustBe INTERNAL_SERVER_ERROR
     }
   }
+  
   "GetReturns must" - {
     "return 200 OK when the connector successfully gets returns" in {
       when(mockGetConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))

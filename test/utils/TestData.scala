@@ -97,7 +97,11 @@ trait TestData {
   val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
     periodKey = periodKey.value,
     vapingProductsProduced = vapingProductsProducedRegular,
-    totalDutyDue = totalDutyDue,
+    overDeclaration = Some(overDeclaration),
+    underDeclaration = Some(underDeclaration),
+    spoiltProduct = Some(spoiltProduct),
+    totalDutyDue = Some(totalDutyDue),
+    otherOptions = Some(otherOptions),
     declaration = sampleDeclarationDetails
   )
 
