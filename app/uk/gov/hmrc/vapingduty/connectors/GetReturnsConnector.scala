@@ -65,9 +65,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
     Try {
       response.json.as[ReturnDisplayResponse]
     } match {
-      case Success(getResponse) =>
-        println(Json.toJson(getResponse))
-        Future.successful(getResponse)
+      case Success(getResponse) => Future.successful(getResponse)
       case Failure(_) =>
         logger.warn(parsingError)
         Future.failed(InternalServerException(parsingError))
