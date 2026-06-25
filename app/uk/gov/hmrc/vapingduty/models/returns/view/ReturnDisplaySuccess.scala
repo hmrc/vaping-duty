@@ -35,5 +35,5 @@ final case class ReturnDisplaySuccess(
 )
 
 object ReturnDisplaySuccess {
-  given OFormat[ReturnDisplaySuccess] = Json.format[ReturnDisplaySuccess]
+  given format: OFormat[ReturnDisplaySuccess] = Json.format[ReturnDisplaySuccess]
 }

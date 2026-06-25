@@ -25,5 +25,5 @@ final case class OtherOptions(
 )
 
 object OtherOptions {
-  given OFormat[OtherOptions] = Json.format[OtherOptions]
+  given format: OFormat[OtherOptions] = Json.format[OtherOptions]
 }

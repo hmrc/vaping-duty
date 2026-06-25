@@ -132,7 +132,7 @@ trait TestData {
     receiptDate = Instant.now(clock)
   )
 
-  val overDeclarationProduct: OverDeclarationProduct = OverDeclarationProduct(
+  def overDeclarationProduct: OverDeclarationProduct = OverDeclarationProduct(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
@@ -140,13 +140,13 @@ trait TestData {
     dutyDue = BigDecimal("110.00")
   )
 
-  val overDeclaration: OverDeclaration = OverDeclaration(
+  def overDeclaration: OverDeclaration = OverDeclaration(
     overDeclFilled = "1",
     reasonForOverDecl = Some("Correction needed"),
     overDeclarationProducts = Some(Seq(overDeclarationProduct))
   )
 
-  val underDeclarationProduct: UnderDeclarationProduct = UnderDeclarationProduct(
+  def underDeclarationProduct: UnderDeclarationProduct = UnderDeclarationProduct(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
@@ -154,13 +154,13 @@ trait TestData {
     dutyDue = BigDecimal("55.00")
   )
 
-  val underDeclaration: UnderDeclaration = UnderDeclaration(
+  def underDeclaration: UnderDeclaration = UnderDeclaration(
     underDeclFilled = "1",
     reasonForUnderDecl = Some("Additional products found"),
     underDeclarationProducts = Some(Seq(underDeclarationProduct))
   )
 
-  val spoiltProductItem: SpoiltProductItem = SpoiltProductItem(
+  def spoiltProductItem: SpoiltProductItem = SpoiltProductItem(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
@@ -168,12 +168,12 @@ trait TestData {
     dutyDue = BigDecimal("-22.00")
   )
 
-  val spoiltProduct: SpoiltProduct = SpoiltProduct(
+  def spoiltProduct: SpoiltProduct = SpoiltProduct(
     spoiltProductFilled = "1",
     spoiltProducts = Some(Seq(spoiltProductItem))
   )
 
-  val otherOptions: OtherOptions = OtherOptions(
+  def otherOptions: OtherOptions = OtherOptions(
     vapingProductUnderDutySuspense = "1",
     volumeMovedFromDutySuspense = Some(BigDecimal("300.00")),
     volumeMovedToDutySuspense = Some(BigDecimal("150.00"))

@@ -28,5 +28,5 @@ case class TotalDutyDue(
 )
 
 object TotalDutyDue {
-  given OFormat[TotalDutyDue] = Json.format[TotalDutyDue]
+  given format: OFormat[TotalDutyDue] = Json.format[TotalDutyDue]
 }

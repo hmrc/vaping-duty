@@ -26,5 +26,5 @@ case class RegularReturn(
 )
 
 object RegularReturn {
-  given OFormat[RegularReturn] = Json.format[RegularReturn]
+  given format: OFormat[RegularReturn] = Json.format[RegularReturn]
 }

@@ -24,5 +24,5 @@ case class VapingProductsProduced(
 )
 
 object VapingProductsProduced {
-  given OFormat[VapingProductsProduced] = Json.format[VapingProductsProduced]
+  given format: OFormat[VapingProductsProduced] = Json.format[VapingProductsProduced]
 }

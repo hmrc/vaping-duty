@@ -18,12 +18,12 @@ package uk.gov.hmrc.vapingduty.models.returns.view
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class UnderDeclaration(
+case class UnderDeclaration(
   underDeclFilled: String,
   reasonForUnderDecl: Option[String],
   underDeclarationProducts: Option[Seq[UnderDeclarationProduct]]
 )
 
 object UnderDeclaration {
-  given OFormat[UnderDeclaration] = Json.format[UnderDeclaration]
+  given format: OFormat[UnderDeclaration] = Json.format[UnderDeclaration]
 }

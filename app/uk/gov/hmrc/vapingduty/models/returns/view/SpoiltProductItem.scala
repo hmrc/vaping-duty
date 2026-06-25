@@ -27,5 +27,5 @@ final case class SpoiltProductItem(
 )
 
 object SpoiltProductItem {
-  given OFormat[SpoiltProductItem] = Json.format[SpoiltProductItem]
+  given format: OFormat[SpoiltProductItem] = Json.format[SpoiltProductItem]
 }

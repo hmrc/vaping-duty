@@ -32,5 +32,5 @@ case class ReturnCreateRequest(
 )
 
 object ReturnCreateRequest {
-  given OFormat[ReturnCreateRequest] = Json.format[ReturnCreateRequest]
+  given format: OFormat[ReturnCreateRequest] = Json.format[ReturnCreateRequest]
 }

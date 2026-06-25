@@ -27,5 +27,5 @@ final case class OverDeclarationProduct(
 )
 
 object OverDeclarationProduct {
-  given OFormat[OverDeclarationProduct] = Json.format[OverDeclarationProduct]
+  given format: OFormat[OverDeclarationProduct] = Json.format[OverDeclarationProduct]
 }

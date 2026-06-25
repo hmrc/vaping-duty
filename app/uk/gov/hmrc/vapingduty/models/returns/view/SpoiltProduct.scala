@@ -18,11 +18,11 @@ package uk.gov.hmrc.vapingduty.models.returns.view
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class SpoiltProduct(
+case class SpoiltProduct(
   spoiltProductFilled: String,
   spoiltProducts: Option[Seq[SpoiltProductItem]]
 )
 
 object SpoiltProduct {
-  given OFormat[SpoiltProduct] = Json.format[SpoiltProduct]
+  given format: OFormat[SpoiltProduct] = Json.format[SpoiltProduct]
 }
