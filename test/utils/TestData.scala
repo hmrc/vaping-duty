@@ -70,7 +70,6 @@ trait TestData {
     totalDutyOverDeclaration = BigDecimal("100.00"),
     totalDutyUnderDeclaration = BigDecimal("50.00"),
     totalDutySpoiltProduct = BigDecimal("25.00"),
-    adjustmentAmount = BigDecimal("-75.00"),
     totalDue = BigDecimal("3676.88")
   )
 
@@ -79,7 +78,6 @@ trait TestData {
     totalDutyOverDeclaration = BigDecimal("0.00"),
     totalDutyUnderDeclaration = BigDecimal("0.00"),
     totalDutySpoiltProduct = BigDecimal("0.00"),
-    adjustmentAmount = BigDecimal("0.00"),
     totalDue = BigDecimal("0.00")
   )
 
