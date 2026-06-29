@@ -19,8 +19,8 @@ package uk.gov.hmrc.vapingduty.models.returns.view
 import play.api.libs.json.{Json, OFormat}
 
 final case class IdDetails(
-  vpdReference: String,
-  submissionId: Option[String]
+  vpdReferenceNumber: String,
+  submissionId: String
 )
 
 object IdDetails {

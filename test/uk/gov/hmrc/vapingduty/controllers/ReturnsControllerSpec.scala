@@ -54,17 +54,17 @@ class ReturnsControllerSpec extends SpecBase {
     "return 200 OK when the connector successfully submits nil return" in {
       val nilRequestBody = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
-          nilReturn = Seq(nilReturnNoProducts),
-          regularReturn = Seq.empty
+          vapingProdManufactured = "0",
+          returns = Seq.empty
         ),
-        totalDutyDue = totalDutyDueNil
+        totalDutyDue = Some(totalDutyDueNil)
       )
       
       val nilReturn = returnCreateResponseSuccess.success.copy(
-        submissionID = None,
+        submissionId = None,
         chargeReference = None,
         amount = BigDecimal("0.0"),
-        paymentDueDate = None,
+        paymentDueDate = None
       )
 
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
@@ -85,6 +85,7 @@ class ReturnsControllerSpec extends SpecBase {
       status(result)          mustBe INTERNAL_SERVER_ERROR
     }
   }
+  
   "GetReturns must" - {
     "return 200 OK when the connector successfully gets returns" in {
       when(mockGetConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))

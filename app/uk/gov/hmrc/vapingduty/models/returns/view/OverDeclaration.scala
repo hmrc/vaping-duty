@@ -18,12 +18,12 @@ package uk.gov.hmrc.vapingduty.models.returns.view
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class OverDeclaration(
+case class OverDeclaration(
   overDeclFilled: String,
   reasonForOverDecl: Option[String],
   overDeclarationProducts: Option[Seq[OverDeclarationProduct]]
 )
 
 object OverDeclaration {
-  given OFormat[OverDeclaration] = Json.format[OverDeclaration]
+  given format: OFormat[OverDeclaration] = Json.format[OverDeclaration]
 }

@@ -22,10 +22,10 @@ final case class UnderDeclarationProduct(
   returnPeriodAffected: String,
   taxType: String,
   dutyRate: BigDecimal,
-  amountUnderDeclaration: BigDecimal,
+  amountUnderDeclared: BigDecimal,
   dutyDue: BigDecimal
 )
 
 object UnderDeclarationProduct {
-  given OFormat[UnderDeclarationProduct] = Json.format[UnderDeclarationProduct]
+  given format: OFormat[UnderDeclarationProduct] = Json.format[UnderDeclarationProduct]
 }

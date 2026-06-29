@@ -17,6 +17,7 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
@@ -64,8 +65,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
     Try {
       response.json.as[ReturnDisplayResponse]
     } match {
-      case Success(getResponse) =>
-        Future.successful(getResponse)
+      case Success(getResponse) => Future.successful(getResponse)
       case Failure(_) =>
         logger.warn(parsingError)
         Future.failed(InternalServerException(parsingError))

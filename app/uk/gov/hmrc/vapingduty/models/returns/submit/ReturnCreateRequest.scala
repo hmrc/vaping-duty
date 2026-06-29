@@ -18,14 +18,19 @@ package uk.gov.hmrc.vapingduty.models.returns.submit
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.vapingduty.models.returns.{DeclarationDetails, TotalDutyDue, VapingProductsProduced}
+import uk.gov.hmrc.vapingduty.models.returns.view.{OverDeclaration, UnderDeclaration, SpoiltProduct, OtherOptions}
 
 case class ReturnCreateRequest(
   periodKey: String,
   vapingProductsProduced: VapingProductsProduced,
-  totalDutyDue: TotalDutyDue,
+  overDeclaration: Option[OverDeclaration],
+  underDeclaration: Option[UnderDeclaration],
+  spoiltProduct: Option[SpoiltProduct],
+  totalDutyDue: Option[TotalDutyDue],
+  otherOptions: Option[OtherOptions],
   declaration: DeclarationDetails
 )
 
 object ReturnCreateRequest {
-  given OFormat[ReturnCreateRequest] = Json.format[ReturnCreateRequest]
+  given format: OFormat[ReturnCreateRequest] = Json.format[ReturnCreateRequest]
 }

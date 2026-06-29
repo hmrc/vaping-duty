@@ -70,8 +70,7 @@ trait TestData {
     totalDutyOverDeclaration = BigDecimal("100.00"),
     totalDutyUnderDeclaration = BigDecimal("50.00"),
     totalDutySpoiltProduct = BigDecimal("25.00"),
-    adjustmentAmount = BigDecimal("-75.00"),
-    totalDutyDue = BigDecimal("3676.88")
+    totalDue = BigDecimal("3676.88")
   )
 
   val totalDutyDueNil: TotalDutyDue = TotalDutyDue(
@@ -79,13 +78,12 @@ trait TestData {
     totalDutyOverDeclaration = BigDecimal("0.00"),
     totalDutyUnderDeclaration = BigDecimal("0.00"),
     totalDutySpoiltProduct = BigDecimal("0.00"),
-    adjustmentAmount = BigDecimal("0.00"),
-    totalDutyDue = BigDecimal("0.00")
+    totalDue = BigDecimal("0.00")
   )
 
   val vapingProductsProducedRegular: VapingProductsProduced = VapingProductsProduced(
-    nilReturn = Seq.empty,
-    regularReturn = Seq(regularReturn)
+    vapingProdManufactured = "1",
+    returns = Seq(regularReturn)
   )
 
   val sampleDeclarationDetails: DeclarationDetails = DeclarationDetails(
@@ -97,18 +95,21 @@ trait TestData {
   val returnsCreateRequest: ReturnCreateRequest = ReturnCreateRequest(
     periodKey = periodKey.value,
     vapingProductsProduced = vapingProductsProducedRegular,
-    totalDutyDue = totalDutyDue,
+    overDeclaration = Some(overDeclaration),
+    underDeclaration = Some(underDeclaration),
+    spoiltProduct = Some(spoiltProduct),
+    totalDutyDue = Some(totalDutyDue),
+    otherOptions = Some(otherOptions),
     declaration = sampleDeclarationDetails
   )
 
   val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
     processingDate = Instant.now(clock),
     vpdReferenceNumber = vpdReferenceNumber,
-    submissionID = Some(submissionId),
+    submissionId = Some(submissionId),
     chargeReference = Some(chargeReference),
     amount = BigDecimal("3676.88"),
-    paymentDueDate = Some(LocalDate.of(2026, 6, 30)),
-    declaration = sampleDeclarationDetails
+    paymentDueDate = Some(LocalDate.of(2026, 6, 30))
   )
 
   val returnCreateResponseSuccess: ReturnCreateResponse = ReturnCreateResponse(
@@ -117,8 +118,8 @@ trait TestData {
 
   // GET endpoint test data
   val idDetails: IdDetails = IdDetails(
-    vpdReference = vpdReferenceNumber,
-    submissionId = Some(submissionId)
+    vpdReferenceNumber = vpdReferenceNumber,
+    submissionId = submissionId
   )
 
   val chargeDetails: ChargeDetails = ChargeDetails(
@@ -129,35 +130,35 @@ trait TestData {
     receiptDate = Instant.now(clock)
   )
 
-  val overDeclarationProduct: OverDeclarationProduct = OverDeclarationProduct(
+  def overDeclarationProduct: OverDeclarationProduct = OverDeclarationProduct(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
-    amountOverDeclaration = BigDecimal("50.00"),
+    amountOverDeclared = BigDecimal("50.00"),
     dutyDue = BigDecimal("110.00")
   )
 
-  val overDeclaration: OverDeclaration = OverDeclaration(
+  def overDeclaration: OverDeclaration = OverDeclaration(
     overDeclFilled = "1",
     reasonForOverDecl = Some("Correction needed"),
     overDeclarationProducts = Some(Seq(overDeclarationProduct))
   )
 
-  val underDeclarationProduct: UnderDeclarationProduct = UnderDeclarationProduct(
+  def underDeclarationProduct: UnderDeclarationProduct = UnderDeclarationProduct(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
-    amountUnderDeclaration = BigDecimal("25.00"),
+    amountUnderDeclared = BigDecimal("25.00"),
     dutyDue = BigDecimal("55.00")
   )
 
-  val underDeclaration: UnderDeclaration = UnderDeclaration(
+  def underDeclaration: UnderDeclaration = UnderDeclaration(
     underDeclFilled = "1",
-    reasonForUnderDec = Some("Additional products found"),
+    reasonForUnderDecl = Some("Additional products found"),
     underDeclarationProducts = Some(Seq(underDeclarationProduct))
   )
 
-  val spoiltProductItem: SpoiltProductItem = SpoiltProductItem(
+  def spoiltProductItem: SpoiltProductItem = SpoiltProductItem(
     returnPeriodAffected = "26AA",
     taxType = "641",
     dutyRate = BigDecimal("2.20"),
@@ -165,19 +166,15 @@ trait TestData {
     dutyDue = BigDecimal("-22.00")
   )
 
-  val spoiltProduct: SpoiltProduct = SpoiltProduct(
+  def spoiltProduct: SpoiltProduct = SpoiltProduct(
     spoiltProductFilled = "1",
     spoiltProducts = Some(Seq(spoiltProductItem))
   )
 
-  val otherOptions: OtherOptions = OtherOptions(
-    otherOptions = "1",
-    vapingProdManufactured = Some("01"),
-    otherVapingProduct = Some("1"),
-    destroyed = Some(BigDecimal("5.00")),
-    imported = Some(BigDecimal("100.00")),
-    exported = Some(BigDecimal("50.00")),
-    amtRecieved = Some(BigDecimal("200.00"))
+  def otherOptions: OtherOptions = OtherOptions(
+    vapingProductUnderDutySuspense = "1",
+    volumeMovedFromDutySuspense = Some(BigDecimal("300.00")),
+    volumeMovedToDutySuspense = Some(BigDecimal("150.00"))
   )
 
   val returnDisplaySuccess: ReturnDisplaySuccess = ReturnDisplaySuccess(
@@ -189,7 +186,6 @@ trait TestData {
     underDeclaration = Some(underDeclaration),
     spoiltProduct = Some(spoiltProduct),
     totalDutyDue = Some(totalDutyDue),
-    totalDutyDueByTaxType = Some(totalDutyDue),
     otherOptions = Some(otherOptions),
     declaration = sampleDeclarationDetails
   )

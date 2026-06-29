@@ -23,10 +23,9 @@ case class TotalDutyDue(
   totalDutyOverDeclaration: BigDecimal,
   totalDutyUnderDeclaration: BigDecimal,
   totalDutySpoiltProduct: BigDecimal,
-  adjustmentAmount: BigDecimal,
-  totalDutyDue: BigDecimal
+  totalDue: BigDecimal
 )
 
 object TotalDutyDue {
-  given OFormat[TotalDutyDue] = Json.format[TotalDutyDue]
+  given format: OFormat[TotalDutyDue] = Json.format[TotalDutyDue]
 }
