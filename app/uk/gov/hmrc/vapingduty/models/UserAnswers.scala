@@ -19,7 +19,6 @@ package uk.gov.hmrc.vapingduty.models
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
-import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 
 import java.time.{Instant, Month}
 
