@@ -17,7 +17,6 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
-import play.api.libs.json.Json
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
