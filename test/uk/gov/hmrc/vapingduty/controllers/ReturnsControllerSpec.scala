@@ -17,14 +17,15 @@
 package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{verify, when}
 import play.api.http.Status.*
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
-import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.http.{InternalServerException, UpstreamErrorResponse}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
+import uk.gov.hmrc.vapingduty.services.NrsService
 
 import scala.concurrent.Future
 
@@ -32,18 +33,38 @@ class ReturnsControllerSpec extends SpecBase {
 
   val mockSubmitConnector: SubmitReturnsConnector = mock[SubmitReturnsConnector]
   val mockGetConnector: GetReturnsConnector = mock[GetReturnsConnector]
+  val mockNrsService: NrsService = mock[NrsService]
 
   val controller = new ReturnsController(
     cc,
     mockSubmitConnector,
     mockGetConnector,
-    fakeAuthorisedAction
+    fakeAuthorisedAction,
+    mockNrsService
   )
 
   "submitReturn must" - {
     "return 200 OK when the connector successfully submits returns" in {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
+      
+      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
+        .thenReturn(Future.successful(Right(())))
+
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
+      
+      verify(mockNrsService).submitToNrs(any(), any(), any())(any())
+    }
+
+    "return 200 OK even when NRS submission fails" in {
+      when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
+        .thenReturn(Future.successful(returnCreateResponseSuccess.success))
+      
+      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
+        .thenReturn(Future.successful(Left(UpstreamErrorResponse("NRS failed", 500))))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
@@ -69,6 +90,9 @@ class ReturnsControllerSpec extends SpecBase {
 
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
+      
+      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
+        .thenReturn(Future.successful(Right(())))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
 

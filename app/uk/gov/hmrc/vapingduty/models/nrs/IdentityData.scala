@@ -29,15 +29,18 @@ final case class IdentityData(
   nino: Option[String] = None,
   saUtr: Option[String] = None,
   optionalName: Option[Name] = None,
+  dateOfBirth: Option[String] = None,
   email: Option[String] = None,
   agentInformation: AgentInformation,
   groupIdentifier: Option[String] = None,
   credentialRole: Option[CredentialRole] = None,
   mdtpInformation: Option[MdtpInformation] = None,
   optionalItmpName: Option[ItmpName] = None,
+  dateOfBirthFromItmp: Option[String] = None,
   optionalItmpAddress: Option[ItmpAddress] = None,
   affinityGroup: Option[AffinityGroup] = None,
-  credentialStrength: Option[String] = None
+  credentialStrength: Option[String] = None,
+  loginTimes: Option[LoginTimes] = None
 )
 
 object IdentityData {

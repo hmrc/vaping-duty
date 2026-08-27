@@ -26,7 +26,9 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
+import uk.gov.hmrc.vapingduty.models.nrs.NrsMetadata
 import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
+import uk.gov.hmrc.vapingduty.services.NrsService
 
 import scala.concurrent.ExecutionContext
 
@@ -34,8 +36,11 @@ class ReturnsController @Inject()(
                                    cc: ControllerComponents,
                                    submitConnector: SubmitReturnsConnector,
                                    getConnector: GetReturnsConnector,
-                                   authorise: AuthorisedAction
+                                   authorise: AuthorisedAction,
+                                   nrsService: NrsService
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+
+  private val NOTABLE_EVENT_SUBMIT_RETURN = NrsMetadata.VpdSubmitReturnNotableEventId
 
   def getReturn(periodKey: PeriodKey, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
@@ -48,11 +53,33 @@ class ReturnsController @Inject()(
   
   def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
-      withJsonBody[ReturnCreateRequest] { returnSubmission =>
-        submitConnector.submitReturn(returnSubmission, vpdId)
-          .map(successResponse => Ok(Json.toJson(successResponse)))
-          .recover(errorResponse => InternalServerError)
+      given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
 
+      withJsonBody[ReturnCreateRequest] { returnSubmission =>
+        // Submit to ETMP first - this is the primary operation
+        submitConnector.submitReturn(returnSubmission, vpdId)
+          .map { successResponse =>
+            // After successful ETMP submission, trigger NRS submission asynchronously
+            // This is fire-and-forget - we don't wait for the result
+            val nrsPayload = Json.toJson(returnSubmission)
+            val identityData = request.toIdentityData
+            
+            // Fire and forget - NRS submission happens in background
+            nrsService.submitToNrs(nrsPayload, identityData, NOTABLE_EVENT_SUBMIT_RETURN)
+              .recover { case ex =>
+                // Log NRS failures but don't affect the returns submission response
+                logger.warn(s"Failed to submit to NRS for vpdId: $vpdId, periodKey: $periodKey", ex)
+                Left(ex)
+              }
+            
+            // Return success response immediately without waiting for NRS
+            Ok(Json.toJson(successResponse))
+          }
+          .recover { errorResponse =>
+            // ETMP submission failed - don't attempt NRS submission
+            logger.error(s"Failed to submit return for vpdId: $vpdId, periodKey: $periodKey")
+            InternalServerError
+          }
       }
     }
   }
