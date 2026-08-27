@@ -20,13 +20,16 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.ConfidenceLevel.L50
+import uk.gov.hmrc.auth.core.CredentialStrength
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
-import uk.gov.hmrc.vapingduty.models.nrs.NrsMetadata
+import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata}
 import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
 import uk.gov.hmrc.vapingduty.services.NrsService
 
@@ -62,7 +65,27 @@ class ReturnsController @Inject()(
             // After successful ETMP submission, queue NRS work item for background processing
             // This is fire-and-forget - we don't wait for the result
             val nrsPayload = Json.toJson(returnSubmission)
-            val identityData = request.toIdentityData
+            val identityData = IdentityData(
+              Some(request.userId),
+              None,
+              None,
+              None,
+              L50,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              Some(Organisation),
+              Some(CredentialStrength.strong),
+              None
+            )
             
             // Queue work item - NRS submission will be processed by scheduler
             nrsService.makeWorkItemAndQueue(nrsPayload, identityData, NOTABLE_EVENT_SUBMIT_RETURN)
@@ -75,7 +98,7 @@ class ReturnsController @Inject()(
             // Return success response immediately without waiting for NRS
             Ok(Json.toJson(successResponse))
           }
-          .recover { errorResponse =>
+          .recover { _ =>
             // ETMP submission failed - don't attempt NRS submission
             logger.error(s"Failed to submit return for vpdId: $vpdId, periodKey: $periodKey")
             InternalServerError

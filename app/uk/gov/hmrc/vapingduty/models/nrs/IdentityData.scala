@@ -31,7 +31,6 @@ final case class IdentityData(
   optionalName: Option[Name] = None,
   dateOfBirth: Option[String] = None,
   email: Option[String] = None,
-  agentInformation: AgentInformation,
   groupIdentifier: Option[String] = None,
   credentialRole: Option[CredentialRole] = None,
   mdtpInformation: Option[MdtpInformation] = None,

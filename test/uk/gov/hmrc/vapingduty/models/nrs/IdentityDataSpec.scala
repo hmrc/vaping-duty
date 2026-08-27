@@ -33,7 +33,6 @@ class IdentityDataSpec extends SpecBase {
     saUtr = Some("1234567890"),
     optionalName = Some(Name(Some("John"), Some("Doe"))),
     email = Some("test@example.com"),
-    agentInformation = AgentInformation(Some("agent-id"), Some("agent-code"), Some("agent-name")),
     groupIdentifier = Some("group-123"),
     credentialRole = Some(User),
     mdtpInformation = Some(MdtpInformation("device-id", "session-id")),
@@ -121,8 +120,7 @@ class IdentityDataSpec extends SpecBase {
 
     "must handle minimal IdentityData" in {
       val minimalData = IdentityData(
-        confidenceLevel = ConfidenceLevel.L50,
-        agentInformation = AgentInformation(None, None, None)
+        confidenceLevel = ConfidenceLevel.L50
       )
 
       val json = Json.toJson(minimalData)

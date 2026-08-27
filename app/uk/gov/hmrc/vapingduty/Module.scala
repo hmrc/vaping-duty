@@ -16,17 +16,23 @@
 
 package uk.gov.hmrc.vapingduty
 
-import com.google.inject.AbstractModule
+import play.api.{Configuration, Environment}
+import play.api.inject.{Binding, Module as AppModule}
+import controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 import uk.gov.hmrc.vapingduty.connectors.{NrsCircuitBreakerProvider, NrsConnector}
 import uk.gov.hmrc.vapingduty.scheduling.NrsScheduledService
 
 import java.time.Clock
 
-class Module extends AbstractModule {
+class Module extends AppModule {
 
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[NrsConnector.NrsCircuitBreaker]).toProvider(classOf[NrsCircuitBreakerProvider])
-    bind(classOf[NrsScheduledService]).asEagerSingleton()
-  }
+  override def bindings(
+                         environment: Environment,
+                         configuration: Configuration
+                       ): Seq[Binding[_]] =
+    bind[Clock].toInstance(Clock.systemDefaultZone) ::
+      bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
+      bind[NrsConnector.NrsCircuitBreaker].toProvider(classOf[NrsCircuitBreakerProvider]) ::
+      bind[NrsScheduledService].toSelf ::
+      Nil
 }

@@ -46,7 +46,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   with Matchers
   with Results
   with ScalaFutures {
-  
+
   val enrolment               = "HMRC-VPD-ORG"
   val vpdIdKey                = "ZVPD"
   val vpdId                   = "XMADP9876543210"
@@ -65,7 +65,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   private val mockAuthConnector: AuthConnector       = mock[AuthConnector]
 
   val authorisedAction =
-    new AuthorisedAction(mockAuthConnector, defaultBodyParser)
+    new BaseAuthorisedAction(mockAuthConnector, appConfig, defaultBodyParser)
 
   val testAction: Request[_] => Future[Result] = { _ =>
     Future(Ok(testContent))

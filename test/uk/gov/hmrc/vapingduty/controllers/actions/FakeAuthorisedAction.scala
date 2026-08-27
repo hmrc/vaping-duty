@@ -16,49 +16,21 @@
 
 package uk.gov.hmrc.vapingduty.controllers.actions
 
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.mvc.*
-import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.auth.core.retrieve.*
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments, User}
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
 import uk.gov.hmrc.vapingduty.models.requests.IdentifierRequest
 
-import java.time.{Instant, LocalDate}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FakeAuthorisedAction @Inject()(parser: BodyParsers.Default) 
-    extends AuthorisedAction(mock[AuthConnector], parser)(ExecutionContext.global) 
-    with MockitoSugar {
+class FakeAuthorisedAction @Inject()(bodyParsers: PlayBodyParsers) extends AuthorisedAction {
+
+  override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
 
   override def invokeBlock[A](request: Request[A], block: IdentifierRequest[A] => Future[Result]): Future[Result] =
     block(
-      IdentifierRequest(
-        request = request,
-        internalId = InternalId("test-internal-id"),
-        externalId = Some("test-external-id"),
-        agentCode = None,
-        credentials = Some(Credentials("test-cred-id", "GovernmentGateway")),
-        confidenceLevel = ConfidenceLevel.L50,
-        nino = Some("AB123456C"),
-        saUtr = None,
-        name = Some(Name(Some("Test"), Some("User"))),
-        dateOfBirth = Some(LocalDate.of(1980, 1, 1)),
-        email = Some("test@example.com"),
-        agentInformation = AgentInformation(None, None, None),
-        groupIdentifier = Some("test-group-id"),
-        credentialRole = Some(User),
-        mdtpInformation = Some(MdtpInformation("test-device-id", "test-session-id")),
-        itmpName = Some(ItmpName(Some("Test"), None, Some("User"))),
-        itmpDateOfBirth = Some(LocalDate.of(1980, 1, 1)),
-        itmpAddress = None,
-        affinityGroup = Some(AffinityGroup.Individual),
-        credentialStrength = Some("strong"),
-        loginTimes = LoginTimes(Instant.now(), None),
-        enrolments = Enrolments(Set.empty)
-      )
+      IdentifierRequest(request, "vpdId", "userId")
     )
+
+  override protected def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
 }
