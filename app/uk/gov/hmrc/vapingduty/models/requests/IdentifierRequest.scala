@@ -17,58 +17,5 @@
 package uk.gov.hmrc.vapingduty.models.requests
 
 import play.api.mvc.{Request, WrappedRequest}
-import uk.gov.hmrc.auth.core.retrieve.*
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, Enrolments}
-import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
-import uk.gov.hmrc.vapingduty.models.nrs.IdentityData
 
-import java.time.LocalDate
-
-final case class IdentifierRequest[A](
-  request: Request[A],
-  internalId: InternalId,
-  externalId: Option[String],
-  agentCode: Option[String],
-  credentials: Option[Credentials],
-  confidenceLevel: ConfidenceLevel,
-  nino: Option[String],
-  saUtr: Option[String],
-  name: Option[Name],
-  dateOfBirth: Option[LocalDate],
-  email: Option[String],
-  agentInformation: AgentInformation,
-  groupIdentifier: Option[String],
-  credentialRole: Option[CredentialRole],
-  mdtpInformation: Option[MdtpInformation],
-  itmpName: Option[ItmpName],
-  itmpDateOfBirth: Option[LocalDate],
-  itmpAddress: Option[ItmpAddress],
-  affinityGroup: Option[AffinityGroup],
-  credentialStrength: Option[String],
-  loginTimes: LoginTimes,
-  enrolments: Enrolments
-) extends WrappedRequest[A](request) {
-
-  def toIdentityData: IdentityData = IdentityData(
-    internalId = Some(internalId.id),
-    externalId = externalId,
-    agentCode = agentCode,
-    optionalCredentials = credentials,
-    confidenceLevel = confidenceLevel,
-    nino = nino,
-    saUtr = saUtr,
-    optionalName = name,
-    dateOfBirth = dateOfBirth.map(_.toString),
-    email = email,
-    agentInformation = agentInformation,
-    groupIdentifier = groupIdentifier,
-    credentialRole = credentialRole,
-    mdtpInformation = mdtpInformation,
-    optionalItmpName = itmpName,
-    dateOfBirthFromItmp = itmpDateOfBirth.map(_.toString),
-    optionalItmpAddress = itmpAddress,
-    affinityGroup = affinityGroup,
-    credentialStrength = credentialStrength,
-    loginTimes = Some(loginTimes)
-  )
-}
+case class IdentifierRequest[A](request: Request[A], vpdId: String, userId: String) extends WrappedRequest[A](request)
