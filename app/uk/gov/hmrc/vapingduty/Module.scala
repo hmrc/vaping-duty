@@ -16,19 +16,44 @@
 
 package uk.gov.hmrc.vapingduty
 
-import play.api.{Configuration, Environment}
-import play.api.inject.{Binding, Module => AppModule}
+import com.google.inject.{AbstractModule, Provides}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.CircuitBreaker
+import play.api.Configuration
+import uk.gov.hmrc.vapingduty.connectors.NrsCircuitBreaker
 import uk.gov.hmrc.vapingduty.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import uk.gov.hmrc.vapingduty.scheduling.NrsScheduledService
 
 import java.time.Clock
+import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
-class Module extends AppModule {
+class Module extends AbstractModule {
 
-  override def bindings(
-                         environment: Environment,
-                         configuration: Configuration
-                       ): Seq[Binding[_]] =
-      bind[Clock].toInstance(Clock.systemDefaultZone) ::
-      bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
-      Nil
+  override def configure(): Unit = {
+    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
+    bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction])
+    bind(classOf[NrsScheduledService]).asEagerSingleton()
+  }
+
+  @Provides
+  @Singleton
+  def provideNrsCircuitBreaker(
+    actorSystem: ActorSystem,
+    configuration: Configuration
+  )(implicit ec: ExecutionContext): NrsCircuitBreaker = {
+    val maxFailures  = configuration.get[Int]("microservice.services.nrs.circuit-breaker.max-failures")
+    val callTimeout  = configuration.get[FiniteDuration]("microservice.services.nrs.circuit-breaker.call-timeout")
+    val resetTimeout = configuration.get[FiniteDuration]("microservice.services.nrs.circuit-breaker.reset-timeout")
+
+    NrsCircuitBreaker(
+      new CircuitBreaker(
+        actorSystem.scheduler,
+        maxFailures = maxFailures,
+        callTimeout = callTimeout,
+        resetTimeout = resetTimeout
+      )
+    )
+  }
 }
