@@ -17,6 +17,7 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.vapingduty.models.nrs.IdentityData
 
 final case class NrsMetadata(
   businessId: String,
@@ -35,6 +36,8 @@ object NrsMetadata {
   private val NOTABLE_EVENT = "vpd-submit-return-api"
   private val SEARCH_KEY = "vpdId"
   private val PAYLOAD_CONTENT_TYPE = "application/json"
+  
+  val notableEventSubmitReturn: String = NOTABLE_EVENT
 
   def create(
     payLoad: String,

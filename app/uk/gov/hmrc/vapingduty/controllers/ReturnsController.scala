@@ -40,7 +40,7 @@ class ReturnsController @Inject()(
                                    nrsService: NrsService
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  private val NOTABLE_EVENT_SUBMIT_RETURN = NrsMetadata.VpdSubmitReturnNotableEventId
+  private val NOTABLE_EVENT_SUBMIT_RETURN = NrsMetadata.notableEventSubmitReturn
 
   def getReturn(periodKey: PeriodKey, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)

@@ -16,44 +16,17 @@
 
 package uk.gov.hmrc.vapingduty
 
-import com.google.inject.{AbstractModule, Provides}
-import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.pattern.CircuitBreaker
-import play.api.Configuration
-import uk.gov.hmrc.vapingduty.connectors.NrsCircuitBreaker
-import uk.gov.hmrc.vapingduty.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.vapingduty.connectors.{NrsCircuitBreakerProvider, NrsConnector}
 import uk.gov.hmrc.vapingduty.scheduling.NrsScheduledService
 
 import java.time.Clock
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction])
+    bind(classOf[NrsConnector.NrsCircuitBreaker]).toProvider(classOf[NrsCircuitBreakerProvider])
     bind(classOf[NrsScheduledService]).asEagerSingleton()
-  }
-
-  @Provides
-  @Singleton
-  def provideNrsCircuitBreaker(
-    actorSystem: ActorSystem,
-    configuration: Configuration
-  )(implicit ec: ExecutionContext): NrsCircuitBreaker = {
-    val maxFailures  = configuration.get[Int]("microservice.services.nrs.circuit-breaker.max-failures")
-    val callTimeout  = configuration.get[FiniteDuration]("microservice.services.nrs.circuit-breaker.call-timeout")
-    val resetTimeout = configuration.get[FiniteDuration]("microservice.services.nrs.circuit-breaker.reset-timeout")
-
-    NrsCircuitBreaker(
-      new CircuitBreaker(
-        actorSystem.scheduler,
-        maxFailures = maxFailures,
-        callTimeout = callTimeout,
-        resetTimeout = resetTimeout
-      )
-    )
   }
 }

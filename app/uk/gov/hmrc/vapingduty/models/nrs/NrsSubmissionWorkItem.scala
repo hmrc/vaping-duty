@@ -19,7 +19,7 @@ package uk.gov.hmrc.vapingduty.models.nrs
 import play.api.libs.json.{Json, OFormat}
 
 final case class NrsSubmissionWorkItem(
-  nrsPayload: NrsPayload
+  payload: NrsPayload
 )
 
 object NrsSubmissionWorkItem {

@@ -56,7 +56,7 @@ class NrsService @Inject() (
   )(implicit hc: HeaderCarrier): Future[Unit] = {
     val payloadString = Json.stringify(payload)
     val checksum = nrsUtils.sha256Hash(payloadString)
-    val timestamp = dateTimeService.timestamp()
+    val timestamp = dateTimeService.timestamp
     val userAuthToken = hc.authorization.map(_.value).getOrElse("")
     val headerData = hc.headers(Seq("User-Agent", "X-Request-ID", "X-Session-ID")).toMap
     val vpdId = identityData.internalId.getOrElse("")
@@ -78,11 +78,11 @@ class NrsService @Inject() (
     )
 
     val workItem = NrsSubmissionWorkItem(
-      nrsPayload = nrsPayload
+      payload = nrsPayload
     )
 
     nrsWorkItemRepository
-      .pushNew(workItem, Instant.now(), ProcessingStatus.ToDo)
+      .pushNew(workItem, Instant.now(), _ => ProcessingStatus.ToDo)
       .map { _ =>
         logger.info(s"Successfully queued NRS work item for notable event: $notableEvent")
         ()
@@ -111,6 +111,39 @@ class NrsService @Inject() (
       case Left(error) =>
         logger.error(s"Failed to submit to NRS for notable event: ${payload.metadata.notableEvent} - ${error.getMessage}")
         Left(error)
+    }
+  }
+
+  /**
+   * Process all pending work items from the queue. This method is called by the scheduler.
+   * It pulls work items, submits them to NRS, and updates their status accordingly.
+   *
+   * @return Future[Unit]
+   */
+  def processAll(): Future[Unit] = {
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+    
+    nrsWorkItemRepository.pullOutstanding(Instant.now(), Instant.now()).flatMap {
+      case None =>
+        logger.debug("No pending NRS work items to process")
+        Future.successful(())
+      case Some(workItem) =>
+        logger.info(s"Processing NRS work item: ${workItem.id}")
+        submitToNrs(workItem.item.payload).flatMap {
+          case Right(_) =>
+            nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
+              logger.info(s"Successfully processed NRS work item: ${workItem.id}")
+              ()
+            }
+          case Left(error) =>
+            nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
+              logger.error(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}")
+              ()
+            }
+        }.recoverWith { case ex =>
+          logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
+          nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
+        }
     }
   }
 }

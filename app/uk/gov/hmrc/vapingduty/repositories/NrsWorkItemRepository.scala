@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.vapingduty.repositories
 
-import org.mongodb.scala.model.{Filters, Indexes}
+import org.mongodb.scala.model.Filters
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem, WorkItemFields, WorkItemRepository}
+import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.NrsSubmissionWorkItem
 
@@ -41,18 +41,10 @@ class NrsWorkItemRepository @Inject() (
   override def now(): Instant = Instant.now()
 
   override lazy val inProgressRetryAfter: Duration =
-    Duration.ofMinutes(appConfig.nrsWorkItemRetryAfterMinutes)
+    Duration.ofMillis(appConfig.nrsWorkItemRetryAfter.toMillis)
 
-  override val retryIntervalMillis: Seq[Long] = Seq(
-    Duration.ofMinutes(1).toMillis,
-    Duration.ofMinutes(5).toMillis,
-    Duration.ofMinutes(15).toMillis,
-    Duration.ofMinutes(30).toMillis,
-    Duration.ofHours(1).toMillis
-  )
-
-  def completeAndDelete(id: org.bson.types.ObjectId): Future[Unit] =
-    collection.deleteOne(Filters.equal("_id", id)).toFuture().map(_ => ())
+  override def completeAndDelete(id: org.bson.types.ObjectId): Future[Boolean] =
+    super.completeAndDelete(id)
 
   override lazy val requiresTtlIndex: Boolean = true
 }

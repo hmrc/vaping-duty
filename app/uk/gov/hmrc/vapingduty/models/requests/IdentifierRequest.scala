@@ -50,7 +50,7 @@ final case class IdentifierRequest[A](
 ) extends WrappedRequest[A](request) {
 
   def toIdentityData: IdentityData = IdentityData(
-    internalId = Some(internalId.value),
+    internalId = Some(internalId.id),
     externalId = externalId,
     agentCode = agentCode,
     optionalCredentials = credentials,
