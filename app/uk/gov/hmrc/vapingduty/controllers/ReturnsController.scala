@@ -59,17 +59,17 @@ class ReturnsController @Inject()(
         // Submit to ETMP first - this is the primary operation
         submitConnector.submitReturn(returnSubmission, vpdId)
           .map { successResponse =>
-            // After successful ETMP submission, trigger NRS submission asynchronously
+            // After successful ETMP submission, queue NRS work item for background processing
             // This is fire-and-forget - we don't wait for the result
             val nrsPayload = Json.toJson(returnSubmission)
             val identityData = request.toIdentityData
             
-            // Fire and forget - NRS submission happens in background
-            nrsService.submitToNrs(nrsPayload, identityData, NOTABLE_EVENT_SUBMIT_RETURN)
+            // Queue work item - NRS submission will be processed by scheduler
+            nrsService.makeWorkItemAndQueue(nrsPayload, identityData, NOTABLE_EVENT_SUBMIT_RETURN)
               .recover { case ex =>
-                // Log NRS failures but don't affect the returns submission response
-                logger.warn(s"Failed to submit to NRS for vpdId: $vpdId, periodKey: $periodKey", ex)
-                Left(ex)
+                // Log NRS queueing failures but don't affect the returns submission response
+                logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)
+                ()
               }
             
             // Return success response immediately without waiting for NRS

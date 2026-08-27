@@ -44,27 +44,27 @@ class ReturnsControllerSpec extends SpecBase {
   )
 
   "submitReturn must" - {
-    "return 200 OK when the connector successfully submits returns" in {
+    "return 200 OK when the connector successfully submits returns and queue NRS work item" in {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
-      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
-        .thenReturn(Future.successful(Right(())))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+        .thenReturn(Future.successful(()))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
       
-      verify(mockNrsService).submitToNrs(any(), any(), any())(any())
+      verify(mockNrsService).makeWorkItemAndQueue(any(), any(), any())(any())
     }
 
-    "return 200 OK even when NRS submission fails" in {
+    "return 200 OK even when NRS work item queueing fails" in {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
-      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
-        .thenReturn(Future.successful(Left(UpstreamErrorResponse("NRS failed", 500))))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+        .thenReturn(Future.failed(new RuntimeException("Failed to queue work item")))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
 
@@ -72,7 +72,7 @@ class ReturnsControllerSpec extends SpecBase {
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
     }
 
-    "return 200 OK when the connector successfully submits nil return" in {
+    "return 200 OK when the connector successfully submits nil return and queue NRS work item" in {
       val nilRequestBody = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
           vapingProdManufactured = "0",
@@ -91,8 +91,8 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
       
-      when(mockNrsService.submitToNrs(any(), any(), any())(any()))
-        .thenReturn(Future.successful(Right(())))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+        .thenReturn(Future.successful(()))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
 
