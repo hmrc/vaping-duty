@@ -17,8 +17,8 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole}
+import uk.gov.hmrc.auth.core.retrieve.*
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, User}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 class IdentityDataSpec extends SpecBase {
@@ -35,7 +35,7 @@ class IdentityDataSpec extends SpecBase {
     email = Some("test@example.com"),
     agentInformation = AgentInformation(Some("agent-id"), Some("agent-code"), Some("agent-name")),
     groupIdentifier = Some("group-123"),
-    credentialRole = Some(CredentialRole.User),
+    credentialRole = Some(User),
     mdtpInformation = Some(MdtpInformation("device-id", "session-id")),
     optionalItmpName = Some(ItmpName(Some("John"), Some("M"), Some("Doe"))),
     optionalItmpAddress = Some(ItmpAddress(
