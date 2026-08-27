@@ -17,7 +17,7 @@
 package uk.gov.hmrc.vapingduty.services
 
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
-import org.mockito.Mockito.{verify, when}
+import org.mockito.Mockito.{reset, times, verify, when}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.auth.core.retrieve.AgentInformation
@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
-import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsPayload}
+import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload}
 import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
 import uk.gov.hmrc.vapingduty.utils.{DateTimeService, NrsUtils}
 
@@ -74,15 +74,28 @@ class NrsServiceSpec extends SpecBase {
   val testEncodedPayload   = "encodedPayload"
   val testChecksum         = "checksum123"
   val testTimestamp        = Instant.now(clock)
+  val testTimestampString  = "2024-06-11T12:34:27.838Z"
   val testHeaderData       = Json.obj("test" -> "header")
   val testSearchKeys       = Json.obj("vpdReference" -> "XMVPD0000000123")
+  
+  val testMetadata = NrsMetadata.create(
+    payLoad = Json.stringify(testPayload),
+    sha256Hash = testChecksum,
+    identityData = testIdentityData,
+    submissionTimeStamp = testTimestampString,
+    userAuthToken = "Bearer token",
+    userHeaderData = Map("User-Agent" -> "test-agent"),
+    vpdId = "Int-123"
+  )
 
   "NrsService must" - {
     "makeWorkItemAndQueue must" - {
       "successfully queue a work item" in {
+        reset(mockNrsWorkItemRepository, mockNrsUtils, mockDateTimeService)
+        
         when(mockNrsUtils.encode(any[String])).thenReturn(testEncodedPayload)
         when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
-        when(mockDateTimeService.timestamp).thenReturn(testTimestamp)
+        when(mockDateTimeService.timestamp).thenReturn(testTimestampString)
         when(mockNrsWorkItemRepository.pushNew(any(), any(), any()))
           .thenReturn(Future.successful(null))
 
@@ -94,9 +107,11 @@ class NrsServiceSpec extends SpecBase {
       }
 
       "handle queueing failures gracefully" in {
+        reset(mockNrsWorkItemRepository, mockNrsUtils, mockDateTimeService)
+        
         when(mockNrsUtils.encode(any[String])).thenReturn(testEncodedPayload)
         when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
-        when(mockDateTimeService.timestamp).thenReturn(testTimestamp)
+        when(mockDateTimeService.timestamp).thenReturn(testTimestampString)
         when(mockNrsWorkItemRepository.pushNew(any(), any(), any()))
           .thenReturn(Future.failed(new RuntimeException("Database error")))
 
@@ -110,7 +125,9 @@ class NrsServiceSpec extends SpecBase {
 
     "submitToNrs must" - {
       "successfully submit to NRS and return Right(())" in {
-        val testNrsPayload = NrsPayload(testEncodedPayload, null)
+        reset(mockNrsConnector)
+        
+        val testNrsPayload = NrsPayload(testEncodedPayload, testMetadata)
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
           .thenReturn(Future.successful(Right(())))
@@ -122,8 +139,10 @@ class NrsServiceSpec extends SpecBase {
       }
 
       "return Left(UpstreamErrorResponse) when NRS connector fails" in {
+        reset(mockNrsConnector)
+        
         val error = UpstreamErrorResponse("NRS error", 500)
-        val testNrsPayload = NrsPayload(testEncodedPayload, null)
+        val testNrsPayload = NrsPayload(testEncodedPayload, testMetadata)
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
           .thenReturn(Future.successful(Left(error)))

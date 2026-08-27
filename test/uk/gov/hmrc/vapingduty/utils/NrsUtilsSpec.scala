@@ -65,7 +65,7 @@ class NrsUtilsSpec extends SpecBase {
         val input = """{"key":"value"}"""
         val result = nrsUtils.sha256Hash(input)
         
-        result mustBe "a7c976db1723adb41274178dc82e9b777941ab201c69de61d0f2bc6d27a32534"
+        result mustBe "e43abcf3375244839c012f9633f95862d232a95b00d5bc7348b3098b9fed7f32"
       }
 
       "must generate consistent hash for same input" in {
