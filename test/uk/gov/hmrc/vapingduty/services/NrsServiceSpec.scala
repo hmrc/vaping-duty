@@ -59,7 +59,6 @@ class NrsServiceSpec extends SpecBase {
     optionalName = None,
     dateOfBirth = None,
     email = None,
-    agentInformation = AgentInformation(None, None, None),
     groupIdentifier = None,
     credentialRole = None,
     mdtpInformation = None,

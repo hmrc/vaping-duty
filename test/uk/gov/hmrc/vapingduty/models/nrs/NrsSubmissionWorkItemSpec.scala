@@ -31,8 +31,7 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
 
   private val testIdentityData = IdentityData(
     internalId = Some("int-id-123"),
-    confidenceLevel = ConfidenceLevel.L200,
-    agentInformation = AgentInformation(None, None, None)
+    confidenceLevel = ConfidenceLevel.L200
   )
 
   private val testMetadata = NrsMetadata.create(

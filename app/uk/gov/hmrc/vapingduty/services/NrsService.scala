@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.vapingduty.services
 
-import org.mongodb.scala.bson.ObjectId
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -31,29 +30,28 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NrsService @Inject() (
-  nrsConnector: NrsConnector,
-  nrsUtils: NrsUtils,
-  dateTimeService: DateTimeService,
-  nrsWorkItemRepository: NrsWorkItemRepository
-)(implicit ec: ExecutionContext)
-    extends Logging {
+class NrsService @Inject()(
+                            nrsConnector: NrsConnector,
+                            nrsUtils: NrsUtils,
+                            dateTimeService: DateTimeService,
+                            nrsWorkItemRepository: NrsWorkItemRepository
+                          )(implicit ec: ExecutionContext) extends Logging {
 
   /**
    * Queue a work item for NRS submission. This is the method that should be called
    * from controllers after successful ETMP submission.
    *
-   * @param payload The JSON payload to submit to NRS
+   * @param payload      The JSON payload to submit to NRS
    * @param identityData User identity data from auth
    * @param notableEvent The notable event identifier
-   * @param hc HeaderCarrier for HTTP context
+   * @param hc           HeaderCarrier for HTTP context
    * @return Future[Unit] - fire and forget, failures are logged
    */
   def makeWorkItemAndQueue(
-    payload: JsValue,
-    identityData: IdentityData,
-    notableEvent: String
-  )(implicit hc: HeaderCarrier): Future[Unit] = {
+                            payload: JsValue,
+                            identityData: IdentityData,
+                            notableEvent: String
+                          )(implicit hc: HeaderCarrier): Future[Unit] = {
     val payloadString = Json.stringify(payload)
     val checksum = nrsUtils.sha256Hash(payloadString)
     val timestamp = dateTimeService.timestamp
@@ -98,14 +96,14 @@ class NrsService @Inject() (
    * Controllers should NOT call this method directly - use makeWorkItemAndQueue instead.
    *
    * @param payload The NRS payload to submit
-   * @param hc HeaderCarrier for HTTP context
+   * @param hc      HeaderCarrier for HTTP context
    * @return Future[Either[UpstreamErrorResponse, Unit]]
    */
   def submitToNrs(
-    payload: NrsPayload
-  )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
+                   payload: NrsPayload
+                 )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
     nrsConnector.submitToNrs(payload).map {
-      case Right(_)    =>
+      case Right(_) =>
         logger.info(s"Successfully submitted to NRS for notable event: ${payload.metadata.notableEvent}")
         Right(())
       case Left(error) =>
@@ -122,7 +120,7 @@ class NrsService @Inject() (
    */
   def processAll(): Future[Unit] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    
+
     nrsWorkItemRepository.pullOutstanding(Instant.now(), Instant.now()).flatMap {
       case None =>
         logger.debug("No pending NRS work items to process")

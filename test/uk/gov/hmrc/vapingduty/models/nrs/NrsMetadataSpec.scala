@@ -39,7 +39,6 @@ class NrsMetadataSpec extends SpecBase {
     saUtr = None,
     optionalName = Some(Name(Some("John"), Some("Doe"))),
     email = Some("test@example.com"),
-    agentInformation = AgentInformation(None, None, None),
     groupIdentifier = Some("group-123"),
     credentialRole = Some(User),
     mdtpInformation = Some(MdtpInformation("device-id", "session-id")),

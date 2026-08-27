@@ -20,6 +20,7 @@ import org.scalacheck.Gen
 import play.api.libs.json.{JsObject, Json, OFormat}
 import uk.gov.hmrc.vapingduty.models.*
 import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, PeriodKey, VpdId}
+import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata}
 import uk.gov.hmrc.vapingduty.models.returns.*
 import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.models.returns.view.*
@@ -192,5 +193,39 @@ trait TestData {
 
   val returnDisplayResponse: ReturnDisplayResponse = ReturnDisplayResponse(
     success = returnDisplaySuccess
+  )
+
+  val sampleIdentityData: IdentityData = IdentityData(
+    internalId = Some("test-internal-id"),
+    externalId = Some("test-external-id"),
+    agentCode = None,
+    optionalCredentials = None,
+    confidenceLevel = uk.gov.hmrc.auth.core.ConfidenceLevel.L200,
+    nino = None,
+    saUtr = None,
+    optionalName = None,
+    dateOfBirth = None,
+    email = Some("test@example.com"),
+    groupIdentifier = Some("test-group-id"),
+    credentialRole = Some(uk.gov.hmrc.auth.core.User),
+    mdtpInformation = None,
+    optionalItmpName = None,
+    dateOfBirthFromItmp = None,
+    optionalItmpAddress = None,
+    affinityGroup = Some(uk.gov.hmrc.auth.core.AffinityGroup.Organisation),
+    credentialStrength = Some("strong"),
+    loginTimes = None
+  )
+
+  val sampleNrsMeta: NrsMetadata = NrsMetadata(
+    businessId = "vpd",
+    notableEvent = "vaping-duty-return",
+    payloadContentType = "application/json",
+    payloadSha256Checksum = "test-checksum",
+    userSubmissionTimestamp = Instant.now(clock).toString,
+    identityData = sampleIdentityData,
+    userAuthToken = "test-auth-token",
+    headerData = Map.empty[String, String],
+    searchKeys = Map("vpdId" -> vpdId.id, "periodKey" -> periodKey.value)
   )
 }
