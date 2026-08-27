@@ -65,7 +65,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   private val mockAuthConnector: AuthConnector       = mock[AuthConnector]
 
   val authorisedAction =
-    new BaseAuthorisedAction(mockAuthConnector, appConfig, defaultBodyParser)
+    new AuthorisedAction(mockAuthConnector, defaultBodyParser)
 
   val testAction: Request[_] => Future[Result] = { _ =>
     Future(Ok(testContent))

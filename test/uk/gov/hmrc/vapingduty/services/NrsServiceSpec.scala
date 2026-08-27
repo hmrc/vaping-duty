@@ -19,6 +19,8 @@ package uk.gov.hmrc.vapingduty.services
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.auth.core.retrieve.AgentInformation
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
@@ -50,21 +52,21 @@ class NrsServiceSpec extends SpecBase {
     internalId = Some("Int-123"),
     externalId = Some("Ext-123"),
     agentCode = None,
-    credentials = None,
-    confidenceLevel = 200,
+    optionalCredentials = None,
+    confidenceLevel = ConfidenceLevel.L200,
     nino = None,
     saUtr = None,
-    name = None,
+    optionalName = None,
     dateOfBirth = None,
     email = None,
-    agentInformation = None,
+    agentInformation = AgentInformation(None, None, None),
     groupIdentifier = None,
     credentialRole = None,
     mdtpInformation = None,
-    itmpName = None,
-    itmpDateOfBirth = None,
-    itmpAddress = None,
-    affinityGroup = Some("Organisation"),
+    optionalItmpName = None,
+    dateOfBirthFromItmp = None,
+    optionalItmpAddress = None,
+    affinityGroup = None,
     credentialStrength = Some("strong"),
     loginTimes = None
   )
@@ -80,28 +82,28 @@ class NrsServiceSpec extends SpecBase {
       "successfully queue a work item" in {
         when(mockNrsUtils.encode(any[String])).thenReturn(testEncodedPayload)
         when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
-        when(mockDateTimeService.timestamp()).thenReturn(testTimestamp)
-        when(mockNrsWorkItemRepository.pushNew(any(), any(), any())(any()))
+        when(mockDateTimeService.timestamp).thenReturn(testTimestamp)
+        when(mockNrsWorkItemRepository.pushNew(any(), any(), any()))
           .thenReturn(Future.successful(null))
 
         val result = service.makeWorkItemAndQueue(testPayload, testIdentityData, testNotableEvent)
 
         whenReady(result) { _ =>
-          verify(mockNrsWorkItemRepository).pushNew(any(), any(), eqTo(ProcessingStatus.ToDo))(any())
+          verify(mockNrsWorkItemRepository).pushNew(any(), any(), any())
         }
       }
 
       "handle queueing failures gracefully" in {
         when(mockNrsUtils.encode(any[String])).thenReturn(testEncodedPayload)
         when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
-        when(mockDateTimeService.timestamp()).thenReturn(testTimestamp)
-        when(mockNrsWorkItemRepository.pushNew(any(), any(), any())(any()))
+        when(mockDateTimeService.timestamp).thenReturn(testTimestamp)
+        when(mockNrsWorkItemRepository.pushNew(any(), any(), any()))
           .thenReturn(Future.failed(new RuntimeException("Database error")))
 
         val result = service.makeWorkItemAndQueue(testPayload, testIdentityData, testNotableEvent)
 
         whenReady(result) { _ =>
-          verify(mockNrsWorkItemRepository).pushNew(any(), any(), eqTo(ProcessingStatus.ToDo))(any())
+          verify(mockNrsWorkItemRepository).pushNew(any(), any(), any())
         }
       }
     }

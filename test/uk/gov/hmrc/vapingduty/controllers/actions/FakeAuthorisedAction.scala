@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.vapingduty.controllers.actions
 
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.mvc.*
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.auth.core.retrieve.*
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments, User}
 import uk.gov.hmrc.vapingduty.models.identifiers.InternalId
@@ -26,9 +29,9 @@ import java.time.{Instant, LocalDate}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FakeAuthorisedAction @Inject()(bodyParsers: PlayBodyParsers) extends AuthorisedAction {
-
-  override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
+class FakeAuthorisedAction @Inject()(parser: BodyParsers.Default) 
+    extends AuthorisedAction(mock[AuthConnector], parser)(ExecutionContext.global) 
+    with MockitoSugar {
 
   override def invokeBlock[A](request: Request[A], block: IdentifierRequest[A] => Future[Result]): Future[Result] =
     block(
@@ -57,7 +60,5 @@ class FakeAuthorisedAction @Inject()(bodyParsers: PlayBodyParsers) extends Autho
         enrolments = Enrolments(Set.empty)
       )
     )
-
-  override protected def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
 }

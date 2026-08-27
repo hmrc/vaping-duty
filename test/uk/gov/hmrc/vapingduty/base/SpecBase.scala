@@ -68,7 +68,7 @@ trait SpecBase
   val cc: ControllerComponents                         = stubControllerComponents()
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
   val appConfig: AppConfig                             = app.injector.instanceOf[AppConfig]
-  val bodyParsers: PlayBodyParsers                     = app.injector.instanceOf[PlayBodyParsers]
+  val bodyParsers: BodyParsers.Default                 = app.injector.instanceOf[BodyParsers.Default]
   val fakeAuthorisedAction                             = new FakeAuthorisedAction(bodyParsers)
 
   def fakeRequestWithJsonBody(json: JsValue): FakeRequest[JsValue] = FakeRequest("", "/", FakeHeaders(), json)

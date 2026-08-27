@@ -47,7 +47,7 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
           "nrs-submission-scheduler.initial-delay" -> "1 minute"
         )
 
-        when(mockNrsService.processAllWithLock()).thenReturn(Future.successful(Done))
+        when(mockNrsService.processAll()).thenReturn(Future.successful(Done))
 
         new NrsScheduledService(actorSystem, mockNrsService, config)
 
@@ -70,7 +70,7 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
         // Give it a moment to ensure nothing is scheduled
         Thread.sleep(100)
 
-        verify(mockNrsService, never()).processAllWithLock()
+        verify(mockNrsService, never()).processAll()
       }
     }
 
@@ -82,7 +82,7 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
           "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
         )
 
-        when(mockNrsService.processAllWithLock())
+        when(mockNrsService.processAll())
           .thenReturn(Future.failed(new RuntimeException("Test error")))
 
         new NrsScheduledService(actorSystem, mockNrsService, config)
@@ -90,8 +90,8 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
         // Wait for at least one execution
         Thread.sleep(200)
 
-        // Verify that processAllWithLock was called despite the error
-        verify(mockNrsService).processAllWithLock()
+        // Verify that processAll was called despite the error
+        verify(mockNrsService).processAll()
       }
     }
   }

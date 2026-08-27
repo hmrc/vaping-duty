@@ -18,14 +18,15 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.CircuitBreaker
+import org.scalatest.BeforeAndAfterAll
 import play.api.Configuration
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 import scala.concurrent.duration._
 
-class NrsCircuitBreakerProviderSpec extends SpecBase {
+class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
 
-  private val actorSystem = ActorSystem("test-system")
+  private var actorSystem: ActorSystem = _
 
   private val testConfig = Configuration(
     "microservice.services.nrs.max-failures"                -> 5,
@@ -35,8 +36,15 @@ class NrsCircuitBreakerProviderSpec extends SpecBase {
     "microservice.services.nrs.exponential-backoff-factor"  -> 2.0
   )
 
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    actorSystem = ActorSystem("test-system")
+  }
+
   override def afterAll(): Unit = {
-    actorSystem.terminate()
+    if (actorSystem != null) {
+      actorSystem.terminate()
+    }
     super.afterAll()
   }
 
