@@ -82,6 +82,6 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
       ("X-Regime-Type", "VPD"),
       ("X-Transmitting-System", "HIP"),
       ("periodKey", periodKey),
-      ("vpdreference", vpdId.toString)
+      ("X-ZVPD", vpdId.toString)
     )
 }
