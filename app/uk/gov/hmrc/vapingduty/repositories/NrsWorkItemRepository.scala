@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.vapingduty.repositories
 
-import org.mongodb.scala.model.Filters
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.vapingduty.config.AppConfig
@@ -27,17 +26,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NrsWorkItemRepository @Inject() (
-  mongoComponent: MongoComponent,
-  appConfig: AppConfig,
-  clock: Clock
-)(implicit ec: ExecutionContext)
-    extends WorkItemRepository[NrsSubmissionWorkItem](
-      collectionName = "nrs-work-items",
-      mongoComponent = mongoComponent,
-      itemFormat = NrsSubmissionWorkItem.format,
-      workItemFields = WorkItemFields.default
-    ) {
+class NrsWorkItemRepository @Inject()(
+                                       mongoComponent: MongoComponent,
+                                       appConfig: AppConfig,
+                                       clock: Clock
+                                     )(using ec: ExecutionContext)
+  extends WorkItemRepository[NrsSubmissionWorkItem](
+    collectionName = "nrs-work-items",
+    mongoComponent = mongoComponent,
+    itemFormat = NrsSubmissionWorkItem.format,
+    workItemFields = WorkItemFields.default
+  ) {
 
   override def now(): Instant = Instant.now(clock)
 
