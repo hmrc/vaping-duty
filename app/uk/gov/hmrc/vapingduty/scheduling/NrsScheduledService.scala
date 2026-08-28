@@ -25,12 +25,11 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class NrsScheduledService @Inject() (
-  actorSystem: ActorSystem,
-  nrsService: NrsService,
-  configuration: Configuration
-)(implicit ec: ExecutionContext)
-    extends Logging {
+class NrsScheduledService @Inject()(
+                                     actorSystem: ActorSystem,
+                                     nrsService: NrsService,
+                                     configuration: Configuration
+                                   )(implicit ec: ExecutionContext) extends Logging {
 
   private val enabled: Boolean = configuration.get[Boolean]("nrs-submission-scheduler.enabled")
   private val initialDelay: FiniteDuration =
