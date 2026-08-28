@@ -48,7 +48,7 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
-      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any())(using any(), any()))
         .thenReturn(Future.successful(()))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
@@ -56,14 +56,14 @@ class ReturnsControllerSpec extends SpecBase {
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
       
-      verify(mockNrsService).makeWorkItemAndQueue(any(), any(), any())(any())
+      verify(mockNrsService).makeWorkItemAndQueue(any(), any())(using any(), any())
     }
 
     "return 200 OK even when NRS work item queueing fails" in {
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
-      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any())(using any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Failed to queue work item")))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
@@ -91,7 +91,7 @@ class ReturnsControllerSpec extends SpecBase {
       when(mockSubmitConnector.submitReturn(eqTo(nilRequestBody), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(nilReturn))
       
-      when(mockNrsService.makeWorkItemAndQueue(any(), any(), any())(any()))
+      when(mockNrsService.makeWorkItemAndQueue(any(), any())(using any(), any()))
         .thenReturn(Future.successful(()))
 
       val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(nilRequestBody)))
