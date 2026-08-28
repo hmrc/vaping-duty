@@ -50,6 +50,7 @@ class NrsConnector @Inject() (
     nrsCircuitBreaker.breaker.withCircuitBreaker(
       httpClient
         .post(url)
+        .setHeader("X-API-Key" -> appConfig.nrsApiKey)
         .withBody(Json.toJson(payload))
         .execute[HttpResponse]
         .map { response =>
