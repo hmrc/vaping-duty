@@ -81,6 +81,6 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
       ("X-Transmitting-System", "HIP"),
-      ("X-ZVPD", vpdId.toString)
+      ("vpdreference", vpdId.toString)
     )
 }
