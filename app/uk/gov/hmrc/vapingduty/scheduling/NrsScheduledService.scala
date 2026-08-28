@@ -54,6 +54,8 @@ class NrsScheduledService @Inject() (
       logger.debug("NRS submission scheduler triggered")
       nrsService.processAll().recover { case ex =>
         logger.error("Error processing NRS work items", ex)
+        ()
       }
+      ()
     }
 }

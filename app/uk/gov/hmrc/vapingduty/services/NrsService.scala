@@ -115,33 +115,40 @@ class NrsService @Inject()(
   /**
    * Process all pending work items from the queue. This method is called by the scheduler.
    * It pulls work items, submits them to NRS, and updates their status accordingly.
+   * Continues processing until no more items are available.
    *
    * @return Future[Unit]
    */
   def processAll(): Future[Unit] = {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    nrsWorkItemRepository.pullOutstanding(Instant.now(), Instant.now()).flatMap {
-      case None =>
-        logger.debug("No pending NRS work items to process")
-        Future.successful(())
-      case Some(workItem) =>
-        logger.info(s"Processing NRS work item: ${workItem.id}")
-        submitToNrs(workItem.item.payload).flatMap {
-          case Right(_) =>
-            nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
-              logger.info(s"Successfully processed NRS work item: ${workItem.id}")
-              ()
-            }
-          case Left(error) =>
-            nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
-              logger.error(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}")
-              ()
-            }
-        }.recoverWith { case ex =>
-          logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
-          nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
-        }
-    }
+    def processNext(): Future[Unit] =
+      nrsWorkItemRepository.pullOutstanding(Instant.now().minusSeconds(60), Instant.now()).flatMap {
+        case None =>
+          logger.debug("No pending NRS work items to process")
+          Future.successful(())
+        case Some(workItem) =>
+          logger.info(s"Processing NRS work item: ${workItem.id}")
+          val processResult = submitToNrs(workItem.item.payload).flatMap {
+            case Right(_) =>
+              nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
+                logger.info(s"Successfully processed NRS work item: ${workItem.id}")
+                ()
+              }
+            case Left(error) =>
+              nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
+                logger.error(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}")
+                ()
+              }
+          }.recoverWith { case ex =>
+            logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
+            nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
+          }
+          
+          // Continue processing next item after this one completes
+          processResult.flatMap(_ => processNext())
+      }
+
+    processNext()
   }
 }
