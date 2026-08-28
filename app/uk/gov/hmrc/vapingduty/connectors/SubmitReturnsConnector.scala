@@ -22,6 +22,7 @@ import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -32,10 +33,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: Clock)(
-                                      config: AppConfig,
-                                      implicit val httpClient: HttpClientV2
+  config: AppConfig,
+  implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
-    extends HttpReadsInstances
+  extends HttpReadsInstances
     with Logging {
 
   private val parsingError = "Parsing failed for VPD return submission response"
@@ -44,7 +45,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
       .post(url"${config.submitReturnUrl()}")
-      .setHeader(createReturnHeaders(vpdId): _*)
+      .setHeader(createReturnHeaders(vpdId, returnRequest.periodKey): _*)
       .withBody(Json.toJson(returnRequest))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>
@@ -71,14 +72,16 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
     }
   }
 
-  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
+  def createReturnHeaders(vpdId: VpdId, periodKey: String): Seq[(String, String)] =
     Seq(
+      (HeaderNames.authorisation, HIPAuth(config).authorizationForReturns()),
       ("correlationid", randomUUIDGenerator.uuid),
       ("X-Message-Type", "VPDReturnCreate"),
       ("X-Originating-System", "MDTP"),
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
       ("X-Transmitting-System", "HIP"),
-      ("X-ZVPD", vpdId.toString)
+      ("periodKey", periodKey),
+      ("vpdreference", vpdId.toString)
     )
 }
