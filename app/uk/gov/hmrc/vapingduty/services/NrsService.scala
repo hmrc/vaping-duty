@@ -61,7 +61,7 @@ class NrsService @Inject()(
     val checksum = nrsUtils.sha256Hash(payloadString)
     val timestamp = dateTimeService.timestamp
     val userAuthToken = retrieveUserAuthToken()
-    val headerData = hc.headers(Seq("User-Agent", "X-Request-ID", "X-Session-ID")).toMap
+    val headerData = request.request.headers.headers.toMap
     val vpdId = request.vpdId
 
     for {

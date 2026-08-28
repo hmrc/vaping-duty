@@ -57,7 +57,7 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
       
       (json \ "payload" \ "payload").as[String] mustBe testEncodedPayload
       (json \ "payload" \ "metadata" \ "businessId").as[String] mustBe "vpd"
-      (json \ "payload" \ "metadata" \ "notableEvent").as[String] mustBe "vpd-submit-return-api"
+      (json \ "payload" \ "metadata" \ "notableEvent").as[String] mustBe "returnSubmitted"
     }
 
     "must deserialize from JSON correctly" in {
@@ -66,7 +66,7 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
           "payload" -> testEncodedPayload,
           "metadata" -> Json.obj(
             "businessId" -> "vpd",
-            "notableEvent" -> "vpd-submit-return-api",
+            "notableEvent" -> "returnSubmitted",
             "payloadContentType" -> "application/json",
             "payloadSha256Checksum" -> testSha256Hash,
             "userSubmissionTimestamp" -> testTimestamp,
@@ -90,7 +90,7 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
       
       result.payload.payload mustBe testEncodedPayload
       result.payload.metadata.businessId mustBe "vpd"
-      result.payload.metadata.notableEvent mustBe "vpd-submit-return-api"
+      result.payload.metadata.notableEvent mustBe "returnSubmitted"
     }
 
     "must round-trip through JSON" in {
