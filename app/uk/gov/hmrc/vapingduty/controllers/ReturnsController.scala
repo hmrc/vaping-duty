@@ -56,7 +56,7 @@ class ReturnsController @Inject()(
   
   def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
-      given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
+      given HeaderCarrier = HeaderCarrierConverter.fromRequest(request = request.request)
 
       withJsonBody[ReturnCreateRequest] { returnSubmission =>
         // Submit to ETMP first - this is the primary operation
@@ -65,30 +65,9 @@ class ReturnsController @Inject()(
             // After successful ETMP submission, queue NRS work item for background processing
             // This is fire-and-forget - we don't wait for the result
             val nrsPayload = Json.toJson(returnSubmission)
-            val identityData = IdentityData(
-              Some(request.userId),
-              None,
-              None,
-              None,
-              L50,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              Some(Organisation),
-              Some(CredentialStrength.strong),
-              None
-            )
             
             // Queue work item - NRS submission will be processed by scheduler
-            nrsService.makeWorkItemAndQueue(nrsPayload, identityData, NOTABLE_EVENT_SUBMIT_RETURN)
+            nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN)
               .recover { case ex =>
                 // Log NRS queueing failures but don't affect the returns submission response
                 logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)

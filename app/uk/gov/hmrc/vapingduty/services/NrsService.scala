@@ -16,13 +16,19 @@
 
 package uk.gov.hmrc.vapingduty.services
 
+import org.apache.pekko.Done
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.retrieve.{AgentInformation, Credentials, ItmpAddress, ItmpName, MdtpInformation, Name, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel, CredentialRole}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, UpstreamErrorResponse}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionWorkItem}
+import uk.gov.hmrc.vapingduty.models.requests.IdentifierRequest
 import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
+import uk.gov.hmrc.vapingduty.services.NrsService.nonRepudiationIdentityRetrievals
 import uk.gov.hmrc.vapingduty.utils.{DateTimeService, NrsUtils}
 
 import java.time.Instant
@@ -31,64 +37,54 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NrsService @Inject()(
+                            override val authConnector: AuthConnector,
                             nrsConnector: NrsConnector,
                             nrsUtils: NrsUtils,
                             dateTimeService: DateTimeService,
                             nrsWorkItemRepository: NrsWorkItemRepository
-                          )(implicit ec: ExecutionContext) extends Logging {
+                          )(implicit ec: ExecutionContext) extends AuthorisedFunctions with Logging {
 
   /**
    * Queue a work item for NRS submission. This is the method that should be called
    * from controllers after successful ETMP submission.
    *
    * @param payload      The JSON payload to submit to NRS
-   * @param identityData User identity data from auth
    * @param notableEvent The notable event identifier
    * @param hc           HeaderCarrier for HTTP context
    * @return Future[Unit] - fire and forget, failures are logged
    */
   def makeWorkItemAndQueue(
                             payload: JsValue,
-                            identityData: IdentityData,
                             notableEvent: String
-                          )(implicit hc: HeaderCarrier): Future[Unit] = {
+                          )(using hc: HeaderCarrier, request: IdentifierRequest[?]): Future[Unit] = {
     val payloadString = Json.stringify(payload)
     val checksum = nrsUtils.sha256Hash(payloadString)
     val timestamp = dateTimeService.timestamp
-    val userAuthToken = hc.authorization.map(_.value).getOrElse("")
+    val userAuthToken = retrieveUserAuthToken()
     val headerData = hc.headers(Seq("User-Agent", "X-Request-ID", "X-Session-ID")).toMap
-    val vpdId = identityData.internalId.getOrElse("")
+    val vpdId = request.vpdId
 
-    val metadata = NrsMetadata.create(
-      payLoad = payloadString,
-      sha256Hash = checksum,
-      identityData = identityData,
-      submissionTimeStamp = timestamp,
-      userAuthToken = userAuthToken,
-      userHeaderData = headerData,
-      vpdId = vpdId
-    )
-
-    val encodedPayload = nrsUtils.encode(payloadString)
-    val nrsPayload = NrsPayload(
-      payload = encodedPayload,
-      metadata = metadata
-    )
-
-    val workItem = NrsSubmissionWorkItem(
-      payload = nrsPayload
-    )
-
-    nrsWorkItemRepository
-      .pushNew(workItem, Instant.now(), _ => ProcessingStatus.ToDo)
-      .map { _ =>
-        logger.info(s"Successfully queued NRS work item for notable event: $notableEvent")
-        ()
-      }
-      .recover { case ex =>
-        logger.warn(s"Failed to queue NRS work item for notable event: $notableEvent", ex)
-        ()
-      }
+    for {
+      identityData <- retrieveIdentityData()
+      metaData = NrsMetadata.create(
+        payLoad = payloadString,
+        sha256Hash = checksum,
+        identityData = identityData,
+        submissionTimeStamp = timestamp,
+        userAuthToken = userAuthToken,
+        userHeaderData = headerData,
+        vpdId = vpdId
+      )
+      encodedPayload = nrsUtils.encode(payloadString)
+      _ <- nrsWorkItemRepository.pushNew(NrsSubmissionWorkItem(NrsPayload(encodedPayload, metaData))).map { _ =>
+          logger.info(s"Successfully queued NRS work item for notable event: $notableEvent")
+          ()
+        }
+        .recover { case ex =>
+          logger.warn(s"Failed to queue NRS work item for notable event: $notableEvent", ex)
+          ()
+        }
+    } yield ()
   }
 
   /**
@@ -101,7 +97,7 @@ class NrsService @Inject()(
    */
   def submitToNrs(
                    payload: NrsPayload
-                 )(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
+                 )(using hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
     nrsConnector.submitToNrs(payload).map {
       case Right(_) =>
         logger.info(s"Successfully submitted to NRS for notable event: ${payload.metadata.notableEvent}")
@@ -120,7 +116,7 @@ class NrsService @Inject()(
    * @return Future[Unit]
    */
   def processAll(): Future[Unit] = {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given HeaderCarrier = HeaderCarrier()
 
     def processNext(): Future[Unit] =
       nrsWorkItemRepository.pullOutstanding(Instant.now().minusSeconds(60), Instant.now()).flatMap {
@@ -144,11 +140,57 @@ class NrsService @Inject()(
             logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
             nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
           }
-          
+
           // Continue processing next item after this one completes
           processResult.flatMap(_ => processNext())
       }
 
     processNext()
   }
+
+  private def retrieveUserAuthToken()(using hc: HeaderCarrier): String = {
+    hc.authorization match {
+      case Some(authToken) => authToken.value
+      case _ =>
+        logger.warn("[NrsService] - No auth token available for NRS")
+        throw new InternalServerException("No auth token available for NRS")
+    }
+  }
+
+  private def retrieveIdentityData()(implicit hc: HeaderCarrier): Future[IdentityData] =
+    authorised().retrieve(nonRepudiationIdentityRetrievals) {
+      case affinityGroup ~ internalId ~ groupId ~ credentials ~ confidenceLevel ~ credentialRole ~ credentialStrength =>
+        Future.successful(
+          IdentityData(
+            affinityGroup = affinityGroup,
+            internalId = internalId,
+            groupIdentifier = groupId,
+            optionalCredentials = credentials,
+            confidenceLevel = confidenceLevel,
+            credentialRole = credentialRole,
+            credentialStrength = credentialStrength
+          )
+        )
+    }
+}
+
+object NrsService {
+
+  private type NonRepudiationIdentityRetrievals =
+    Option[AffinityGroup]
+      ~ Option[String]
+      ~ Option[String]
+      ~ Option[Credentials]
+      ~ ConfidenceLevel
+      ~ Option[CredentialRole]
+      ~ Option[String]
+
+  val nonRepudiationIdentityRetrievals: Retrieval[NonRepudiationIdentityRetrievals] =
+    Retrievals.affinityGroup and
+      Retrievals.internalId and
+      Retrievals.groupIdentifier and
+      Retrievals.credentials and
+      Retrievals.confidenceLevel and
+      Retrievals.credentialRole and
+      Retrievals.credentialStrength
 }
