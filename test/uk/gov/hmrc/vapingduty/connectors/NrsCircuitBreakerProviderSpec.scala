@@ -22,11 +22,10 @@ import org.scalatest.BeforeAndAfterAll
 import play.api.Configuration
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
-
-  private var actorSystem: ActorSystem = _
 
   private val testConfig = Configuration(
     "microservice.services.nrs.max-failures"                -> 5,
@@ -36,15 +35,10 @@ class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
     "microservice.services.nrs.exponential-backoff-factor"  -> 2.0
   )
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    actorSystem = ActorSystem("test-system")
-  }
+  private lazy val actorSystem: ActorSystem = ActorSystem("test-system")
 
   override def afterAll(): Unit = {
-    if (actorSystem != null) {
-      actorSystem.terminate()
-    }
+    Await.result(actorSystem.terminate(), 5.seconds)
     super.afterAll()
   }
 

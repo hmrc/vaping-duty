@@ -55,7 +55,7 @@ class NrsConnector @Inject() (
         .map { response =>
           response.status match {
             case ACCEPTED =>
-              logger.info(s"NRS submission successful")
+              logger.info("NRS submission successful")
               Right(())
             case status   =>
               logger.warn(s"NRS submission failed with status: $status")

@@ -96,7 +96,7 @@ class NrsServiceSpec extends SpecBase {
         when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
         when(mockDateTimeService.timestamp).thenReturn(testTimestampString)
         when(mockNrsWorkItemRepository.pushNew(any(), any(), any()))
-          .thenReturn(Future.successful(null))
+          .thenReturn(Future.failed(new RuntimeException("Unexpected null response")))
 
         val result = service.makeWorkItemAndQueue(testPayload, testIdentityData, testNotableEvent)
 
