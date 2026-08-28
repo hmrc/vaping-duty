@@ -17,7 +17,7 @@
 package uk.gov.hmrc.vapingduty.repositories
 
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
+import uk.gov.hmrc.mongo.workitem.{WorkItem, WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.NrsSubmissionWorkItem
 
@@ -48,6 +48,6 @@ class NrsWorkItemRepository @Inject()(
 
   override lazy val requiresTtlIndex: Boolean = true
 
-  override def pullOutstanding(failedBefore: Instant, availableAt: Instant): Future[Option[uk.gov.hmrc.mongo.workitem.WorkItem[NrsSubmissionWorkItem]]] =
+  override def pullOutstanding(failedBefore: Instant, availableAt: Instant): Future[Option[WorkItem[NrsSubmissionWorkItem]]] =
     super.pullOutstanding(failedBefore, availableAt)
 }
