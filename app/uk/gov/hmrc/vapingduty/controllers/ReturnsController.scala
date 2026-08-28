@@ -64,7 +64,7 @@ class ReturnsController @Inject()(
             val nrsPayload = Json.toJson(returnSubmission)
             
             // Queue work item - NRS submission will be processed by scheduler
-            nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN)
+            nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN, returnSubmission.periodKey)
               .recover { case ex =>
                 // Log NRS queueing failures but don't affect the returns submission response
                 logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)

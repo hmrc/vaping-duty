@@ -226,6 +226,6 @@ trait TestData {
     identityData = sampleIdentityData,
     userAuthToken = "test-auth-token",
     headerData = Map.empty[String, String],
-    searchKeys = Map("vpdId" -> vpdId.id, "periodKey" -> periodKey.value)
+    searchKeys = Map("zvpd" -> vpdId.id, "periodKey" -> periodKey.value)
   )
 }

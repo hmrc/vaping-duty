@@ -34,6 +34,8 @@ class NrsPayloadSpec extends SpecBase {
     confidenceLevel = ConfidenceLevel.L200
   )
 
+  private val testPeriodKey = "24AF"
+
   private val testMetadata = NrsMetadata.create(
     payLoad = """{"test":"payload"}""",
     sha256Hash = testSha256Hash,
@@ -41,7 +43,8 @@ class NrsPayloadSpec extends SpecBase {
     submissionTimeStamp = testTimestamp,
     userAuthToken = testAuthToken,
     userHeaderData = Map("X-Request-ID" -> "test-request-id"),
-    vpdId = testVpdId
+    vpdId = testVpdId,
+    periodKey = testPeriodKey
   )
 
   "NrsPayload" - {
@@ -66,7 +69,8 @@ class NrsPayloadSpec extends SpecBase {
         (result \ "metadata" \ "payloadSha256Checksum").as[String] mustBe testSha256Hash
         (result \ "metadata" \ "userSubmissionTimestamp").as[String] mustBe testTimestamp
         (result \ "metadata" \ "userAuthToken").as[String] mustBe testAuthToken
-        (result \ "metadata" \ "searchKeys" \ "vpdId").as[String] mustBe testVpdId
+        (result \ "metadata" \ "searchKeys" \ "zvpd").as[String] mustBe testVpdId
+        (result \ "metadata" \ "searchKeys" \ "periodKey").as[String] mustBe testPeriodKey
       }
     }
 

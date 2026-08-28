@@ -34,6 +34,8 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
     confidenceLevel = ConfidenceLevel.L200
   )
 
+  private val testPeriodKey = "24AF"
+
   private val testMetadata = NrsMetadata.create(
     payLoad = """{"test":"payload"}""",
     sha256Hash = testSha256Hash,
@@ -41,7 +43,8 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
     submissionTimeStamp = testTimestamp,
     userAuthToken = testAuthToken,
     userHeaderData = Map("X-Request-ID" -> "test-request-id"),
-    vpdId = testVpdId
+    vpdId = testVpdId,
+    periodKey = testPeriodKey
   )
 
   private val testPayload = NrsPayload(testEncodedPayload, testMetadata)
@@ -76,7 +79,8 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
               "X-Request-ID" -> "test-request-id"
             ),
             "searchKeys" -> Json.obj(
-              "vpdId" -> testVpdId
+              "zvpd" -> testVpdId,
+              "periodKey" -> testPeriodKey
             )
           )
         )
@@ -109,6 +113,18 @@ class NrsSubmissionWorkItemSpec extends SpecBase {
       result.payload.metadata.userSubmissionTimestamp mustBe testPayload.metadata.userSubmissionTimestamp
       result.payload.metadata.userAuthToken mustBe testPayload.metadata.userAuthToken
       result.payload.metadata.searchKeys mustBe testPayload.metadata.searchKeys
+    }
+
+    "must provide access to vpdId" in {
+      val workItem = NrsSubmissionWorkItem(testPayload)
+      
+      workItem.vpdId mustBe testVpdId
+    }
+
+    "must provide access to periodKey" in {
+      val workItem = NrsSubmissionWorkItem(testPayload)
+      
+      workItem.periodKey mustBe testPeriodKey
     }
   }
 }

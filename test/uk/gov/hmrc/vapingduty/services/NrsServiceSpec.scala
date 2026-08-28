@@ -20,12 +20,9 @@ import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.{reset, verify, when}
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId as retriveInternalId
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, ConfidenceLevel, CredentialStrength, Enrolment, User}
+import uk.gov.hmrc.auth.core.{AuthConnector, ConfidenceLevel, CredentialStrength, User}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
@@ -80,7 +77,8 @@ class NrsServiceSpec extends SpecBase {
     submissionTimeStamp = testTimestampString,
     userAuthToken = "Bearer token",
     userHeaderData = Map("User-Agent" -> "test-agent"),
-    vpdId = "XMVPD0000000123"
+    vpdId = "XMVPD0000000123",
+    periodKey = periodKey.value
   )
 
   implicit class RetrievalCombiner[A](a: A) {
@@ -121,7 +119,7 @@ class NrsServiceSpec extends SpecBase {
           .thenReturn(Future.failed(new RuntimeException("Unexpected null response")))
 
         implicit val request: IdentifierRequest[_] = IdentifierRequest(fakeRequest, "Int-123", "XMVPD0000000123")
-        val result = service.makeWorkItemAndQueue(testPayload, testNotableEvent)(using hc, request)
+        val result = service.makeWorkItemAndQueue(testPayload, testNotableEvent, periodKey.value)(using hc, request)
 
         whenReady(result) { _ =>
           verify(mockNrsWorkItemRepository).pushNew(any(), any(), any())
@@ -138,7 +136,7 @@ class NrsServiceSpec extends SpecBase {
           .thenReturn(Future.failed(new RuntimeException("Database error")))
 
         implicit val request: IdentifierRequest[_] = IdentifierRequest(fakeRequest, "Int-123", "XMVPD0000000123")
-        val result = service.makeWorkItemAndQueue(testPayload, testNotableEvent)(using hc, request)
+        val result = service.makeWorkItemAndQueue(testPayload, testNotableEvent, periodKey.value)(using hc, request)
 
         whenReady(result) { _ =>
           verify(mockNrsWorkItemRepository).pushNew(any(), any(), any())

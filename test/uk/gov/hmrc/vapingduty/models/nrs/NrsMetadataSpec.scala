@@ -28,6 +28,7 @@ class NrsMetadataSpec extends SpecBase {
   private val testTimestamp = "2024-01-15T10:30:00Z"
   private val testAuthToken = "Bearer test-token"
   private val testVpdId = "XMVPD0000000123"
+  private val testPeriodKey = "24AF"
 
   private val testIdentityData = IdentityData(
     internalId = Some("int-id-123"),
@@ -72,7 +73,8 @@ class NrsMetadataSpec extends SpecBase {
           submissionTimeStamp = testTimestamp,
           userAuthToken = testAuthToken,
           userHeaderData = testHeaderData,
-          vpdId = testVpdId
+          vpdId = testVpdId,
+          periodKey = testPeriodKey
         )
 
         result.businessId mustBe "vpd"
@@ -83,7 +85,7 @@ class NrsMetadataSpec extends SpecBase {
         result.identityData mustBe testIdentityData
         result.userAuthToken mustBe testAuthToken
         result.headerData mustBe testHeaderData
-        result.searchKeys mustBe Map("vpdId" -> testVpdId)
+        result.searchKeys mustBe Map("zvpd" -> testVpdId, "periodKey" -> testPeriodKey)
       }
 
       "must create NrsMetadata with empty header data" in {
@@ -94,7 +96,8 @@ class NrsMetadataSpec extends SpecBase {
           submissionTimeStamp = testTimestamp,
           userAuthToken = testAuthToken,
           userHeaderData = Map.empty,
-          vpdId = testVpdId
+          vpdId = testVpdId,
+          periodKey = testPeriodKey
         )
 
         result.headerData mustBe Map.empty
@@ -109,7 +112,8 @@ class NrsMetadataSpec extends SpecBase {
         submissionTimeStamp = testTimestamp,
         userAuthToken = testAuthToken,
         userHeaderData = testHeaderData,
-        vpdId = testVpdId
+        vpdId = testVpdId,
+        periodKey = testPeriodKey
       )
 
       val json = Json.toJson(metadata)
@@ -120,7 +124,8 @@ class NrsMetadataSpec extends SpecBase {
       (json \ "payloadSha256Checksum").as[String] mustBe testSha256Hash
       (json \ "userSubmissionTimestamp").as[String] mustBe testTimestamp
       (json \ "userAuthToken").as[String] mustBe testAuthToken
-      (json \ "searchKeys" \ "vpdId").as[String] mustBe testVpdId
+      (json \ "searchKeys" \ "zvpd").as[String] mustBe testVpdId
+      (json \ "searchKeys" \ "periodKey").as[String] mustBe testPeriodKey
     }
 
     "must deserialize from JSON correctly" in {
@@ -139,7 +144,8 @@ class NrsMetadataSpec extends SpecBase {
           "X-Request-ID" -> "test-request-id"
         ),
         "searchKeys" -> Json.obj(
-          "vpdId" -> testVpdId
+          "zvpd" -> testVpdId,
+          "periodKey" -> testPeriodKey
         )
       )
 
@@ -148,7 +154,8 @@ class NrsMetadataSpec extends SpecBase {
       result.businessId mustBe "vpd"
       result.notableEvent mustBe "vpd-submit-return-api"
       result.payloadSha256Checksum mustBe testSha256Hash
-      result.searchKeys("vpdId") mustBe testVpdId
+      result.searchKeys("zvpd") mustBe testVpdId
+      result.searchKeys("periodKey") mustBe testPeriodKey
     }
 
     "must round-trip through JSON" in {
@@ -159,7 +166,8 @@ class NrsMetadataSpec extends SpecBase {
         submissionTimeStamp = testTimestamp,
         userAuthToken = testAuthToken,
         userHeaderData = testHeaderData,
-        vpdId = testVpdId
+        vpdId = testVpdId,
+        periodKey = testPeriodKey
       )
 
       val json = Json.toJson(metadata)

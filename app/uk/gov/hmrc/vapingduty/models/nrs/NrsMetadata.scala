@@ -33,7 +33,8 @@ final case class NrsMetadata(
 object NrsMetadata {
   private val BUSINESS_ID = "vpd"
   private val NOTABLE_EVENT = "vpd-submit-return-api"
-  private val SEARCH_KEY = "vpdId"
+  private val SEARCH_KEY_ZVPD = "zvpd"
+  private val SEARCH_KEY_PERIOD = "periodKey"
   private val PAYLOAD_CONTENT_TYPE = "application/json"
   
   val notableEventSubmitReturn: String = NOTABLE_EVENT
@@ -45,7 +46,8 @@ object NrsMetadata {
     submissionTimeStamp: String,
     userAuthToken: String,
     userHeaderData: Map[String, String],
-    vpdId: String
+    vpdId: String,
+    periodKey: String
   ): NrsMetadata =
     NrsMetadata(
       businessId = BUSINESS_ID,
@@ -56,7 +58,10 @@ object NrsMetadata {
       identityData = identityData,
       userAuthToken = userAuthToken,
       headerData = userHeaderData,
-      searchKeys = Map(SEARCH_KEY -> vpdId)
+      searchKeys = Map(
+        SEARCH_KEY_ZVPD -> vpdId,
+        SEARCH_KEY_PERIOD -> periodKey
+      )
     )
 
   given format: OFormat[NrsMetadata] = Json.format[NrsMetadata]

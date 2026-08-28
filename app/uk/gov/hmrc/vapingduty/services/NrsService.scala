@@ -54,7 +54,8 @@ class NrsService @Inject()(
    */
   def makeWorkItemAndQueue(
                             payload: JsValue,
-                            notableEvent: String
+                            notableEvent: String,
+                            periodKey: String
                           )(using hc: HeaderCarrier, request: IdentifierRequest[?]): Future[Unit] = {
     val payloadString = Json.stringify(payload)
     val checksum = nrsUtils.sha256Hash(payloadString)
@@ -72,7 +73,8 @@ class NrsService @Inject()(
         submissionTimeStamp = timestamp,
         userAuthToken = userAuthToken,
         userHeaderData = headerData,
-        vpdId = vpdId
+        vpdId = vpdId,
+        periodKey = periodKey
       )
       encodedPayload = nrsUtils.encode(payloadString)
       _ <- nrsWorkItemRepository.pushNew(NrsSubmissionWorkItem(NrsPayload(encodedPayload, metaData))).map { _ =>

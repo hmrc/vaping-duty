@@ -20,7 +20,10 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class NrsSubmissionWorkItem(
   payload: NrsPayload
-)
+) {
+  def vpdId: String = payload.metadata.searchKeys("zvpd")
+  def periodKey: String = payload.metadata.searchKeys("periodKey")
+}
 
 object NrsSubmissionWorkItem {
   given format: OFormat[NrsSubmissionWorkItem] = Json.format[NrsSubmissionWorkItem]
