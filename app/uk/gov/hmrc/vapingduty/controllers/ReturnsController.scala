@@ -20,16 +20,13 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.*
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.auth.core.ConfidenceLevel.L50
-import uk.gov.hmrc.auth.core.CredentialStrength
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
-import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata}
+import uk.gov.hmrc.vapingduty.models.nrs.NrsMetadata
 import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
 import uk.gov.hmrc.vapingduty.services.NrsService
 

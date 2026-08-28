@@ -17,7 +17,6 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.vapingduty.models.nrs.IdentityData
 
 final case class NrsMetadata(
   businessId: String,

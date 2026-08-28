@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.vapingduty.services
 
-import org.apache.pekko.Done
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.retrieve.{AgentInformation, Credentials, ItmpAddress, ItmpName, MdtpInformation, Name, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions, ConfidenceLevel, CredentialRole}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, UpstreamErrorResponse}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
