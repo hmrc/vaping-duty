@@ -22,14 +22,15 @@ import uk.gov.hmrc.mongo.workitem.{WorkItemFields, WorkItemRepository}
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.NrsSubmissionWorkItem
 
-import java.time.{Duration, Instant}
+import java.time.{Clock, Duration, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NrsWorkItemRepository @Inject() (
   mongoComponent: MongoComponent,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  clock: Clock
 )(implicit ec: ExecutionContext)
     extends WorkItemRepository[NrsSubmissionWorkItem](
       collectionName = "nrs-work-items",
@@ -38,7 +39,7 @@ class NrsWorkItemRepository @Inject() (
       workItemFields = WorkItemFields.default
     ) {
 
-  override def now(): Instant = Instant.now()
+  override def now(): Instant = Instant.now(clock)
 
   override lazy val inProgressRetryAfter: Duration =
     Duration.ofMillis(appConfig.nrsWorkItemRetryAfter.toMillis)
@@ -47,4 +48,7 @@ class NrsWorkItemRepository @Inject() (
     super.completeAndDelete(id)
 
   override lazy val requiresTtlIndex: Boolean = true
+
+  override def pullOutstanding(failedBefore: Instant, availableAt: Instant): Future[Option[uk.gov.hmrc.mongo.workitem.WorkItem[NrsSubmissionWorkItem]]] =
+    super.pullOutstanding(failedBefore, availableAt)
 }

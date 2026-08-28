@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.vapingduty.repositories
 
+import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.model.Filters
-import play.api.libs.json.Json
+import org.scalatest.BeforeAndAfterEach
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionWorkItem}
@@ -25,7 +27,7 @@ import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload,
 import java.time.Instant
 import scala.concurrent.Future
 
-class NrsWorkItemRepositoryISpec extends ISpecBase {
+class NrsWorkItemRepositoryISpec extends ISpecBase with BeforeAndAfterEach {
 
   private val repository = app.injector.instanceOf[NrsWorkItemRepository]
 
@@ -41,32 +43,31 @@ class NrsWorkItemRepositoryISpec extends ISpecBase {
       notableEvent = "vaping-duty-return-submitted",
       payloadContentType = "application/json",
       payloadSha256Checksum = "checksum123",
-      userSubmissionTimestamp = Instant.now(clock),
+      userSubmissionTimestamp = Instant.now(clock).toString,
       identityData = IdentityData(
         internalId = Some("Int-123"),
         externalId = Some("Ext-123"),
         agentCode = None,
-        credentials = None,
-        confidenceLevel = 200,
+        optionalCredentials = None,
+        confidenceLevel = ConfidenceLevel.L200,
         nino = None,
         saUtr = None,
-        name = None,
+        optionalName = None,
         dateOfBirth = None,
         email = None,
-        agentInformation = None,
         groupIdentifier = None,
         credentialRole = None,
         mdtpInformation = None,
-        itmpName = None,
-        itmpDateOfBirth = None,
-        itmpAddress = None,
-        affinityGroup = Some("Organisation"),
+        optionalItmpName = None,
+        dateOfBirthFromItmp = None,
+        optionalItmpAddress = None,
+        affinityGroup = Some(AffinityGroup.Organisation),
         credentialStrength = Some("strong"),
         loginTimes = None
       ),
       userAuthToken = "Bearer token123",
-      headerData = Json.obj(),
-      searchKeys = Json.obj("vpdReference" -> "XMVPD0000000123")
+      headerData = Map.empty[String, String],
+      searchKeys = Map("vpdReference" -> "XMVPD0000000123")
     )
   )
 
@@ -74,14 +75,14 @@ class NrsWorkItemRepositoryISpec extends ISpecBase {
 
   "NrsWorkItemRepository must" - {
     "successfully push a new work item" in {
-      val result = await(repository.pushNew(testWorkItem, Instant.now(clock), ProcessingStatus.ToDo))
+      val result = await(repository.pushNew(testWorkItem, Instant.now(clock), _ => ProcessingStatus.ToDo))
 
       result.item mustBe testWorkItem
       result.status mustBe ProcessingStatus.ToDo
     }
 
     "pull an outstanding work item" in {
-      await(repository.pushNew(testWorkItem, Instant.now(clock), ProcessingStatus.ToDo))
+      await(repository.pushNew(testWorkItem, Instant.now(clock).minusSeconds(120), _ => ProcessingStatus.ToDo))
 
       val result = await(repository.pullOutstanding(Instant.now(clock).minusSeconds(60), Instant.now(clock)))
 
@@ -97,15 +98,16 @@ class NrsWorkItemRepositoryISpec extends ISpecBase {
     }
 
     "mark a work item as complete" in {
-      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), ProcessingStatus.ToDo))
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), _ => ProcessingStatus.ToDo))
 
-      val result = await(repository.complete(workItem.id, ProcessingStatus.Succeeded))
+      await(repository.complete(workItem.id, ProcessingStatus.Succeeded))
 
-      result mustBe true
+      val retrieved = await(repository.pullOutstanding(Instant.now(clock).minusSeconds(60), Instant.now(clock)))
+      retrieved mustBe None
     }
 
     "mark a work item as failed" in {
-      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), ProcessingStatus.ToDo))
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), _ => ProcessingStatus.ToDo))
 
       val result = await(repository.markAs(workItem.id, ProcessingStatus.Failed, Some(Instant.now(clock).plusSeconds(60))))
 
@@ -113,7 +115,7 @@ class NrsWorkItemRepositoryISpec extends ISpecBase {
     }
 
     "complete and delete a work item" in {
-      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), ProcessingStatus.ToDo))
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock), _ => ProcessingStatus.ToDo))
 
       await(repository.completeAndDelete(workItem.id))
 
@@ -125,8 +127,8 @@ class NrsWorkItemRepositoryISpec extends ISpecBase {
       val workItem1 = testWorkItem
       val workItem2 = testWorkItem.copy(payload = testNrsPayload.copy(payload = "encodedPayload2"))
 
-      await(repository.pushNew(workItem1, Instant.now(clock), ProcessingStatus.ToDo))
-      await(repository.pushNew(workItem2, Instant.now(clock), ProcessingStatus.ToDo))
+      await(repository.pushNew(workItem1, Instant.now(clock).minusSeconds(120), _ => ProcessingStatus.ToDo))
+      await(repository.pushNew(workItem2, Instant.now(clock).minusSeconds(120), _ => ProcessingStatus.ToDo))
 
       val result1 = await(repository.pullOutstanding(Instant.now(clock).minusSeconds(60), Instant.now(clock)))
       val result2 = await(repository.pullOutstanding(Instant.now(clock).minusSeconds(60), Instant.now(clock)))
