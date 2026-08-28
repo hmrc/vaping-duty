@@ -42,6 +42,12 @@ trait ISpecBase
     with IntegrationPatience 
     with TestData {
   
+  override def fakeApplication() = 
+    new GuiceApplicationBuilder()
+      .configure("mongodb.uri" -> "mongodb://localhost:27017/vaping-duty-integration-test")
+      .overrides(play.api.inject.bind[java.time.Clock].toInstance(clock))
+      .build()
+
   protected def applicationBuilder(): GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 

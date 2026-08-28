@@ -18,7 +18,10 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload}
 import uk.gov.hmrc.vapingduty.utils.ConnectorTestHelpers
 
@@ -37,36 +40,35 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
           notableEvent = "vaping-duty-return-submitted",
           payloadContentType = "application/json",
           payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock),
+          userSubmissionTimestamp = Instant.now(clock).toString,
           identityData = IdentityData(
             internalId = Some("Int-123"),
             externalId = Some("Ext-123"),
             agentCode = None,
-            credentials = None,
-            confidenceLevel = 200,
+            optionalCredentials = None,
+            confidenceLevel = ConfidenceLevel.L50,
             nino = None,
             saUtr = None,
-            name = None,
+            optionalName = None,
             dateOfBirth = None,
             email = None,
-            agentInformation = None,
             groupIdentifier = None,
             credentialRole = None,
             mdtpInformation = None,
-            itmpName = None,
-            itmpDateOfBirth = None,
-            itmpAddress = None,
-            affinityGroup = Some("Organisation"),
+            optionalItmpName = None,
+            dateOfBirthFromItmp = None,
+            optionalItmpAddress = None,
+            affinityGroup = Some(Organisation),
             credentialStrength = Some("strong"),
             loginTimes = None
           ),
           userAuthToken = "Bearer token123",
-          headerData = Json.obj(),
-          searchKeys = Json.obj("vpdReference" -> "XMVPD0000000123")
+          headerData = Map.empty[String, String],
+          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
         )
       )
 
-      stubPost(url, ACCEPTED, "")
+      stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
         result mustBe Right(())
@@ -82,36 +84,35 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
           notableEvent = "vaping-duty-return-submitted",
           payloadContentType = "application/json",
           payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock),
+          userSubmissionTimestamp = Instant.now(clock).toString,
           identityData = IdentityData(
             internalId = Some("Int-123"),
             externalId = Some("Ext-123"),
             agentCode = None,
-            credentials = None,
-            confidenceLevel = 200,
+            optionalCredentials = None,
+            confidenceLevel = ConfidenceLevel.L200,
             nino = None,
             saUtr = None,
-            name = None,
+            optionalName = None,
             dateOfBirth = None,
             email = None,
-            agentInformation = None,
             groupIdentifier = None,
             credentialRole = None,
             mdtpInformation = None,
-            itmpName = None,
-            itmpDateOfBirth = None,
-            itmpAddress = None,
-            affinityGroup = Some("Organisation"),
+            optionalItmpName = None,
+            dateOfBirthFromItmp = None,
+            optionalItmpAddress = None,
+            affinityGroup = Some(Organisation),
             credentialStrength = Some("strong"),
             loginTimes = None
           ),
           userAuthToken = "Bearer token123",
-          headerData = Json.obj(),
-          searchKeys = Json.obj("vpdReference" -> "XMVPD0000000123")
+          headerData = Map.empty[String, String],
+          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
         )
       )
 
-      stubPost(url, BAD_REQUEST, "Bad request")
+      stubPost(url, BAD_REQUEST, Json.toJson(nrsPayload).toString, "Bad request")
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
         result.isLeft mustBe true
@@ -128,36 +129,35 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
           notableEvent = "vaping-duty-return-submitted",
           payloadContentType = "application/json",
           payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock),
+          userSubmissionTimestamp = Instant.now(clock).toString,
           identityData = IdentityData(
             internalId = Some("Int-123"),
             externalId = Some("Ext-123"),
             agentCode = None,
-            credentials = None,
-            confidenceLevel = 200,
+            optionalCredentials = None,
+            confidenceLevel = ConfidenceLevel.L200,
             nino = None,
             saUtr = None,
-            name = None,
+            optionalName = None,
             dateOfBirth = None,
             email = None,
-            agentInformation = None,
             groupIdentifier = None,
             credentialRole = None,
             mdtpInformation = None,
-            itmpName = None,
-            itmpDateOfBirth = None,
-            itmpAddress = None,
-            affinityGroup = Some("Organisation"),
+            optionalItmpName = None,
+            dateOfBirthFromItmp = None,
+            optionalItmpAddress = None,
+            affinityGroup = Some(Organisation),
             credentialStrength = Some("strong"),
             loginTimes = None
           ),
           userAuthToken = "Bearer token123",
-          headerData = Json.obj(),
-          searchKeys = Json.obj("vpdReference" -> "XMVPD0000000123")
+          headerData = Map.empty[String, String],
+          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
         )
       )
 
-      stubPost(url, INTERNAL_SERVER_ERROR, "Internal server error")
+      stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
         result.isLeft mustBe true
@@ -168,7 +168,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
   }
 
   class SetUp extends ConnectorFixture {
-    val connector    = appWithHttpClient.injector.instanceOf[NrsConnector]
-    lazy val url     = s"${appConfig.nrsBaseUrl}/submission"
+    val connector = app.injector.instanceOf[NrsConnector]
+    lazy val url  = s"${app.injector.instanceOf[AppConfig].nrsBaseUrl}/submission"
   }
 }
