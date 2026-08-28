@@ -52,4 +52,10 @@ class AppConfig @Inject()(
 
   def submitReturnUrl(): String = s"$vpdReturnHost$vpdReturnUrlPrefix"
   def getReturnUrl(vpdReference: VpdId, periodKey: PeriodKey): String = s"$vpdReturnHost$vpdReturnUrlPrefix/$vpdReference/$periodKey"
+  
+  def returnsClientId: String = config.get[String]("microservice.services.submit-return.clientId")
+  def returnsSecret: String = config.get[String]("microservice.services.submit-return.secret")
+
+  def obligationsClientId: String = config.get[String]("microservice.services.obligations.clientId")
+  def obligationsSecret: String = config.get[String]("microservice.services.obligations.secret")
 }

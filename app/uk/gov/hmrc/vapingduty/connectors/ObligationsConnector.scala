@@ -20,6 +20,7 @@ import play.api.Logging
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -71,6 +72,7 @@ class ObligationsConnector @Inject()(
 
   private def createObligationHeaders: Seq[(String, String)] =
     Seq(
+      (HeaderNames.authorisation, HIPAuth(config).authorizationForObligations()),
       ("correlationid", randomUUIDGenerator.uuid),
       ("X-Message-Type", "GetObligations"),
       ("X-Originating-System", "MDTP"),

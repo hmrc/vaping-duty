@@ -20,6 +20,7 @@ import play.api.Logging
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.view.ReturnDisplayResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -30,16 +31,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, clock: Clock)(
-                                      config: AppConfig,
-                                      implicit val httpClient: HttpClientV2
+  config: AppConfig,
+  implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
-    extends HttpReadsInstances
+  extends HttpReadsInstances
     with Logging {
 
   private val parsingError = "Parsing failed for VPD return get response"
 
   def getReturn(periodKey: PeriodKey, vpdId: VpdId)
-                  (implicit hc: HeaderCarrier): Future[ReturnDisplayResponse] =
+               (implicit hc: HeaderCarrier): Future[ReturnDisplayResponse] =
     httpClient
       .get(url"${config.getReturnUrl(vpdId, periodKey)}")
       .setHeader(createReturnHeaders(vpdId): _*)
@@ -73,6 +74,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
 
   def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
     Seq(
+      (HeaderNames.authorisation, HIPAuth(config).authorizationForReturns()),
       ("correlationid", randomUUIDGenerator.uuid),
       ("X-Message-Type", "VPDReturnDisplay"),
       ("X-Originating-System", "MDTP"),
