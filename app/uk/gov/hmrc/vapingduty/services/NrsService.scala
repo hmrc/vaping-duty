@@ -176,7 +176,7 @@ class NrsService @Inject()(
 
 object NrsService {
 
-  private type NonRepudiationIdentityRetrievals =
+  type NonRepudiationIdentityRetrievals =
     Option[AffinityGroup]
       ~ Option[String]
       ~ Option[String]
