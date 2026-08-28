@@ -33,6 +33,6 @@ class Module extends AppModule {
     bind[Clock].toInstance(Clock.systemDefaultZone) ::
       bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
       bind[NrsConnector.NrsCircuitBreaker].toProvider(classOf[NrsCircuitBreakerProvider]) ::
-      bind[NrsScheduledService].toSelf ::
+      bind[NrsScheduledService].toSelf.eagerly() ::
       Nil
 }
