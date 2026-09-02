@@ -48,6 +48,7 @@ class NrsServiceSpec extends SpecBase {
 
   val service = new NrsService(
     mockAuthConnector,
+    clock,
     mockNrsConnector,
     mockNrsUtils,
     mockDateTimeService,

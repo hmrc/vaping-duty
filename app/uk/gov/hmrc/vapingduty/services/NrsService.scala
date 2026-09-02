@@ -30,13 +30,14 @@ import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
 import uk.gov.hmrc.vapingduty.services.NrsService.nonRepudiationIdentityRetrievals
 import uk.gov.hmrc.vapingduty.utils.{DateTimeService, NrsUtils}
 
-import java.time.Instant
+import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NrsService @Inject()(
                             override val authConnector: AuthConnector,
+                            clock: Clock,
                             nrsConnector: NrsConnector,
                             nrsUtils: NrsUtils,
                             dateTimeService: DateTimeService,
@@ -120,7 +121,7 @@ class NrsService @Inject()(
     given HeaderCarrier = HeaderCarrier()
 
     def processNext(): Future[Unit] =
-      nrsWorkItemRepository.pullOutstanding(Instant.now().minusSeconds(60), Instant.now()).flatMap {
+      nrsWorkItemRepository.pullOutstanding(Instant.now(clock).minusSeconds(60), Instant.now(clock)).flatMap {
         case None =>
           logger.debug("No pending NRS work items to process")
           Future.successful(())
