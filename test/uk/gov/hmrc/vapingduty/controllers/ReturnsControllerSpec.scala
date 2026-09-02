@@ -21,7 +21,7 @@ import org.mockito.Mockito.{verify, when}
 import play.api.http.Status.*
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
-import uk.gov.hmrc.http.{InternalServerException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced

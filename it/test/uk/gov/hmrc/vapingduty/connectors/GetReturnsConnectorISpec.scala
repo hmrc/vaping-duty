@@ -21,8 +21,6 @@ import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSAB
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
-import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
-import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
 class GetReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {

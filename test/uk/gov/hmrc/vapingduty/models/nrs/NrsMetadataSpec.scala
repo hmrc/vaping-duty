@@ -17,8 +17,8 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.auth.core.retrieve.{AgentInformation, Credentials, ItmpAddress, ItmpName, MdtpInformation, Name}
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, User}
+import uk.gov.hmrc.auth.core.retrieve.*
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 class NrsMetadataSpec extends SpecBase {

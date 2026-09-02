@@ -17,7 +17,6 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.auth.core.retrieve.AgentInformation
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
