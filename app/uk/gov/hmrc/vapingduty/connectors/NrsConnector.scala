@@ -58,7 +58,7 @@ class NrsConnector @Inject() (
             case ACCEPTED =>
               logger.info("NRS submission successful")
               Right(())
-            case status   =>
+            case status =>
               logger.warn(s"NRS submission failed with status: $status")
               Left(UpstreamErrorResponse(response.body, status))
           }
