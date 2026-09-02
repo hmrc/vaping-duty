@@ -18,7 +18,6 @@ package uk.gov.hmrc.vapingduty.scheduling
 
 import org.apache.pekko.Done
 import org.apache.pekko.actor.ActorSystem
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{atLeastOnce, never, verify, when}
 import org.scalatest.BeforeAndAfterAll
 import play.api.Configuration
@@ -26,7 +25,6 @@ import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.services.NrsService
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
 
