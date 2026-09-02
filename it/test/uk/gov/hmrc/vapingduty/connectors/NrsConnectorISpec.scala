@@ -260,6 +260,6 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
 
   class SetUp extends ConnectorFixture {
     val connector: NrsConnector = app.injector.instanceOf[NrsConnector]
-    lazy val url  = s"${app.injector.instanceOf[AppConfig].nrsBaseUrl}/submission"
+    lazy val url  = s"${app.injector.instanceOf[AppConfig].nrsSubmissionUrl}"
   }
 }

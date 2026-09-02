@@ -35,21 +35,17 @@ object NrsConnector {
 }
 
 @Singleton
-class NrsConnector @Inject() (
-  httpClient: HttpClientV2,
-  appConfig: AppConfig,
-  nrsCircuitBreaker: NrsConnector.NrsCircuitBreaker
-)(implicit ec: ExecutionContext)
-    extends Logging {
-
-  private val nrsSubmissionUrl = s"${appConfig.nrsBaseUrl}/submission"
+class NrsConnector @Inject()(
+                              httpClient: HttpClientV2,
+                              appConfig: AppConfig,
+                              nrsCircuitBreaker: NrsConnector.NrsCircuitBreaker
+                            )(implicit ec: ExecutionContext) extends Logging {
 
   def submitToNrs(payload: NrsPayload)(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
-    val url = url"$nrsSubmissionUrl"
 
     nrsCircuitBreaker.breaker.withCircuitBreaker(
       httpClient
-        .post(url)
+        .post(url"${appConfig.nrsSubmissionUrl}")
         .setHeader("X-API-Key" -> appConfig.nrsApiKey)
         .withBody(Json.toJson(payload))
         .execute[HttpResponse]
