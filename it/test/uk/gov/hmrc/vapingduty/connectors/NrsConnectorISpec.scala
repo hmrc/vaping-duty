@@ -20,6 +20,7 @@ import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload}
@@ -33,40 +34,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
 
   "NrsConnector must" - {
     "return Right(()) when NRS accepts the submission" in new SetUp {
-      val nrsPayload = NrsPayload(
-        payload = "encodedPayload",
-        metadata = NrsMetadata(
-          businessId = "vpd",
-          notableEvent = "vaping-duty-return-submitted",
-          payloadContentType = "application/json",
-          payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock).toString,
-          identityData = IdentityData(
-            internalId = Some("Int-123"),
-            externalId = Some("Ext-123"),
-            agentCode = None,
-            optionalCredentials = None,
-            confidenceLevel = ConfidenceLevel.L50,
-            nino = None,
-            saUtr = None,
-            optionalName = None,
-            dateOfBirth = None,
-            email = None,
-            groupIdentifier = None,
-            credentialRole = None,
-            mdtpInformation = None,
-            optionalItmpName = None,
-            dateOfBirthFromItmp = None,
-            optionalItmpAddress = None,
-            affinityGroup = Some(Organisation),
-            credentialStrength = Some("strong"),
-            loginTimes = None
-          ),
-          userAuthToken = "Bearer token123",
-          headerData = Map.empty[String, String],
-          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
-        )
-      )
+      val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
 
@@ -77,40 +45,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
     }
 
     "return Left(UpstreamErrorResponse) when NRS returns BAD_REQUEST" in new SetUp {
-      val nrsPayload = NrsPayload(
-        payload = "encodedPayload",
-        metadata = NrsMetadata(
-          businessId = "vpd",
-          notableEvent = "vaping-duty-return-submitted",
-          payloadContentType = "application/json",
-          payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock).toString,
-          identityData = IdentityData(
-            internalId = Some("Int-123"),
-            externalId = Some("Ext-123"),
-            agentCode = None,
-            optionalCredentials = None,
-            confidenceLevel = ConfidenceLevel.L200,
-            nino = None,
-            saUtr = None,
-            optionalName = None,
-            dateOfBirth = None,
-            email = None,
-            groupIdentifier = None,
-            credentialRole = None,
-            mdtpInformation = None,
-            optionalItmpName = None,
-            dateOfBirthFromItmp = None,
-            optionalItmpAddress = None,
-            affinityGroup = Some(Organisation),
-            credentialStrength = Some("strong"),
-            loginTimes = None
-          ),
-          userAuthToken = "Bearer token123",
-          headerData = Map.empty[String, String],
-          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
-        )
-      )
+      val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, BAD_REQUEST, Json.toJson(nrsPayload).toString, "Bad request")
 
@@ -120,42 +55,9 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         verifyPost(url)
       }
     }
-
+    
     "return Left(UpstreamErrorResponse) when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
-      val nrsPayload = NrsPayload(
-        payload = "encodedPayload",
-        metadata = NrsMetadata(
-          businessId = "vpd",
-          notableEvent = "vaping-duty-return-submitted",
-          payloadContentType = "application/json",
-          payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock).toString,
-          identityData = IdentityData(
-            internalId = Some("Int-123"),
-            externalId = Some("Ext-123"),
-            agentCode = None,
-            optionalCredentials = None,
-            confidenceLevel = ConfidenceLevel.L200,
-            nino = None,
-            saUtr = None,
-            optionalName = None,
-            dateOfBirth = None,
-            email = None,
-            groupIdentifier = None,
-            credentialRole = None,
-            mdtpInformation = None,
-            optionalItmpName = None,
-            dateOfBirthFromItmp = None,
-            optionalItmpAddress = None,
-            affinityGroup = Some(Organisation),
-            credentialStrength = Some("strong"),
-            loginTimes = None
-          ),
-          userAuthToken = "Bearer token123",
-          headerData = Map.empty[String, String],
-          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
-        )
-      )
+      val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
 
@@ -167,40 +69,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
     }
 
     "return Left(UpstreamErrorResponse) when NRS returns an unexpected error" in new SetUp {
-      val nrsPayload = NrsPayload(
-        payload = "encodedPayload",
-        metadata = NrsMetadata(
-          businessId = "vpd",
-          notableEvent = "vaping-duty-return-submitted",
-          payloadContentType = "application/json",
-          payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock).toString,
-          identityData = IdentityData(
-            internalId = Some("Int-123"),
-            externalId = Some("Ext-123"),
-            agentCode = None,
-            optionalCredentials = None,
-            confidenceLevel = ConfidenceLevel.L200,
-            nino = None,
-            saUtr = None,
-            optionalName = None,
-            dateOfBirth = None,
-            email = None,
-            groupIdentifier = None,
-            credentialRole = None,
-            mdtpInformation = None,
-            optionalItmpName = None,
-            dateOfBirthFromItmp = None,
-            optionalItmpAddress = None,
-            affinityGroup = Some(Organisation),
-            credentialStrength = Some("strong"),
-            loginTimes = None
-          ),
-          userAuthToken = "Bearer token123",
-          headerData = Map.empty[String, String],
-          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
-        )
-      )
+      val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Unexpected error")
 
@@ -212,40 +81,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
     }
 
     "return Left(UpstreamErrorResponse) when a network fault occurs" in new SetUp {
-      val nrsPayload = NrsPayload(
-        payload = "encodedPayload",
-        metadata = NrsMetadata(
-          businessId = "vpd",
-          notableEvent = "vaping-duty-return-submitted",
-          payloadContentType = "application/json",
-          payloadSha256Checksum = "checksum123",
-          userSubmissionTimestamp = Instant.now(clock).toString,
-          identityData = IdentityData(
-            internalId = Some("Int-123"),
-            externalId = Some("Ext-123"),
-            agentCode = None,
-            optionalCredentials = None,
-            confidenceLevel = ConfidenceLevel.L200,
-            nino = None,
-            saUtr = None,
-            optionalName = None,
-            dateOfBirth = None,
-            email = None,
-            groupIdentifier = None,
-            credentialRole = None,
-            mdtpInformation = None,
-            optionalItmpName = None,
-            dateOfBirthFromItmp = None,
-            optionalItmpAddress = None,
-            affinityGroup = Some(Organisation),
-            credentialStrength = Some("strong"),
-            loginTimes = None
-          ),
-          userAuthToken = "Bearer token123",
-          headerData = Map.empty[String, String],
-          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
-        )
-      )
+      val nrsPayload: NrsPayload = createTestPayload()
 
       import com.github.tomakehurst.wiremock.http.Fault
       val requestBody: String = Json.toJson(nrsPayload).toString
@@ -256,10 +92,60 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         verifyPost(url)
       }
     }
+
+    "use existing correlation ID when present in header carrier" in new SetUp {
+      val nrsPayload: NrsPayload = createTestPayload()
+      val existingCorrelationId = "existing-correlation-id-123"
+      implicit val hcWithCorrelationId: HeaderCarrier = hc.withExtraHeaders(
+        "X-Correlation-Id" -> existingCorrelationId
+      )
+
+      stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
+
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result mustBe Right(())
+        verifyPostWithHeader(url, "X-Correlation-Id", existingCorrelationId)
+      }
+    }
   }
 
   class SetUp extends ConnectorFixture {
     val connector: NrsConnector = app.injector.instanceOf[NrsConnector]
-    lazy val url  = s"${app.injector.instanceOf[AppConfig].nrsSubmissionUrl}"
+    lazy val url = s"${app.injector.instanceOf[AppConfig].nrsSubmissionUrl}"
+    
+    def createTestPayload(): NrsPayload = NrsPayload(
+      payload = "encodedPayload",
+      metadata = NrsMetadata(
+        businessId = "vpd",
+        notableEvent = "vaping-duty-return-submitted",
+        payloadContentType = "application/json",
+        payloadSha256Checksum = "checksum123",
+        userSubmissionTimestamp = Instant.now(clock).toString,
+        identityData = IdentityData(
+          internalId = Some("Int-123"),
+          externalId = Some("Ext-123"),
+          agentCode = None,
+          optionalCredentials = None,
+          confidenceLevel = ConfidenceLevel.L200,
+          nino = None,
+          saUtr = None,
+          optionalName = None,
+          dateOfBirth = None,
+          email = None,
+          groupIdentifier = None,
+          credentialRole = None,
+          mdtpInformation = None,
+          optionalItmpName = None,
+          dateOfBirthFromItmp = None,
+          optionalItmpAddress = None,
+          affinityGroup = Some(Organisation),
+          credentialStrength = Some("strong"),
+          loginTimes = None
+        ),
+        userAuthToken = "Bearer token123",
+        headerData = Map.empty[String, String],
+        searchKeys = Map("vpdReference" -> "XMVPD0000000123")
+      )
+    )
   }
 }
