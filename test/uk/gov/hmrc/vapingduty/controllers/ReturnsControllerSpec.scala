@@ -17,12 +17,13 @@
 package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
-import org.mockito.Mockito.{verify, when}
+import org.mockito.Mockito.{never, verify, when}
 import play.api.http.Status.*
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
+import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.models.returns.VapingProductsProduced
 import uk.gov.hmrc.vapingduty.services.NrsService
@@ -34,17 +35,20 @@ class ReturnsControllerSpec extends SpecBase {
   val mockSubmitConnector: SubmitReturnsConnector = mock[SubmitReturnsConnector]
   val mockGetConnector: GetReturnsConnector = mock[GetReturnsConnector]
   val mockNrsService: NrsService = mock[NrsService]
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   val controller = new ReturnsController(
     cc,
     mockSubmitConnector,
     mockGetConnector,
     fakeAuthorisedAction,
-    mockNrsService
+    mockNrsService,
+    mockAppConfig
   )
 
   "submitReturn must" - {
-    "return 200 OK when the connector successfully submits returns and queue NRS work item" in {
+    "return 200 OK when the connector successfully submits returns and queue NRS work item when feature enabled" in {
+      when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
@@ -58,8 +62,20 @@ class ReturnsControllerSpec extends SpecBase {
       
       verify(mockNrsService).makeWorkItemAndQueue(any(), any(), any())(using any(), any())
     }
+    
+    "return 200 OK and not call NRS service when feature switch is disabled" in {
+      when(mockAppConfig.nrsSubmissionEnabled).thenReturn(false)
+      when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
+        .thenReturn(Future.successful(returnCreateResponseSuccess.success))
+
+      val result = controller.submitReturn(vpdId, periodKey)(fakeRequestWithJsonBody(Json.toJson(returnsCreateRequest)))
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(returnCreateResponseSuccess.success)
+    }
 
     "return 200 OK even when NRS work item queueing fails" in {
+      when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.successful(returnCreateResponseSuccess.success))
       
@@ -73,6 +89,7 @@ class ReturnsControllerSpec extends SpecBase {
     }
 
     "return 200 OK when the connector successfully submits nil return and queue NRS work item" in {
+      when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
       val nilRequestBody = returnsCreateRequest.copy(
         vapingProductsProduced = VapingProductsProduced(
           vapingProdManufactured = "0",
@@ -101,6 +118,7 @@ class ReturnsControllerSpec extends SpecBase {
     }
 
     "return 500 INTERNAL_SERVER_ERROR when the connector fails" in {
+      when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
       when(mockSubmitConnector.submitReturn(eqTo(returnsCreateRequest), eqTo(vpdId))(any()))
         .thenReturn(Future.failed(InternalServerException("")))
 

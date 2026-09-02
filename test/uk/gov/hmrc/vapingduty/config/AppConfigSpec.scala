@@ -53,7 +53,8 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.nrs.circuit-breaker.call-timeout" -> "30 seconds",
     "microservice.services.nrs.circuit-breaker.reset-timeout" -> "60 seconds",
     "microservice.services.nrs.nrs-throttle-duration" -> "5 seconds",
-    "microservice.services.nrs.lock-service-ttl" -> "10 minutes"
+    "microservice.services.nrs.lock-service-ttl" -> "10 minutes",
+    "features.nrs-submission-enabled" -> true
   )
 
   private def buildAppConfig(overrides: Map[String, Any] = Map.empty): AppConfig = {
@@ -82,6 +83,18 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       "must return the configured enrolment identifier key" in {
         val config = buildAppConfig()
         config.enrolmentIdentifierKey mustBe "VPDReference"
+      }
+    }
+    
+    "nrsSubmissionEnabled" - {
+      "must return true when feature is enabled" in {
+        val config = buildAppConfig()
+        config.nrsSubmissionEnabled mustBe true
+      }
+      
+      "must return false when feature is disabled" in {
+        val config = buildAppConfig(Map("features.nrs-submission-enabled" -> false))
+        config.nrsSubmissionEnabled mustBe false
       }
     }
 
@@ -359,6 +372,7 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
         config.nrsLockServiceTTL mustBe 10.minutes
         config.nrsWorkItemRetryAfter mustBe 1.hour
         config.nrsWorkItemExponentialBackoffFactor mustBe 2.0
+        config.nrsSubmissionEnabled mustBe true
       }
     }
   }

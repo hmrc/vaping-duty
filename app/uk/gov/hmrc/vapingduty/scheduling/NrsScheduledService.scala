@@ -50,10 +50,14 @@ class NrsScheduledService @Inject()(
       initialDelay = initialDelay,
       interval = interval
     ) { () =>
-      logger.debug("NRS submission scheduler triggered")
-      nrsService.processAll().recover { case ex =>
-        logger.error("Error processing NRS work items", ex)
-        ()
+      if (configuration.get[Boolean]("features.nrs-submission-enabled")) {
+        logger.debug("NRS submission scheduler triggered")
+        nrsService.processAll().recover { case ex =>
+          logger.error("Error processing NRS work items", ex)
+          ()
+        }
+      } else {
+        logger.debug("NRS submission disabled - skipping scheduled processing")
       }
       ()
     }

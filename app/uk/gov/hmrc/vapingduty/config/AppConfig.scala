@@ -82,4 +82,6 @@ class AppConfig @Inject()(
     config.get[Int]("mongodb.nrs-work-item.max-retries")
   def nrsWorkItemExponentialBackoffFactor: Double = 
     config.get[Double]("mongodb.nrs-work-item.exponential-backoff-factor")
+  
+  val nrsSubmissionEnabled: Boolean = config.get[Boolean]("features.nrs-submission-enabled")
 }

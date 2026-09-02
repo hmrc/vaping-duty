@@ -37,12 +37,13 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
   }
 
   "NrsScheduledService" - {
-    "when scheduler is enabled" - {
+    "when scheduler is enabled and feature switch is enabled" - {
       "must initialize and log that it is enabled" in {
         val config = Configuration(
           "nrs-submission-scheduler.enabled"       -> true,
           "nrs-submission-scheduler.interval"      -> "30 seconds",
-          "nrs-submission-scheduler.initial-delay" -> "1 minute"
+          "nrs-submission-scheduler.initial-delay" -> "1 minute",
+          "features.nrs-submission-enabled"        -> true
         )
 
         when(mockNrsService.processAll()).thenReturn(Future.successful(Done))
@@ -54,13 +55,32 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
         succeed
       }
     }
+    
+    "when scheduler is enabled but feature switch is disabled" - {
+      "must skip processing" in {
+        val config = Configuration(
+          "nrs-submission-scheduler.enabled"       -> true,
+          "nrs-submission-scheduler.interval"      -> "100 milliseconds",
+          "nrs-submission-scheduler.initial-delay" -> "10 milliseconds",
+          "features.nrs-submission-enabled"        -> false
+        )
+
+        new NrsScheduledService(actorSystem, mockNrsService, config)
+
+        // Wait to ensure scheduler runs but doesn't call processAll
+        Thread.sleep(300)
+
+        verify(mockNrsService, never()).processAll()
+      }
+    }
 
     "when scheduler is disabled" - {
       "must not schedule any processing" in {
         val config = Configuration(
           "nrs-submission-scheduler.enabled"       -> false,
           "nrs-submission-scheduler.interval"      -> "30 seconds",
-          "nrs-submission-scheduler.initial-delay" -> "1 minute"
+          "nrs-submission-scheduler.initial-delay" -> "1 minute",
+          "features.nrs-submission-enabled"        -> true
         )
 
         new NrsScheduledService(actorSystem, mockNrsService, config)
@@ -77,7 +97,8 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
         val config = Configuration(
           "nrs-submission-scheduler.enabled"       -> true,
           "nrs-submission-scheduler.interval"      -> "100 milliseconds",
-          "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
+          "nrs-submission-scheduler.initial-delay" -> "10 milliseconds",
+          "features.nrs-submission-enabled"        -> true
         )
 
         when(mockNrsService.processAll())

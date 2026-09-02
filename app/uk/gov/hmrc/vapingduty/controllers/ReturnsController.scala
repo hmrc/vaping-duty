@@ -23,6 +23,7 @@ import play.api.mvc.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
@@ -37,7 +38,8 @@ class ReturnsController @Inject()(
                                    submitConnector: SubmitReturnsConnector,
                                    getConnector: GetReturnsConnector,
                                    authorise: AuthorisedAction,
-                                   nrsService: NrsService
+                                   nrsService: NrsService,
+                                   appConfig: AppConfig
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   private val NOTABLE_EVENT_SUBMIT_RETURN = NrsMetadata.notableEventSubmitReturn
@@ -59,17 +61,21 @@ class ReturnsController @Inject()(
         // Submit to ETMP first - this is the primary operation
         submitConnector.submitReturn(returnSubmission, vpdId)
           .map { successResponse =>
-            // After successful ETMP submission, queue NRS work item for background processing
-            // This is fire-and-forget - we don't wait for the result
-            val nrsPayload = Json.toJson(returnSubmission)
-            
-            // Queue work item - NRS submission will be processed by scheduler
-            nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN, returnSubmission.periodKey)
-              .recover { case ex =>
-                // Log NRS queueing failures but don't affect the returns submission response
-                logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)
-                ()
-              }
+            // After successful ETMP submission, queue NRS work item for background processing if enabled
+            if (appConfig.nrsSubmissionEnabled) {
+              // This is fire-and-forget - we don't wait for the result
+              val nrsPayload = Json.toJson(returnSubmission)
+              
+              // Queue work item - NRS submission will be processed by scheduler
+              nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN, returnSubmission.periodKey)
+                .recover { case ex =>
+                  // Log NRS queueing failures but don't affect the returns submission response
+                  logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)
+                  ()
+                }
+            } else {
+              logger.info(s"NRS submission disabled - skipping for vpdId: $vpdId, periodKey: $periodKey")
+            }
             
             // Return success response immediately without waiting for NRS
             Ok(Json.toJson(successResponse))
