@@ -134,7 +134,7 @@ class NrsService @Inject()(
               }
             case Left(error) =>
               nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
-                logger.error(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}")
+                logger.warn(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}. Will retry with exponential backoff.")
                 ()
               }
           }.recoverWith { case ex =>

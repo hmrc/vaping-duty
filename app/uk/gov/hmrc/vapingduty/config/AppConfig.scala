@@ -78,4 +78,8 @@ class AppConfig @Inject()(
   def nrsWorkItemTTL: Int = Duration(config.get[String]("mongodb.nrs-work-item.ttl")).toDays.toInt
   def nrsWorkItemRetryAfter: scala.concurrent.duration.FiniteDuration =
     config.get[scala.concurrent.duration.FiniteDuration]("mongodb.nrs-work-item.retry-after")
+  def nrsWorkItemMaxRetries: Int = 
+    config.get[Int]("mongodb.nrs-work-item.max-retries")
+  def nrsWorkItemExponentialBackoffFactor: Double = 
+    config.get[Double]("mongodb.nrs-work-item.exponential-backoff-factor")
 }

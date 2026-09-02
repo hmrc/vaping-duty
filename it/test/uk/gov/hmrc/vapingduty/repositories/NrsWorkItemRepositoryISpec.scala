@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.vapingduty.repositories
 
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.model.Filters
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+import org.mongodb.scala.model.{Filters, Updates}
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionWorkItem}
 
-import java.time.Instant
+import java.time.{Duration, Instant}
 import scala.concurrent.Future
 
 class NrsWorkItemRepositoryISpec extends ISpecBase with BeforeAndAfterEach {
@@ -136,6 +137,74 @@ class NrsWorkItemRepositoryISpec extends ISpecBase with BeforeAndAfterEach {
       result1.isDefined mustBe true
       result2.isDefined mustBe true
       result1.get.item must not be result2.get.item
+    }
+
+    "implement exponential backoff for failed items" in {
+      val appConfig = app.injector.instanceOf[AppConfig]
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock).minusSeconds(1), _ => ProcessingStatus.ToDo))
+      
+      // Mark as failed for the first time
+      await(repository.markAs(workItem.id, ProcessingStatus.Failed))
+      
+      val afterFirstFailure = await(repository.collection.find(Filters.eq("_id", workItem.id)).toFuture()).head
+      afterFirstFailure.failureCount mustBe 1
+      afterFirstFailure.status mustBe ProcessingStatus.Failed
+      
+      // The availableAt should be set to ~10 minutes in the future (base delay)
+      val expectedDelay = appConfig.nrsWorkItemRetryAfter.toMinutes
+      val actualDelayMinutes = Duration.between(
+        Instant.now(clock),
+        afterFirstFailure.availableAt
+      ).toMinutes
+      
+      // Allow 1 minute tolerance for test execution time
+      Math.abs(actualDelayMinutes - expectedDelay) must be <= 1L
+    }
+
+    "mark as PermanentlyFailed after max retries" in {
+      val appConfig = app.injector.instanceOf[AppConfig]
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock).minusSeconds(1), _ => ProcessingStatus.ToDo))
+      
+      val maxRetries = appConfig.nrsWorkItemMaxRetries
+      
+      // Update the work item to have failureCount = maxRetries - 1
+      await(repository.collection.updateOne(
+        Filters.equal("_id", workItem.id),
+        Updates.set("failureCount", maxRetries - 1)
+      ).toFuture())
+      
+      // Now mark as failed one more time - this should trigger PermanentlyFailed
+      // The failureCount will be incremented to maxRetries (10) in memory during the check,
+      // but when we mark as PermanentlyFailed, the parent implementation doesn't increment it
+      await(repository.markAs(workItem.id, ProcessingStatus.Failed))
+      
+      val finalItem = await(repository.collection.find(Filters.equal("_id", workItem.id)).toFuture()).head
+      // The failureCount remains at maxRetries - 1 because PermanentlyFailed doesn't increment it
+      finalItem.failureCount mustBe (maxRetries - 1)
+      finalItem.status mustBe ProcessingStatus.PermanentlyFailed
+    }
+
+    "handle marking as failed when work item not found" in {
+      val nonExistentId = new org.bson.types.ObjectId()
+      
+      // Attempt to mark a non-existent work item as failed
+      // This should use default behavior and return false
+      val result = await(repository.markAs(nonExistentId, ProcessingStatus.Failed))
+      
+      // The operation should complete without error (uses default behavior)
+      result mustBe false
+    }
+
+    "use default behavior for non-Failed statuses" in {
+      val workItem = await(repository.pushNew(testWorkItem, Instant.now(clock).minusSeconds(1), _ => ProcessingStatus.ToDo))
+      
+      // Mark as InProgress (not Failed) - should use default parent behavior
+      val result = await(repository.markAs(workItem.id, ProcessingStatus.InProgress))
+      
+      result mustBe true
+      
+      val updatedItem = await(repository.collection.find(Filters.equal("_id", workItem.id)).toFuture()).head
+      updatedItem.status mustBe ProcessingStatus.InProgress
     }
   }
 
