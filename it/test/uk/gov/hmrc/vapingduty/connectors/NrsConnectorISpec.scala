@@ -165,10 +165,55 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         verifyPost(url)
       }
     }
+
+    "return Left(UpstreamErrorResponse) when NRS returns an unexpected error" in new SetUp {
+      val nrsPayload = NrsPayload(
+        payload = "encodedPayload",
+        metadata = NrsMetadata(
+          businessId = "vpd",
+          notableEvent = "vaping-duty-return-submitted",
+          payloadContentType = "application/json",
+          payloadSha256Checksum = "checksum123",
+          userSubmissionTimestamp = Instant.now(clock).toString,
+          identityData = IdentityData(
+            internalId = Some("Int-123"),
+            externalId = Some("Ext-123"),
+            agentCode = None,
+            optionalCredentials = None,
+            confidenceLevel = ConfidenceLevel.L200,
+            nino = None,
+            saUtr = None,
+            optionalName = None,
+            dateOfBirth = None,
+            email = None,
+            groupIdentifier = None,
+            credentialRole = None,
+            mdtpInformation = None,
+            optionalItmpName = None,
+            dateOfBirthFromItmp = None,
+            optionalItmpAddress = None,
+            affinityGroup = Some(Organisation),
+            credentialStrength = Some("strong"),
+            loginTimes = None
+          ),
+          userAuthToken = "Bearer token123",
+          headerData = Map.empty[String, String],
+          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
+        )
+      )
+
+      stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Unexpected error")
+
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result.isLeft mustBe true
+        result.left.map(_.statusCode mustBe INTERNAL_SERVER_ERROR)
+        verifyPost(url)
+      }
+    }
   }
 
   class SetUp extends ConnectorFixture {
-    val connector = app.injector.instanceOf[NrsConnector]
+    val connector: NrsConnector = app.injector.instanceOf[NrsConnector]
     lazy val url  = s"${app.injector.instanceOf[AppConfig].nrsBaseUrl}/submission"
   }
 }

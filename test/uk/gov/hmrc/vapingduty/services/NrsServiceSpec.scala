@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, ConfidenceLevel, CredentialStrength, User}
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.http.{InternalServerException, UpstreamErrorResponse}
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
@@ -330,6 +330,38 @@ class NrsServiceSpec extends SpecBase {
           verify(mockNrsWorkItemRepository).markAs(any(), any(), any())
           verify(mockNrsWorkItemRepository).complete(any(), any())
         }
+      }
+    }
+
+    "makeWorkItemAndQueue must" - {
+      "throw InternalServerException when no auth token is available" in {
+        reset(mockNrsWorkItemRepository, mockNrsUtils, mockDateTimeService, mockAuthConnector)
+
+        when(mockAuthConnector.authorise(
+          any(),
+          eqTo(
+            Retrievals.affinityGroup and
+              Retrievals.internalId and
+              Retrievals.groupIdentifier and
+              Retrievals.credentials and
+              Retrievals.confidenceLevel and
+              Retrievals.credentialRole and
+              Retrievals.credentialStrength
+          )
+        )(any(), any())).thenReturn(Future.successful(authRetrievals))
+
+        when(mockNrsUtils.encode(any[String])).thenReturn(testEncodedPayload)
+        when(mockNrsUtils.sha256Hash(any[String])).thenReturn(testChecksum)
+        when(mockDateTimeService.timestamp).thenReturn(testTimestampString)
+
+        val hcWithoutAuth = hc.copy(authorization = None)
+        implicit val request: IdentifierRequest[_] = IdentifierRequest(fakeRequest, "Int-123", "XMVPD0000000123")
+
+        val exception = intercept[InternalServerException] {
+          whenReady(service.makeWorkItemAndQueue(testPayload, testNotableEvent, periodKey.value)(using hcWithoutAuth, request)) { _ => }
+        }
+
+        exception.getMessage mustBe "No auth token available for NRS"
       }
     }
   }
