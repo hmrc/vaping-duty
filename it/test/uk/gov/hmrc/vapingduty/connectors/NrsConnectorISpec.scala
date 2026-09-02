@@ -210,6 +210,52 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         verifyPost(url)
       }
     }
+
+    "return Left(UpstreamErrorResponse) when a network fault occurs" in new SetUp {
+      val nrsPayload = NrsPayload(
+        payload = "encodedPayload",
+        metadata = NrsMetadata(
+          businessId = "vpd",
+          notableEvent = "vaping-duty-return-submitted",
+          payloadContentType = "application/json",
+          payloadSha256Checksum = "checksum123",
+          userSubmissionTimestamp = Instant.now(clock).toString,
+          identityData = IdentityData(
+            internalId = Some("Int-123"),
+            externalId = Some("Ext-123"),
+            agentCode = None,
+            optionalCredentials = None,
+            confidenceLevel = ConfidenceLevel.L200,
+            nino = None,
+            saUtr = None,
+            optionalName = None,
+            dateOfBirth = None,
+            email = None,
+            groupIdentifier = None,
+            credentialRole = None,
+            mdtpInformation = None,
+            optionalItmpName = None,
+            dateOfBirthFromItmp = None,
+            optionalItmpAddress = None,
+            affinityGroup = Some(Organisation),
+            credentialStrength = Some("strong"),
+            loginTimes = None
+          ),
+          userAuthToken = "Bearer token123",
+          headerData = Map.empty[String, String],
+          searchKeys = Map("vpdReference" -> "XMVPD0000000123")
+        )
+      )
+
+      import com.github.tomakehurst.wiremock.http.Fault
+      val requestBody: String = Json.toJson(nrsPayload).toString
+      stubPostFault(url, requestBody, Fault.CONNECTION_RESET_BY_PEER)
+
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result.isLeft mustBe true
+        verifyPost(url)
+      }
+    }
   }
 
   class SetUp extends ConnectorFixture {

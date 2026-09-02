@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import org.apache.pekko.pattern.CircuitBreaker
 import play.api.Logging
-import play.api.http.Status.ACCEPTED
+import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -63,9 +63,9 @@ class NrsConnector @Inject() (
               Left(UpstreamErrorResponse(response.body, status))
           }
         }
-        .recover { case e: UpstreamErrorResponse =>
+        .recover { case e: Exception =>
           logger.error(s"NRS submission failed with error: ${e.getMessage}", e)
-          Left(e)
+          Left(UpstreamErrorResponse(e.getMessage, INTERNAL_SERVER_ERROR))
         }
     )
   }
