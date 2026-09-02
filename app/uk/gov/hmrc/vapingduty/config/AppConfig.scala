@@ -73,22 +73,6 @@ class AppConfig @Inject()(
 
   def nrsApiKey: String = config.get[String]("microservice.services.nrs.api-key")
 
-  def nrsWorkItemRetryAfterMinutes: Long = config.get[Long]("mongodb.nrs-work-item.retry-after-minutes")
-
-  def nrsCircuitBreakerMaxFailures: Int = config.get[Int]("microservice.services.nrs.circuit-breaker.max-failures")
-
-  def nrsCircuitBreakerCallTimeout: scala.concurrent.duration.FiniteDuration =
-    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.circuit-breaker.call-timeout")
-
-  def nrsCircuitBreakerResetTimeout: scala.concurrent.duration.FiniteDuration =
-    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.circuit-breaker.reset-timeout")
-
-  def nrsThrottleDuration: scala.concurrent.duration.FiniteDuration =
-    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.nrs-throttle-duration")
-
-  def nrsLockServiceTTL: scala.concurrent.duration.FiniteDuration =
-    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.lock-service-ttl")
-
   def nrsWorkItemTTL: Int = Duration(config.get[String]("mongodb.nrs-work-item.ttl")).toDays.toInt
 
   def nrsWorkItemRetryAfter: scala.concurrent.duration.FiniteDuration =

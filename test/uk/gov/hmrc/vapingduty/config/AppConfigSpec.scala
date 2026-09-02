@@ -49,11 +49,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.nrs.port" -> 443,
     "microservice.services.nrs.url" -> "/submission",
     "microservice.services.nrs.api-key" -> "test-api-key-12345",
-    "microservice.services.nrs.circuit-breaker.max-failures" -> 5,
-    "microservice.services.nrs.circuit-breaker.call-timeout" -> "30 seconds",
-    "microservice.services.nrs.circuit-breaker.reset-timeout" -> "60 seconds",
-    "microservice.services.nrs.nrs-throttle-duration" -> "5 seconds",
-    "microservice.services.nrs.lock-service-ttl" -> "10 minutes",
     "features.nrs-submission-enabled" -> true
   )
 
@@ -201,76 +196,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       }
     }
 
-    "nrsCircuitBreakerMaxFailures" - {
-      "must return the configured max failures" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerMaxFailures mustBe 5
-      }
-
-      "must handle different max failures values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.circuit-breaker.max-failures" -> 10
-        ))
-        config.nrsCircuitBreakerMaxFailures mustBe 10
-      }
-    }
-
-    "nrsCircuitBreakerCallTimeout" - {
-      "must return the configured call timeout" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
-      }
-
-      "must handle different timeout values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.circuit-breaker.call-timeout" -> "60 seconds"
-        ))
-        config.nrsCircuitBreakerCallTimeout mustBe 60.seconds
-      }
-    }
-
-    "nrsCircuitBreakerResetTimeout" - {
-      "must return the configured reset timeout" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
-      }
-
-      "must handle different reset timeout values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.circuit-breaker.reset-timeout" -> "120 seconds"
-        ))
-        config.nrsCircuitBreakerResetTimeout mustBe 120.seconds
-      }
-    }
-
-    "nrsThrottleDuration" - {
-      "must return the configured throttle duration" in {
-        val config = buildAppConfig()
-        config.nrsThrottleDuration mustBe 5.seconds
-      }
-
-      "must handle different throttle durations" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.nrs-throttle-duration" -> "10 seconds"
-        ))
-        config.nrsThrottleDuration mustBe 10.seconds
-      }
-    }
-
-    "nrsLockServiceTTL" - {
-      "must return the configured lock service TTL" in {
-        val config = buildAppConfig()
-        config.nrsLockServiceTTL mustBe 10.minutes
-      }
-
-      "must handle different TTL values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.lock-service-ttl" -> "5 minutes"
-        ))
-        config.nrsLockServiceTTL mustBe 5.minutes
-      }
-    }
-
     "nrsWorkItemTTL" - {
       "must return the configured work item TTL in days" in {
         val config = buildAppConfig()
@@ -365,11 +290,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
         config.nrsWorkItemTTL mustBe 7
         config.nrsWorkItemMaxRetries mustBe 3
         config.nrsApiKey mustBe "test-api-key-12345"
-        config.nrsCircuitBreakerMaxFailures mustBe 5
-        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
-        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
-        config.nrsThrottleDuration mustBe 5.seconds
-        config.nrsLockServiceTTL mustBe 10.minutes
         config.nrsWorkItemRetryAfter mustBe 1.hour
         config.nrsWorkItemExponentialBackoffFactor mustBe 2.0
         config.nrsSubmissionEnabled mustBe true
