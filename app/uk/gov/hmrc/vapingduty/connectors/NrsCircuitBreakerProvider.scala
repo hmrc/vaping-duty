@@ -26,21 +26,17 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class NrsCircuitBreakerProvider @Inject() (
-  configuration: Configuration,
-  system: ActorSystem
-)(implicit ec: ExecutionContext)
-    extends Provider[NrsCircuitBreaker]
-    with Logging {
+class NrsCircuitBreakerProvider @Inject()(
+                                           configuration: Configuration,
+                                           system: ActorSystem
+                                         )(implicit ec: ExecutionContext)
+  extends Provider[NrsCircuitBreaker] with Logging {
 
-  private val maxFailures: Int                 = configuration.get[Int]("microservice.services.nrs.max-failures")
-  private val callTimeout: FiniteDuration      = configuration.get[FiniteDuration]("microservice.services.nrs.call-timeout")
-  private val resetTimeout: FiniteDuration     =
-    configuration.get[FiniteDuration]("microservice.services.nrs.reset-timeout")
-  private val maxResetTimeout: FiniteDuration  =
-    configuration.get[FiniteDuration]("microservice.services.nrs.max-reset-timeout")
-  private val exponentialBackoffFactor: Double =
-    configuration.get[Double]("microservice.services.nrs.exponential-backoff-factor")
+  private val maxFailures: Int                  = configuration.get[Int]("microservice.services.nrs.max-failures")
+  private val callTimeout: FiniteDuration       = configuration.get[FiniteDuration]("microservice.services.nrs.call-timeout")
+  private val resetTimeout: FiniteDuration      = configuration.get[FiniteDuration]("microservice.services.nrs.reset-timeout")
+  private val maxResetTimeout: FiniteDuration   = configuration.get[FiniteDuration]("microservice.services.nrs.max-reset-timeout")
+  private val exponentialBackoffFactor: Double  = configuration.get[Double]("microservice.services.nrs.exponential-backoff-factor")
 
   private val breaker: CircuitBreaker =
     new CircuitBreaker(
