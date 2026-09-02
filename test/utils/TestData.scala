@@ -18,6 +18,8 @@ package utils
 
 import org.scalacheck.Gen
 import play.api.libs.json.{JsObject, Json, OFormat}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.vapingduty.models.*
 import uk.gov.hmrc.vapingduty.models.identifiers.{InternalId, PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata}
@@ -197,24 +199,12 @@ trait TestData {
 
   val sampleIdentityData: IdentityData = IdentityData(
     internalId = Some("test-internal-id"),
-    externalId = Some("test-external-id"),
-    agentCode = None,
-    optionalCredentials = None,
-    confidenceLevel = uk.gov.hmrc.auth.core.ConfidenceLevel.L200,
-    nino = None,
-    saUtr = None,
-    optionalName = None,
-    dateOfBirth = None,
-    email = Some("test@example.com"),
+    optionalCredentials = Some(Credentials("test-cred-id", "GovernmentGateway")),
+    confidenceLevel = ConfidenceLevel.L50,
     groupIdentifier = Some("test-group-id"),
-    credentialRole = Some(uk.gov.hmrc.auth.core.User),
-    mdtpInformation = None,
-    optionalItmpName = None,
-    dateOfBirthFromItmp = None,
-    optionalItmpAddress = None,
-    affinityGroup = Some(uk.gov.hmrc.auth.core.AffinityGroup.Organisation),
-    credentialStrength = Some("strong"),
-    loginTimes = None
+    credentialRole = Some(User),
+    affinityGroup = Some(AffinityGroup.Organisation),
+    credentialStrength = Some("strong")
   )
 
   val sampleNrsMeta: NrsMetadata = NrsMetadata(

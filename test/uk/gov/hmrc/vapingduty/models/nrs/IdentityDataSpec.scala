@@ -17,95 +17,47 @@
 package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.auth.core.retrieve.*
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole, User}
+import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 class IdentityDataSpec extends SpecBase {
 
+  // Only test the 7 fields actually retrieved from auth in NrsService.retrieveIdentityData()
   private val testIdentityData = IdentityData(
     internalId = Some("int-id-123"),
-    externalId = Some("ext-id-456"),
-    agentCode = Some("AGENT001"),
     optionalCredentials = Some(Credentials("cred-id", "GovernmentGateway")),
     confidenceLevel = ConfidenceLevel.L200,
-    nino = Some("AB123456C"),
-    saUtr = Some("1234567890"),
-    optionalName = Some(Name(Some("John"), Some("Doe"))),
-    email = Some("test@example.com"),
     groupIdentifier = Some("group-123"),
     credentialRole = Some(User),
-    mdtpInformation = Some(MdtpInformation("device-id", "session-id")),
-    optionalItmpName = Some(ItmpName(Some("John"), Some("M"), Some("Doe"))),
-    optionalItmpAddress = Some(ItmpAddress(
-      Some("Line 1"),
-      Some("Line 2"),
-      Some("Line 3"),
-      Some("Line 4"),
-      Some("Line 5"),
-      Some("AB12 3CD"),
-      Some("GB"),
-      Some("UK")
-    )),
     affinityGroup = Some(AffinityGroup.Individual),
     credentialStrength = Some("strong")
   )
 
   "IdentityData" - {
-    "must serialize to JSON correctly" in {
+    "must serialize to JSON correctly with fields used in application" in {
       val json = Json.toJson(testIdentityData)
       
       (json \ "internalId").as[String] mustBe "int-id-123"
-      (json \ "externalId").as[String] mustBe "ext-id-456"
-      (json \ "agentCode").as[String] mustBe "AGENT001"
       (json \ "confidenceLevel").as[Int] mustBe 200
-      (json \ "nino").as[String] mustBe "AB123456C"
-      (json \ "email").as[String] mustBe "test@example.com"
+      (json \ "groupIdentifier").as[String] mustBe "group-123"
+      (json \ "credentialRole").as[String] mustBe "User"
+      (json \ "affinityGroup").as[String] mustBe "Individual"
+      (json \ "credentialStrength").as[String] mustBe "strong"
+      (json \ "optionalCredentials" \ "providerId").as[String] mustBe "cred-id"
+      (json \ "optionalCredentials" \ "providerType").as[String] mustBe "GovernmentGateway"
     }
 
-    "must deserialize from JSON correctly" in {
+    "must deserialize from JSON correctly with fields used in application" in {
       val json = Json.obj(
         "internalId" -> "int-id-123",
-        "externalId" -> "ext-id-456",
-        "agentCode" -> "AGENT001",
         "optionalCredentials" -> Json.obj(
           "providerId" -> "cred-id",
           "providerType" -> "GovernmentGateway"
         ),
         "confidenceLevel" -> 200,
-        "nino" -> "AB123456C",
-        "saUtr" -> "1234567890",
-        "optionalName" -> Json.obj(
-          "name" -> "John",
-          "lastName" -> "Doe"
-        ),
-        "email" -> "test@example.com",
-        "agentInformation" -> Json.obj(
-          "agentId" -> "agent-id",
-          "agentCode" -> "agent-code",
-          "agentFriendlyName" -> "agent-name"
-        ),
         "groupIdentifier" -> "group-123",
         "credentialRole" -> "User",
-        "mdtpInformation" -> Json.obj(
-          "deviceId" -> "device-id",
-          "sessionId" -> "session-id"
-        ),
-        "optionalItmpName" -> Json.obj(
-          "givenName" -> "John",
-          "middleName" -> "M",
-          "familyName" -> "Doe"
-        ),
-        "optionalItmpAddress" -> Json.obj(
-          "line1" -> "Line 1",
-          "line2" -> "Line 2",
-          "line3" -> "Line 3",
-          "line4" -> "Line 4",
-          "line5" -> "Line 5",
-          "postCode" -> "AB12 3CD",
-          "countryName" -> "GB",
-          "countryCode" -> "UK"
-        ),
         "affinityGroup" -> "Individual",
         "credentialStrength" -> "strong"
       )
@@ -113,12 +65,15 @@ class IdentityDataSpec extends SpecBase {
       val result = json.as[IdentityData]
       
       result.internalId mustBe Some("int-id-123")
-      result.externalId mustBe Some("ext-id-456")
-      result.nino mustBe Some("AB123456C")
-      result.email mustBe Some("test@example.com")
+      result.optionalCredentials mustBe Some(Credentials("cred-id", "GovernmentGateway"))
+      result.confidenceLevel mustBe ConfidenceLevel.L200
+      result.groupIdentifier mustBe Some("group-123")
+      result.credentialRole mustBe Some(User)
+      result.affinityGroup mustBe Some(AffinityGroup.Individual)
+      result.credentialStrength mustBe Some("strong")
     }
 
-    "must handle minimal IdentityData" in {
+    "must handle minimal IdentityData with only required field" in {
       val minimalData = IdentityData(
         confidenceLevel = ConfidenceLevel.L50
       )
@@ -127,9 +82,11 @@ class IdentityDataSpec extends SpecBase {
       val result = json.as[IdentityData]
       
       result.internalId mustBe None
-      result.externalId mustBe None
-      result.nino mustBe None
-      result.email mustBe None
+      result.optionalCredentials mustBe None
+      result.groupIdentifier mustBe None
+      result.credentialRole mustBe None
+      result.affinityGroup mustBe None
+      result.credentialStrength mustBe None
       result.confidenceLevel mustBe ConfidenceLevel.L50
     }
 
