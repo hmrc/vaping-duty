@@ -43,7 +43,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
                (implicit hc: HeaderCarrier): Future[ReturnDisplayResponse] =
     httpClient
       .get(url"${config.getReturnUrl(vpdId, periodKey)}")
-      .setHeader(createReturnHeaders(vpdId): _*)
+      .setHeader(createReturnHeaders: _*)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>
         logger.warn(s"Exception while getting return: ${e.getMessage}")
@@ -56,7 +56,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
     response match {
       case Right(response) => Future.successful(response)
       case Left(error) =>
-        logger.warn(s"Unexpected response from VPD return get API. Status: ${error.statusCode}")
+        logger.warn(s"Unexpected response from VPD return get API. Status: ${error.statusCode} Message: ${error.message}")
         Future.failed(InternalServerException("Failed to get VPD return"))
     }
   }
@@ -72,7 +72,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
     }
   }
 
-  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
+  def createReturnHeaders: Seq[(String, String)] =
     Seq(
       (HeaderNames.authorisation, HIPAuth(config).authorizationForReturns()),
       ("correlationid", randomUUIDGenerator.uuid),
@@ -80,7 +80,6 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
       ("X-Originating-System", "MDTP"),
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
-      ("X-Transmitting-System", "HIP"),
-      ("vpdreference", vpdId.toString)
+      ("X-Transmitting-System", "HIP")
     )
 }
