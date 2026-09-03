@@ -67,7 +67,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
             Future.failed(InternalServerException(parsingError))
         }
       case Left(error) =>
-        logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode}")
+        logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode} Message: ${error.message}")
         Future.failed(InternalServerException("Failed to submit VPD return"))
     }
   }
@@ -81,7 +81,6 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
       ("X-Transmitting-System", "HIP"),
-      ("periodKey", periodKey),
       ("X-ZVPD", vpdId.toString)
     )
 }
