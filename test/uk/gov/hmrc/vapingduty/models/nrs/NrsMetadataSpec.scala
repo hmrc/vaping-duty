@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.models.nrs
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.retrieve.*
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, User}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialStrength, User}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 
 class NrsMetadataSpec extends SpecBase {
@@ -32,30 +32,12 @@ class NrsMetadataSpec extends SpecBase {
 
   private val testIdentityData = IdentityData(
     internalId = Some("int-id-123"),
-    externalId = Some("ext-id-456"),
-    agentCode = None,
     optionalCredentials = Some(Credentials("cred-id", "GovernmentGateway")),
-    confidenceLevel = ConfidenceLevel.L200,
-    nino = Some("AB123456C"),
-    saUtr = None,
-    optionalName = Some(Name(Some("John"), Some("Doe"))),
-    email = Some("test@example.com"),
+    confidenceLevel = ConfidenceLevel.L50,
     groupIdentifier = Some("group-123"),
     credentialRole = Some(User),
-    mdtpInformation = Some(MdtpInformation("device-id", "session-id")),
-    optionalItmpName = Some(ItmpName(Some("John"), None, Some("Doe"))),
-    optionalItmpAddress = Some(ItmpAddress(
-      Some("Line 1"),
-      None,
-      None,
-      None,
-      None,
-      Some("AB12 3CD"),
-      Some("GB"),
-      Some("UK")
-    )),
     affinityGroup = Some(AffinityGroup.Individual),
-    credentialStrength = Some("strong")
+    credentialStrength = Some(CredentialStrength.strong)
   )
 
   private val testHeaderData = Map(

@@ -19,7 +19,7 @@ package uk.gov.hmrc.vapingduty.repositories
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import org.mongodb.scala.model.{Filters, Updates}
 import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialStrength}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.config.AppConfig
@@ -47,24 +47,12 @@ class NrsWorkItemRepositoryISpec extends ISpecBase with BeforeAndAfterEach {
       userSubmissionTimestamp = Instant.now(clock).toString,
       identityData = IdentityData(
         internalId = Some("Int-123"),
-        externalId = Some("Ext-123"),
-        agentCode = None,
         optionalCredentials = None,
-        confidenceLevel = ConfidenceLevel.L200,
-        nino = None,
-        saUtr = None,
-        optionalName = None,
-        dateOfBirth = None,
-        email = None,
+        confidenceLevel = ConfidenceLevel.L50,
         groupIdentifier = None,
         credentialRole = None,
-        mdtpInformation = None,
-        optionalItmpName = None,
-        dateOfBirthFromItmp = None,
-        optionalItmpAddress = None,
         affinityGroup = Some(AffinityGroup.Organisation),
-        credentialStrength = Some("strong"),
-        loginTimes = None
+        credentialStrength = Some(CredentialStrength.strong)
       ),
       userAuthToken = "Bearer token123",
       headerData = Map.empty[String, String],

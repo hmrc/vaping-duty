@@ -22,33 +22,33 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, CredentialRole}
 
 final case class IdentityData(
   internalId: Option[String] = None,
-  externalId: Option[String] = None,
-  agentCode: Option[String] = None,
+  // externalId: Option[String] = None,
+  // agentCode: Option[String] = None,
   optionalCredentials: Option[Credentials] = None,
   confidenceLevel: ConfidenceLevel,
-  nino: Option[String] = None,
-  saUtr: Option[String] = None,
-  optionalName: Option[Name] = None,
-  dateOfBirth: Option[String] = None,
-  email: Option[String] = None,
+  // nino: Option[String] = None,
+  // saUtr: Option[String] = None,
+  // optionalName: Option[Name] = None,
+  // dateOfBirth: Option[String] = None,
+  // email: Option[String] = None,
   groupIdentifier: Option[String] = None,
   credentialRole: Option[CredentialRole] = None,
-  mdtpInformation: Option[MdtpInformation] = None,
-  optionalItmpName: Option[ItmpName] = None,
-  dateOfBirthFromItmp: Option[String] = None,
-  optionalItmpAddress: Option[ItmpAddress] = None,
+  // mdtpInformation: Option[MdtpInformation] = None,
+  // optionalItmpName: Option[ItmpName] = None,
+  // dateOfBirthFromItmp: Option[String] = None,
+  // optionalItmpAddress: Option[ItmpAddress] = None,
   affinityGroup: Option[AffinityGroup] = None,
-  credentialStrength: Option[String] = None,
-  loginTimes: Option[LoginTimes] = None
+  credentialStrength: Option[String] = None
+  // loginTimes: Option[LoginTimes] = None
 )
 
 object IdentityData {
   given credFormat: OFormat[Credentials]           = Json.format[Credentials]
-  given nameFormat: OFormat[Name]                  = Json.format[Name]
-  given agentInfoFormat: OFormat[AgentInformation] = Json.format[AgentInformation]
-  given mdtpInfoFormat: OFormat[MdtpInformation]   = Json.format[MdtpInformation]
-  given itmpNameFormat: OFormat[ItmpName]          = Json.format[ItmpName]
-  given itmpAddressFormat: OFormat[ItmpAddress]    = Json.format[ItmpAddress]
-  given loginTimes: OFormat[LoginTimes]            = Json.format[LoginTimes]
+  // given nameFormat: OFormat[Name]                  = Json.format[Name]
+  // given agentInfoFormat: OFormat[AgentInformation] = Json.format[AgentInformation]
+  // given mdtpInfoFormat: OFormat[MdtpInformation]   = Json.format[MdtpInformation]
+  // given itmpNameFormat: OFormat[ItmpName]          = Json.format[ItmpName]
+  // given itmpAddressFormat: OFormat[ItmpAddress]    = Json.format[ItmpAddress]
+  // given loginTimes: OFormat[LoginTimes]            = Json.format[LoginTimes]
   given formats: OFormat[IdentityData]             = Json.format[IdentityData]
 }

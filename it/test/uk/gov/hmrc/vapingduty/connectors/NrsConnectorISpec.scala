@@ -19,7 +19,7 @@ package uk.gov.hmrc.vapingduty.connectors
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
-import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.auth.core.{ConfidenceLevel, CredentialStrength}
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.config.AppConfig
@@ -123,24 +123,12 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         userSubmissionTimestamp = Instant.now(clock).toString,
         identityData = IdentityData(
           internalId = Some("Int-123"),
-          externalId = Some("Ext-123"),
-          agentCode = None,
           optionalCredentials = None,
-          confidenceLevel = ConfidenceLevel.L200,
-          nino = None,
-          saUtr = None,
-          optionalName = None,
-          dateOfBirth = None,
-          email = None,
+          confidenceLevel = ConfidenceLevel.L50,
           groupIdentifier = None,
           credentialRole = None,
-          mdtpInformation = None,
-          optionalItmpName = None,
-          dateOfBirthFromItmp = None,
-          optionalItmpAddress = None,
           affinityGroup = Some(Organisation),
-          credentialStrength = Some("strong"),
-          loginTimes = None
+          credentialStrength = Some(CredentialStrength.strong)
         ),
         userAuthToken = "Bearer token123",
         headerData = Map.empty[String, String],
