@@ -45,7 +45,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
       .post(url"${config.submitReturnUrl()}")
-      .setHeader(createReturnHeaders(vpdId, returnRequest.periodKey): _*)
+      .setHeader(createReturnHeaders(vpdId): _*)
       .withBody(Json.toJson(returnRequest))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>
@@ -67,12 +67,12 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
             Future.failed(InternalServerException(parsingError))
         }
       case Left(error) =>
-        logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode}")
+        logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode} Message: ${error.message}")
         Future.failed(InternalServerException("Failed to submit VPD return"))
     }
   }
 
-  def createReturnHeaders(vpdId: VpdId, periodKey: String): Seq[(String, String)] =
+  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
     Seq(
       (HeaderNames.authorisation, HIPAuth(config).authorizationForReturns()),
       ("correlationid", randomUUIDGenerator.uuid),
@@ -81,7 +81,6 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
       ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       ("X-Regime-Type", "VPD"),
       ("X-Transmitting-System", "HIP"),
-      ("periodKey", periodKey),
       ("X-ZVPD", vpdId.toString)
     )
 }
