@@ -45,7 +45,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
       .post(url"${config.submitReturnUrl()}")
-      .setHeader(createReturnHeaders(vpdId, returnRequest.periodKey): _*)
+      .setHeader(createReturnHeaders(vpdId): _*)
       .withBody(Json.toJson(returnRequest))
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case e: Exception =>
@@ -72,7 +72,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
     }
   }
 
-  def createReturnHeaders(vpdId: VpdId, periodKey: String): Seq[(String, String)] =
+  def createReturnHeaders(vpdId: VpdId): Seq[(String, String)] =
     Seq(
       (HeaderNames.authorisation, HIPAuth(config).authorizationForReturns()),
       ("correlationid", randomUUIDGenerator.uuid),
