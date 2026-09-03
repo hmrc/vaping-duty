@@ -196,6 +196,10 @@ trait TestData {
   val returnDisplayResponse: ReturnDisplayResponse = ReturnDisplayResponse(
     success = returnDisplaySuccess
   )
+  
+  val sampleReturnCreateRequest: ReturnCreateRequest = returnsCreateRequest
+  val sampleReturnSubmittedResponse: ReturnSubmittedResponse = returnSubmittedResponse
+  val sampleReturnDisplaySuccess: ReturnDisplaySuccess = returnDisplaySuccess
 
   val sampleIdentityData: IdentityData = IdentityData(
     internalId = Some("test-internal-id"),
