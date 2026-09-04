@@ -51,8 +51,8 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
         result mustBe NrsSubmissionResult.PermanentFailure
+        verifyPost(url)
       }
-      verifyPost(url)
     }
 
     "return RetryableFailure when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
@@ -62,8 +62,8 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
         result mustBe NrsSubmissionResult.RetryableFailure
+        verifyPost(url)
       }
-      verifyPost(url)
     }
 
     "return RetryableFailure when NRS returns an unexpected 5xx error" in new SetUp {
