@@ -103,6 +103,7 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
           "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
         )
 
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
         when(mockNrsService.processAll())
           .thenReturn(Future.failed(new RuntimeException("Test error")))
