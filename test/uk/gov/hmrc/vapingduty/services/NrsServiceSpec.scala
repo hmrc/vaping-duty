@@ -24,11 +24,11 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, ConfidenceLevel, CredentialStrength, User}
-import uk.gov.hmrc.http.{InternalServerException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
-import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionWorkItem}
+import uk.gov.hmrc.vapingduty.models.nrs.*
 import uk.gov.hmrc.vapingduty.models.requests.IdentifierRequest
 import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
 import uk.gov.hmrc.vapingduty.services.NrsService.NonRepudiationIdentityRetrievals
@@ -175,28 +175,38 @@ class NrsServiceSpec extends SpecBase {
     }
 
     "submitToNrs must" - {
-      "successfully submit to NRS and return Right(())" in {
+      "successfully submit to NRS and return Success" in {
         reset(mockNrsConnector)
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Right(())))
+          .thenReturn(Future.successful(NrsSubmissionResult.Success))
 
         whenReady(service.submitToNrs(testNrsPayload)) { result =>
-          result mustBe Right(())
+          result mustBe NrsSubmissionResult.Success
           verify(mockNrsConnector).submitToNrs(any[NrsPayload])(any())
         }
       }
 
-      "return Left(UpstreamErrorResponse) when NRS connector fails" in {
+      "return RetryableFailure when NRS connector returns 5xx error" in {
         reset(mockNrsConnector)
 
-        val error = UpstreamErrorResponse("NRS error", 500)
-
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Left(error)))
+          .thenReturn(Future.successful(NrsSubmissionResult.RetryableFailure))
 
         whenReady(service.submitToNrs(testNrsPayload)) { result =>
-          result mustBe Left(error)
+          result mustBe NrsSubmissionResult.RetryableFailure
+          verify(mockNrsConnector).submitToNrs(any[NrsPayload])(any())
+        }
+      }
+
+      "return PermanentFailure when NRS connector returns 4xx error" in {
+        reset(mockNrsConnector)
+
+        when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
+          .thenReturn(Future.successful(NrsSubmissionResult.PermanentFailure))
+
+        whenReady(service.submitToNrs(testNrsPayload)) { result =>
+          result mustBe NrsSubmissionResult.PermanentFailure
           verify(mockNrsConnector).submitToNrs(any[NrsPayload])(any())
         }
       }
@@ -223,7 +233,7 @@ class NrsServiceSpec extends SpecBase {
           .thenReturn(Future.successful(None))
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Right(())))
+          .thenReturn(Future.successful(NrsSubmissionResult.Success))
 
         when(mockNrsWorkItemRepository.complete(any(), any()))
           .thenReturn(Future.successful(true))
@@ -235,25 +245,43 @@ class NrsServiceSpec extends SpecBase {
         }
       }
 
-      "mark work item as failed when NRS submission fails" in {
+      "mark work item as failed when NRS submission returns retryable 5xx error" in {
         reset(mockNrsWorkItemRepository, mockNrsConnector)
-
-        val error = UpstreamErrorResponse("NRS error", 500)
 
         when(mockNrsWorkItemRepository.pullOutstanding(any(), any()))
           .thenReturn(Future.successful(Some(testWorkItem)))
           .thenReturn(Future.successful(None))
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Left(error)))
+          .thenReturn(Future.successful(NrsSubmissionResult.RetryableFailure))
 
-        when(mockNrsWorkItemRepository.markAs(any(), any(), any()))
+        when(mockNrsWorkItemRepository.markAs(any(), eqTo(ProcessingStatus.Failed), any()))
           .thenReturn(Future.successful(true))
 
         whenReady(service.processAll()) { result =>
-          result mustBe (())
+          result mustBe ()
           verify(mockNrsConnector).submitToNrs(any[NrsPayload])(any())
-          verify(mockNrsWorkItemRepository).markAs(any(), any(), any())
+          verify(mockNrsWorkItemRepository).markAs(any(), eqTo(ProcessingStatus.Failed), any())
+        }
+      }
+
+      "mark work item as permanently failed when NRS submission returns 4xx error" in {
+        reset(mockNrsWorkItemRepository, mockNrsConnector)
+
+        when(mockNrsWorkItemRepository.pullOutstanding(any(), any()))
+          .thenReturn(Future.successful(Some(testWorkItem)))
+          .thenReturn(Future.successful(None))
+
+        when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
+          .thenReturn(Future.successful(NrsSubmissionResult.PermanentFailure))
+
+        when(mockNrsWorkItemRepository.markAs(any(), eqTo(ProcessingStatus.PermanentlyFailed), any()))
+          .thenReturn(Future.successful(true))
+
+        whenReady(service.processAll()) { result =>
+          result mustBe ()
+          verify(mockNrsConnector).submitToNrs(any[NrsPayload])(any())
+          verify(mockNrsWorkItemRepository).markAs(any(), eqTo(ProcessingStatus.PermanentlyFailed), any())
         }
       }
 
@@ -291,13 +319,13 @@ class NrsServiceSpec extends SpecBase {
           .thenReturn(Future.successful(None))
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Right(())))
+          .thenReturn(Future.successful(NrsSubmissionResult.Success))
 
         when(mockNrsWorkItemRepository.complete(any(), any()))
           .thenReturn(Future.successful(true))
 
         whenReady(service.processAll()) { result =>
-          result mustBe (())
+          result mustBe ()
           verify(mockNrsConnector, times(2)).submitToNrs(any[NrsPayload])(any())
           verify(mockNrsWorkItemRepository, times(2)).complete(any(), any())
         }
@@ -308,7 +336,6 @@ class NrsServiceSpec extends SpecBase {
 
         val workItem1 = testWorkItem
         val workItem2 = testWorkItem
-        val error = UpstreamErrorResponse("NRS error", 500)
 
         when(mockNrsWorkItemRepository.pullOutstanding(any(), any()))
           .thenReturn(Future.successful(Some(workItem1)))
@@ -316,8 +343,8 @@ class NrsServiceSpec extends SpecBase {
           .thenReturn(Future.successful(None))
 
         when(mockNrsConnector.submitToNrs(any[NrsPayload])(any()))
-          .thenReturn(Future.successful(Left(error)))
-          .thenReturn(Future.successful(Right(())))
+          .thenReturn(Future.successful(NrsSubmissionResult.RetryableFailure))
+          .thenReturn(Future.successful(NrsSubmissionResult.Success))
 
         when(mockNrsWorkItemRepository.markAs(any(), any(), any()))
           .thenReturn(Future.successful(true))

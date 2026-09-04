@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.vapingduty.connectors
 
-import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
+import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.{ConfidenceLevel, CredentialStrength}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload}
+import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionResult}
 import uk.gov.hmrc.vapingduty.utils.ConnectorTestHelpers
 
 import java.time.Instant
@@ -33,86 +33,84 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
   protected val endpointName = "nrs"
 
   "NrsConnector must" - {
-    "return Right(()) when NRS accepts the submission" in new SetUp {
+    "return Success when NRS accepts the submission" in new SetUp {
       val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result mustBe Right(())
+        result mustBe NrsSubmissionResult.Success
         verifyPost(url)
       }
     }
 
-    "return Left(UpstreamErrorResponse) when NRS returns BAD_REQUEST" in new SetUp {
+    "return PermanentFailure when NRS returns BAD_REQUEST" in new SetUp {
       val nrsPayload: NrsPayload = createTestPayload()
 
       stubPost(url, BAD_REQUEST, Json.toJson(nrsPayload).toString, "Bad request")
 
       whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result.isLeft mustBe true
-        result.left.map(_.statusCode mustBe BAD_REQUEST)
-        verifyPost(url)
+        result mustBe NrsSubmissionResult.PermanentFailure
       }
+      verifyPost(url)
     }
-    
-    "return Left(UpstreamErrorResponse) when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
-      val nrsPayload: NrsPayload = createTestPayload()
+  }
 
-      stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
+  "return RetryableFailure when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
+    val nrsPayload: NrsPayload = createTestPayload()
 
-      whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result.isLeft mustBe true
-        result.left.map(_.statusCode mustBe INTERNAL_SERVER_ERROR)
-        verifyPost(url)
-      }
+    stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
+
+    whenReady(connector.submitToNrs(nrsPayload)) { result =>
+      result mustBe NrsSubmissionResult.RetryableFailure
     }
+    verifyPost(url)
+  }
 
-    "return Left(UpstreamErrorResponse) when NRS returns an unexpected error" in new SetUp {
-      val nrsPayload: NrsPayload = createTestPayload()
+  "return RetryableFailure when NRS returns an unexpected 5xx error" in new SetUp {
+    val nrsPayload: NrsPayload = createTestPayload()
 
-      stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Unexpected error")
+    stubPost(url, SERVICE_UNAVAILABLE, Json.toJson(nrsPayload).toString, "Unexpected error")
 
-      whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result.isLeft mustBe true
-        result.left.map(_.statusCode mustBe INTERNAL_SERVER_ERROR)
-        verifyPost(url)
-      }
+    whenReady(connector.submitToNrs(nrsPayload)) { result =>
+      result mustBe NrsSubmissionResult.RetryableFailure
+      verifyPost(url)
     }
+  }
 
-    "return Left(UpstreamErrorResponse) when a network fault occurs" in new SetUp {
-      val nrsPayload: NrsPayload = createTestPayload()
+  "return RetryableFailure when a network fault occurs" in new SetUp {
+    val nrsPayload: NrsPayload = createTestPayload()
 
-      import com.github.tomakehurst.wiremock.http.Fault
-      val requestBody: String = Json.toJson(nrsPayload).toString
-      stubPostFault(url, requestBody, Fault.CONNECTION_RESET_BY_PEER)
+    import com.github.tomakehurst.wiremock.http.Fault
 
-      whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result.isLeft mustBe true
-        verifyPost(url)
-      }
+    val requestBody: String = Json.toJson(nrsPayload).toString
+    stubPostFault(url, requestBody, Fault.CONNECTION_RESET_BY_PEER)
+
+    whenReady(connector.submitToNrs(nrsPayload)) { result =>
+      result mustBe NrsSubmissionResult.RetryableFailure
+      verifyPost(url)
     }
+  }
 
-    "use existing correlation ID when present in header carrier" in new SetUp {
-      val nrsPayload: NrsPayload = createTestPayload()
-      val existingCorrelationId = "existing-correlation-id-123"
-      implicit val hcWithCorrelationId: HeaderCarrier = hc.withExtraHeaders(
-        "X-Correlation-Id" -> existingCorrelationId
-      )
+  "use existing correlation ID when present in header carrier" in new SetUp {
+    val nrsPayload: NrsPayload = createTestPayload()
+    val existingCorrelationId = "existing-correlation-id-123"
+    implicit val hcWithCorrelationId: HeaderCarrier = hc.withExtraHeaders(
+      "X-Correlation-Id" -> existingCorrelationId
+    )
 
-      stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
+    stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
 
-      whenReady(connector.submitToNrs(nrsPayload)) { result =>
-        result mustBe Right(())
-        verifyPostWithHeader(url, "X-Correlation-Id", existingCorrelationId)
-      }
+    whenReady(connector.submitToNrs(nrsPayload)) { result =>
+      result mustBe NrsSubmissionResult.Success
+      verifyPostWithHeader(url, "X-Correlation-Id", existingCorrelationId)
     }
   }
 
   class SetUp extends ConnectorFixture {
     val connector: NrsConnector = app.injector.instanceOf[NrsConnector]
     lazy val url = s"${app.injector.instanceOf[AppConfig].nrsSubmissionUrl}"
-    
+
     def createTestPayload(): NrsPayload = NrsPayload(
       payload = "encodedPayload",
       metadata = NrsMetadata(

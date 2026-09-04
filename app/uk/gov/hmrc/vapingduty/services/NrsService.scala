@@ -21,10 +21,10 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.*
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
-import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionWorkItem}
+import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionResult, NrsSubmissionWorkItem}
 import uk.gov.hmrc.vapingduty.models.requests.IdentifierRequest
 import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
 import uk.gov.hmrc.vapingduty.services.NrsService.nonRepudiationIdentityRetrievals
@@ -95,18 +95,21 @@ class NrsService @Inject()(
    *
    * @param payload The NRS payload to submit
    * @param hc      HeaderCarrier for HTTP context
-   * @return Future[Either[UpstreamErrorResponse, Unit]]
+   * @return Future[NrsSubmissionResult]
    */
   def submitToNrs(
                    payload: NrsPayload
-                 )(using hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
+                 )(using hc: HeaderCarrier): Future[NrsSubmissionResult] = {
     nrsConnector.submitToNrs(payload).map {
-      case Right(_) =>
+      case NrsSubmissionResult.Success =>
         logger.info(s"Successfully submitted to NRS for notable event: ${payload.metadata.notableEvent}")
-        Right(())
-      case Left(error) =>
-        logger.error(s"Failed to submit to NRS for notable event: ${payload.metadata.notableEvent} - ${error.getMessage}")
-        Left(error)
+        NrsSubmissionResult.Success
+      case failure @ NrsSubmissionResult.RetryableFailure =>
+        logger.error(s"Failed to submit to NRS (retryable) for notable event: ${payload.metadata.notableEvent}")
+        failure
+      case failure @ NrsSubmissionResult.PermanentFailure =>
+        logger.error(s"Failed to submit to NRS (permanent) for notable event: ${payload.metadata.notableEvent}")
+        failure
     }
   }
 
@@ -128,14 +131,19 @@ class NrsService @Inject()(
         case Some(workItem) =>
           logger.info(s"Processing NRS work item: ${workItem.id}")
           val processResult = submitToNrs(workItem.item.payload).flatMap {
-            case Right(_) =>
+            case NrsSubmissionResult.Success =>
               nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
                 logger.info(s"Successfully processed NRS work item: ${workItem.id}")
                 ()
               }
-            case Left(error) =>
+            case NrsSubmissionResult.RetryableFailure =>
               nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
-                logger.warn(s"Failed to process NRS work item: ${workItem.id} - ${error.getMessage}. Will retry with exponential backoff.")
+                logger.warn(s"Failed to process NRS work item: ${workItem.id} with retryable error. Will retry with exponential backoff.")
+                ()
+              }
+            case NrsSubmissionResult.PermanentFailure =>
+              nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.PermanentlyFailed).map { _ =>
+                logger.warn(s"Permanently failed to process NRS work item: ${workItem.id} with permanent error. Will not retry.")
                 ()
               }
           }.recoverWith { case ex =>

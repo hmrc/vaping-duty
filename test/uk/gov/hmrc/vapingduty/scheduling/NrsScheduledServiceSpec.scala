@@ -42,7 +42,6 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
     "when scheduler is enabled and feature switch is enabled" - {
       "must initialize and log that it is enabled" in {
         val config = Configuration(
-          "nrs-submission-scheduler.enabled"       -> true,
           "nrs-submission-scheduler.interval"      -> "30 seconds",
           "nrs-submission-scheduler.initial-delay" -> "1 minute"
         )
@@ -61,7 +60,6 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
     "when scheduler is enabled but feature switch is disabled" - {
       "must skip processing" in {
         val config = Configuration(
-          "nrs-submission-scheduler.enabled"       -> true,
           "nrs-submission-scheduler.interval"      -> "100 milliseconds",
           "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
         )
@@ -80,7 +78,6 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
     "when scheduler is disabled" - {
       "must not schedule any processing" in {
         val config = Configuration(
-          "nrs-submission-scheduler.enabled"       -> false,
           "nrs-submission-scheduler.interval"      -> "30 seconds",
           "nrs-submission-scheduler.initial-delay" -> "1 minute"
         )
@@ -98,7 +95,6 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
     "when scheduler encounters an error" - {
       "must log the error and continue" in {
         val config = Configuration(
-          "nrs-submission-scheduler.enabled"       -> true,
           "nrs-submission-scheduler.interval"      -> "100 milliseconds",
           "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
         )

@@ -39,7 +39,6 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
     PatienceConfig(timeout = Span(60, Seconds), interval = Span(200, org.scalatest.time.Millis))
 
   private def schedulerEnabledConfig = Configuration(
-    "nrs-submission-scheduler.enabled"       -> true,
     "nrs-submission-scheduler.interval"      -> "1 second",
     "nrs-submission-scheduler.initial-delay" -> "2 seconds",
     "features.nrs-submission-enabled"        -> true,
@@ -57,11 +56,10 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
   )
 
   private def schedulerDisabledConfig = Configuration(
-    "nrs-submission-scheduler.enabled"       -> false,
     "nrs-submission-scheduler.interval"      -> "1 second",
     "nrs-submission-scheduler.initial-delay" -> "2 seconds",
     "features.nrs-submission-enabled"        -> true,
-    "features.nrs-generation-enabled"        -> true,
+    "features.nrs-generation-enabled"        -> false,
     "microservice.services.nrs.protocol"     -> "http",
     "microservice.services.nrs.host"         -> wireMockHost,
     "microservice.services.nrs.port"         -> wireMockPort,
@@ -216,7 +214,7 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
           // Wait a reasonable time
           Thread.sleep(2000)
 
-          // Item should still be in ToDo status since scheduler is disabled
+          // Item should still be in To Do status since scheduler is disabled
           val items = await(repository.collection.find().toFuture())
           items.headOption.map(_.status) shouldBe Some(ProcessingStatus.ToDo)
         }
