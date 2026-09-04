@@ -57,7 +57,7 @@ class ReturnsSubmissionService @Inject()(
     submitReturnsConnector.submitReturn(returnCreateRequest, vpdId)
       .map { successResponse =>
         // After successful ETMP submission, queue NRS work item for background processing if enabled
-        if (appConfig.nrsSubmissionEnabled) {
+        if (appConfig.nrsGenerationEnabled) {
           // This is fire-and-forget - we don't wait for the result
           val nrsPayload = Json.toJson(returnCreateRequest)
 
@@ -69,7 +69,7 @@ class ReturnsSubmissionService @Inject()(
               ()
             }
         } else {
-          logger.info(s"NRS submission disabled - skipping for vpdId: $vpdId, periodKey: $periodKey")
+          logger.info(s"NRS generation disabled - skipping for vpdId: $vpdId, periodKey: $periodKey")
         }
 
         // Return success response immediately without waiting for NRS

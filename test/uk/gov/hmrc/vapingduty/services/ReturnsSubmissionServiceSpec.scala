@@ -51,7 +51,7 @@ class ReturnsSubmissionServiceSpec extends SpecBase with ScalaFutures {
     "submitReturn must" - {
       "successfully submit to ETMP and queue NRS work item when NRS is enabled" in {
         reset(mockSubmitReturnsConnector, mockNrsService, mockAppConfig)
-        when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockSubmitReturnsConnector.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId))(any()))
           .thenReturn(Future.successful(returnSubmittedResponse))
         when(mockNrsService.makeWorkItemAndQueue(any[JsValue], eqTo(NrsMetadata.notableEventSubmitReturn), eqTo(returnCreateRequest.periodKey))(using any(), any()))
@@ -68,7 +68,7 @@ class ReturnsSubmissionServiceSpec extends SpecBase with ScalaFutures {
 
       "successfully submit to ETMP and skip NRS when NRS is disabled" in {
         reset(mockSubmitReturnsConnector, mockNrsService, mockAppConfig)
-        when(mockAppConfig.nrsSubmissionEnabled).thenReturn(false)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(false)
         when(mockSubmitReturnsConnector.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId))(any()))
           .thenReturn(Future.successful(returnSubmittedResponse))
 
@@ -83,7 +83,7 @@ class ReturnsSubmissionServiceSpec extends SpecBase with ScalaFutures {
 
       "successfully submit to ETMP even when NRS queueing fails" in {
         reset(mockSubmitReturnsConnector, mockNrsService, mockAppConfig)
-        when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockSubmitReturnsConnector.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId))(any()))
           .thenReturn(Future.successful(returnSubmittedResponse))
         when(mockNrsService.makeWorkItemAndQueue(any[JsValue], eqTo(NrsMetadata.notableEventSubmitReturn), eqTo(returnCreateRequest.periodKey))(using any(), any()))

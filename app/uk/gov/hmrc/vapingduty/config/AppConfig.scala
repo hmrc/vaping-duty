@@ -83,4 +83,5 @@ class AppConfig @Inject()(
   def nrsWorkItemExponentialBackoffFactor: Double = config.get[Double]("mongodb.nrs-work-item.exponential-backoff-factor")
 
   val nrsSubmissionEnabled: Boolean = config.get[Boolean]("features.nrs-submission-enabled")
+  val nrsGenerationEnabled: Boolean = config.get[Boolean]("features.nrs-generation-enabled")
 }

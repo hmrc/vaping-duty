@@ -49,7 +49,8 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.nrs.port" -> 443,
     "microservice.services.nrs.url" -> "/submission",
     "microservice.services.nrs.api-key" -> "test-api-key-12345",
-    "features.nrs-submission-enabled" -> true
+    "features.nrs-submission-enabled" -> true,
+    "features.nrs-generation-enabled" -> true
   )
 
   private def buildAppConfig(overrides: Map[String, Any] = Map.empty): AppConfig = {
@@ -90,6 +91,18 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       "must return false when feature is disabled" in {
         val config = buildAppConfig(Map("features.nrs-submission-enabled" -> false))
         config.nrsSubmissionEnabled mustBe false
+      }
+    }
+
+    "nrsGenerationEnabled" - {
+      "must return true when feature is enabled" in {
+        val config = buildAppConfig()
+        config.nrsGenerationEnabled mustBe true
+      }
+
+      "must return false when feature is disabled" in {
+        val config = buildAppConfig(Map("features.nrs-generation-enabled" -> false))
+        config.nrsGenerationEnabled mustBe false
       }
     }
 

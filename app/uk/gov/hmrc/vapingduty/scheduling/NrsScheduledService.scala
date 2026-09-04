@@ -18,6 +18,7 @@ package uk.gov.hmrc.vapingduty.scheduling
 
 import org.apache.pekko.actor.ActorSystem
 import play.api.{Configuration, Logging}
+import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.services.NrsService
 
 import javax.inject.{Inject, Singleton}
@@ -28,15 +29,15 @@ import scala.concurrent.duration.FiniteDuration
 class NrsScheduledService @Inject()(
                                      actorSystem: ActorSystem,
                                      nrsService: NrsService,
-                                     configuration: Configuration
+                                     configuration: Configuration,
+                                     appConfig: AppConfig
                                    )(implicit ec: ExecutionContext) extends Logging {
 
-  private val enabled: Boolean = configuration.get[Boolean]("nrs-submission-scheduler.enabled")
   private val initialDelay: FiniteDuration =
     configuration.get[FiniteDuration]("nrs-submission-scheduler.initial-delay")
   private val interval: FiniteDuration = configuration.get[FiniteDuration]("nrs-submission-scheduler.interval")
 
-  if (enabled) {
+  if (appConfig.nrsGenerationEnabled) {
     logger.info(
       s"NRS submission scheduler enabled - initial delay: $initialDelay, interval: $interval"
     )
@@ -50,7 +51,7 @@ class NrsScheduledService @Inject()(
       initialDelay = initialDelay,
       interval = interval
     ) { () =>
-      if (configuration.get[Boolean]("features.nrs-submission-enabled")) {
+      if (appConfig.nrsSubmissionEnabled) {
         logger.debug("NRS submission scheduler triggered")
         nrsService.processAll().recover { case ex =>
           logger.error("Error processing NRS work items", ex)
