@@ -20,12 +20,12 @@ import org.apache.pekko.Done
 import org.apache.pekko.actor.ActorSystem
 import org.mockito.Mockito.{atLeastOnce, never, verify, when}
 import org.scalatest.BeforeAndAfterAll
-import play.api.Configuration
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.services.NrsService
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
 
@@ -41,15 +41,13 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
   "NrsScheduledService" - {
     "when scheduler is enabled and feature switch is enabled" - {
       "must initialize and log that it is enabled" in {
-        val config = Configuration(
-          "nrs-submission-scheduler.interval"      -> "30 seconds",
-          "nrs-submission-scheduler.initial-delay" -> "1 minute"
-        )
-
+        when(mockAppConfig.nrsSchedulerInterval).thenReturn(30.seconds)
+        when(mockAppConfig.nrsSchedulerInitialDelay).thenReturn(1.minute)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
         when(mockNrsService.processAll()).thenReturn(Future.successful(Done))
 
-        new NrsScheduledService(actorSystem, mockNrsService, config, mockAppConfig)
+        new NrsScheduledService(actorSystem, mockNrsService, mockAppConfig)
 
         // Scheduler is initialized but we can't easily test the scheduled execution in a unit test
         // The integration test will verify the actual scheduling behavior
@@ -59,14 +57,12 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
     
     "when scheduler is enabled but feature switch is disabled" - {
       "must skip processing" in {
-        val config = Configuration(
-          "nrs-submission-scheduler.interval"      -> "100 milliseconds",
-          "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
-        )
-
+        when(mockAppConfig.nrsSchedulerInterval).thenReturn(100.milliseconds)
+        when(mockAppConfig.nrsSchedulerInitialDelay).thenReturn(10.milliseconds)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockAppConfig.nrsSubmissionEnabled).thenReturn(false)
 
-        new NrsScheduledService(actorSystem, mockNrsService, config, mockAppConfig)
+        new NrsScheduledService(actorSystem, mockNrsService, mockAppConfig)
 
         // Wait to ensure scheduler runs but doesn't call processAll
         Thread.sleep(300)
@@ -77,13 +73,11 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
 
     "when scheduler is disabled" - {
       "must not schedule any processing" in {
-        val config = Configuration(
-          "nrs-submission-scheduler.interval"      -> "30 seconds",
-          "nrs-submission-scheduler.initial-delay" -> "1 minute"
-        )
+        when(mockAppConfig.nrsSchedulerInterval).thenReturn(30.seconds)
+        when(mockAppConfig.nrsSchedulerInitialDelay).thenReturn(1.minute)
+        when(mockAppConfig.nrsGenerationEnabled).thenReturn(false)
 
-        // Don't need to mock appConfig since scheduler won't start
-        new NrsScheduledService(actorSystem, mockNrsService, config, mockAppConfig)
+        new NrsScheduledService(actorSystem, mockNrsService, mockAppConfig)
 
         // Give it a moment to ensure nothing is scheduled
         Thread.sleep(100)
@@ -94,17 +88,14 @@ class NrsScheduledServiceSpec extends SpecBase with BeforeAndAfterAll {
 
     "when scheduler encounters an error" - {
       "must log the error and continue" in {
-        val config = Configuration(
-          "nrs-submission-scheduler.interval"      -> "100 milliseconds",
-          "nrs-submission-scheduler.initial-delay" -> "10 milliseconds"
-        )
-
+        when(mockAppConfig.nrsSchedulerInterval).thenReturn(100.milliseconds)
+        when(mockAppConfig.nrsSchedulerInitialDelay).thenReturn(10.milliseconds)
         when(mockAppConfig.nrsGenerationEnabled).thenReturn(true)
         when(mockAppConfig.nrsSubmissionEnabled).thenReturn(true)
         when(mockNrsService.processAll())
           .thenReturn(Future.failed(new RuntimeException("Test error")))
 
-        new NrsScheduledService(actorSystem, mockNrsService, config, mockAppConfig)
+        new NrsScheduledService(actorSystem, mockNrsService, mockAppConfig)
 
         // Wait for at least two executions (initial + one retry)
         Thread.sleep(300)

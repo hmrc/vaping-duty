@@ -84,4 +84,27 @@ class AppConfig @Inject()(
 
   val nrsSubmissionEnabled: Boolean = config.get[Boolean]("features.nrs-submission-enabled")
   val nrsGenerationEnabled: Boolean = config.get[Boolean]("features.nrs-generation-enabled")
+
+  // NRS Scheduler Configuration
+  def nrsSchedulerInitialDelay: scala.concurrent.duration.FiniteDuration =
+    config.get[scala.concurrent.duration.FiniteDuration]("nrs-submission-scheduler.initial-delay")
+
+  def nrsSchedulerInterval: scala.concurrent.duration.FiniteDuration =
+    config.get[scala.concurrent.duration.FiniteDuration]("nrs-submission-scheduler.interval")
+
+  // NRS Circuit Breaker Configuration
+  def nrsCircuitBreakerMaxFailures: Int =
+    config.get[Int]("microservice.services.nrs.max-failures")
+
+  def nrsCircuitBreakerCallTimeout: scala.concurrent.duration.FiniteDuration =
+    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.call-timeout")
+
+  def nrsCircuitBreakerResetTimeout: scala.concurrent.duration.FiniteDuration =
+    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.reset-timeout")
+
+  def nrsCircuitBreakerMaxResetTimeout: scala.concurrent.duration.FiniteDuration =
+    config.get[scala.concurrent.duration.FiniteDuration]("microservice.services.nrs.max-reset-timeout")
+
+  def nrsCircuitBreakerExponentialBackoffFactor: Double =
+    config.get[Double]("microservice.services.nrs.exponential-backoff-factor")
 }

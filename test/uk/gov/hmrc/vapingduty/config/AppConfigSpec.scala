@@ -49,6 +49,13 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.nrs.port" -> 443,
     "microservice.services.nrs.url" -> "/submission",
     "microservice.services.nrs.api-key" -> "test-api-key-12345",
+    "microservice.services.nrs.max-failures" -> 5,
+    "microservice.services.nrs.call-timeout" -> "30 seconds",
+    "microservice.services.nrs.reset-timeout" -> "60 seconds",
+    "microservice.services.nrs.max-reset-timeout" -> "300 seconds",
+    "microservice.services.nrs.exponential-backoff-factor" -> 2.0,
+    "nrs-submission-scheduler.interval" -> "30 seconds",
+    "nrs-submission-scheduler.initial-delay" -> "1 minute",
     "features.nrs-submission-enabled" -> true,
     "features.nrs-generation-enabled" -> true
   )
@@ -292,6 +299,104 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       }
     }
 
+    "nrsSchedulerInitialDelay" - {
+      "must return the configured initial delay" in {
+        val config = buildAppConfig()
+        config.nrsSchedulerInitialDelay mustBe 1.minute
+      }
+
+      "must handle different initial delay values" in {
+        val config = buildAppConfig(Map(
+          "nrs-submission-scheduler.initial-delay" -> "2 minutes"
+        ))
+        config.nrsSchedulerInitialDelay mustBe 2.minutes
+      }
+    }
+
+    "nrsSchedulerInterval" - {
+      "must return the configured interval" in {
+        val config = buildAppConfig()
+        config.nrsSchedulerInterval mustBe 30.seconds
+      }
+
+      "must handle different interval values" in {
+        val config = buildAppConfig(Map(
+          "nrs-submission-scheduler.interval" -> "1 minute"
+        ))
+        config.nrsSchedulerInterval mustBe 1.minute
+      }
+    }
+
+    "nrsCircuitBreakerMaxFailures" - {
+      "must return the configured max failures" in {
+        val config = buildAppConfig()
+        config.nrsCircuitBreakerMaxFailures mustBe 5
+      }
+
+      "must handle different max failures values" in {
+        val config = buildAppConfig(Map(
+          "microservice.services.nrs.max-failures" -> 10
+        ))
+        config.nrsCircuitBreakerMaxFailures mustBe 10
+      }
+    }
+
+    "nrsCircuitBreakerCallTimeout" - {
+      "must return the configured call timeout" in {
+        val config = buildAppConfig()
+        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
+      }
+
+      "must handle different call timeout values" in {
+        val config = buildAppConfig(Map(
+          "microservice.services.nrs.call-timeout" -> "45 seconds"
+        ))
+        config.nrsCircuitBreakerCallTimeout mustBe 45.seconds
+      }
+    }
+
+    "nrsCircuitBreakerResetTimeout" - {
+      "must return the configured reset timeout" in {
+        val config = buildAppConfig()
+        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
+      }
+
+      "must handle different reset timeout values" in {
+        val config = buildAppConfig(Map(
+          "microservice.services.nrs.reset-timeout" -> "90 seconds"
+        ))
+        config.nrsCircuitBreakerResetTimeout mustBe 90.seconds
+      }
+    }
+
+    "nrsCircuitBreakerMaxResetTimeout" - {
+      "must return the configured max reset timeout" in {
+        val config = buildAppConfig()
+        config.nrsCircuitBreakerMaxResetTimeout mustBe 300.seconds
+      }
+
+      "must handle different max reset timeout values" in {
+        val config = buildAppConfig(Map(
+          "microservice.services.nrs.max-reset-timeout" -> "600 seconds"
+        ))
+        config.nrsCircuitBreakerMaxResetTimeout mustBe 600.seconds
+      }
+    }
+
+    "nrsCircuitBreakerExponentialBackoffFactor" - {
+      "must return the configured exponential backoff factor" in {
+        val config = buildAppConfig()
+        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 2.0
+      }
+
+      "must handle different exponential backoff factor values" in {
+        val config = buildAppConfig(Map(
+          "microservice.services.nrs.exponential-backoff-factor" -> 1.5
+        ))
+        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 1.5
+      }
+    }
+
     "integration tests" - {
       "must handle complete configuration with all values" in {
         val config = buildAppConfig()
@@ -306,6 +411,13 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
         config.nrsWorkItemRetryAfter mustBe 1.hour
         config.nrsWorkItemExponentialBackoffFactor mustBe 2.0
         config.nrsSubmissionEnabled mustBe true
+        config.nrsSchedulerInitialDelay mustBe 1.minute
+        config.nrsSchedulerInterval mustBe 30.seconds
+        config.nrsCircuitBreakerMaxFailures mustBe 5
+        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
+        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
+        config.nrsCircuitBreakerMaxResetTimeout mustBe 300.seconds
+        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 2.0
       }
     }
   }

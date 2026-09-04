@@ -18,22 +18,23 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.CircuitBreaker
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
-import play.api.Configuration
 import uk.gov.hmrc.vapingduty.base.SpecBase
+import uk.gov.hmrc.vapingduty.config.AppConfig
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
 
-  private val testConfig = Configuration(
-    "microservice.services.nrs.max-failures"                -> 5,
-    "microservice.services.nrs.call-timeout"                -> "30 seconds",
-    "microservice.services.nrs.reset-timeout"               -> "60 seconds",
-    "microservice.services.nrs.max-reset-timeout"           -> "300 seconds",
-    "microservice.services.nrs.exponential-backoff-factor"  -> 2.0
-  )
+  private val mockAppConfig = mock[AppConfig]
+  
+  when(mockAppConfig.nrsCircuitBreakerMaxFailures).thenReturn(5)
+  when(mockAppConfig.nrsCircuitBreakerCallTimeout).thenReturn(30.seconds)
+  when(mockAppConfig.nrsCircuitBreakerResetTimeout).thenReturn(60.seconds)
+  when(mockAppConfig.nrsCircuitBreakerMaxResetTimeout).thenReturn(300.seconds)
+  when(mockAppConfig.nrsCircuitBreakerExponentialBackoffFactor).thenReturn(2.0)
 
   private lazy val actorSystem: ActorSystem = ActorSystem("test-system")
 
@@ -44,7 +45,7 @@ class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
 
   "NrsCircuitBreakerProvider" - {
     "must create a NrsCircuitBreaker with correct configuration" in {
-      val provider = new NrsCircuitBreakerProvider(testConfig, actorSystem)
+      val provider = new NrsCircuitBreakerProvider(mockAppConfig, actorSystem)
       val nrsCircuitBreaker = provider.get()
 
       nrsCircuitBreaker mustBe a[NrsConnector.NrsCircuitBreaker]
@@ -52,7 +53,7 @@ class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
     }
 
     "must return the same instance on multiple calls" in {
-      val provider = new NrsCircuitBreakerProvider(testConfig, actorSystem)
+      val provider = new NrsCircuitBreakerProvider(mockAppConfig, actorSystem)
       val breaker1 = provider.get()
       val breaker2 = provider.get()
 
@@ -60,7 +61,7 @@ class NrsCircuitBreakerProviderSpec extends SpecBase with BeforeAndAfterAll {
     }
 
     "must configure circuit breaker with values from configuration" in {
-      val provider = new NrsCircuitBreakerProvider(testConfig, actorSystem)
+      val provider = new NrsCircuitBreakerProvider(mockAppConfig, actorSystem)
       val nrsCircuitBreaker = provider.get()
 
       // Circuit breaker is created successfully with config values

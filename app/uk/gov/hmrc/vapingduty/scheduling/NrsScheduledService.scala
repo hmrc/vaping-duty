@@ -17,7 +17,7 @@
 package uk.gov.hmrc.vapingduty.scheduling
 
 import org.apache.pekko.actor.ActorSystem
-import play.api.{Configuration, Logging}
+import play.api.Logging
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.services.NrsService
 
@@ -29,13 +29,11 @@ import scala.concurrent.duration.FiniteDuration
 class NrsScheduledService @Inject()(
                                      actorSystem: ActorSystem,
                                      nrsService: NrsService,
-                                     configuration: Configuration,
                                      appConfig: AppConfig
                                    )(implicit ec: ExecutionContext) extends Logging {
 
-  private val initialDelay: FiniteDuration =
-    configuration.get[FiniteDuration]("nrs-submission-scheduler.initial-delay")
-  private val interval: FiniteDuration = configuration.get[FiniteDuration]("nrs-submission-scheduler.interval")
+  private val initialDelay: FiniteDuration = appConfig.nrsSchedulerInitialDelay
+  private val interval: FiniteDuration = appConfig.nrsSchedulerInterval
 
   if (appConfig.nrsGenerationEnabled) {
     logger.info(
