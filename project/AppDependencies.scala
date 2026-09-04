@@ -16,5 +16,7 @@ object AppDependencies {
     "org.scalatestplus"       %% "scalacheck-1-18"            % "3.2.19.0"                  % Test
   )
 
-  val it = Seq.empty
+  val it = Seq(
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-work-item-repo-play-30" % hmrcMongoVersion % "it,test"
+  )
 }
