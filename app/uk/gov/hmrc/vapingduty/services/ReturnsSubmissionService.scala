@@ -52,28 +52,31 @@ class ReturnsSubmissionService @Inject()(
                     returnCreateRequest: ReturnCreateRequest,
                     vpdId: VpdId,
                     periodKey: PeriodKey
-                  )(implicit hc: HeaderCarrier, request: IdentifierRequest[?]): Future[ReturnSubmittedResponse] = {
+                  )(using hc: HeaderCarrier, request: IdentifierRequest[?]): Future[ReturnSubmittedResponse] = {
     // Submit to ETMP first - this is the primary operation
     submitReturnsConnector.submitReturn(returnCreateRequest, vpdId)
       .map { successResponse =>
-        // After successful ETMP submission, queue NRS work item for background processing if enabled
-        if (appConfig.nrsGenerationEnabled) {
-          // This is fire-and-forget - we don't wait for the result
-          val nrsPayload = Json.toJson(returnCreateRequest)
-
-          // Queue work item - NRS submission will be processed by scheduler
-          nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN, returnCreateRequest.periodKey)
-            .recover { case ex =>
-              // Log NRS queueing failures but don't affect the returns submission response
-              logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)
-              ()
-            }
-        } else {
-          logger.info(s"NRS generation disabled - skipping for vpdId: $vpdId, periodKey: $periodKey")
-        }
-
-        // Return success response immediately without waiting for NRS
+        enqueueNrsSubmission(returnCreateRequest, vpdId, periodKey)
         successResponse
       }
+  }
+
+  private def enqueueNrsSubmission(returnCreateRequest: ReturnCreateRequest, vpdId: VpdId, periodKey: PeriodKey)
+                                  (using hc: HeaderCarrier, request: IdentifierRequest[?]) = {
+    // After successful ETMP submission, queue NRS work item for background processing if enabled
+    if (appConfig.nrsGenerationEnabled) {
+      // This is fire-and-forget - we don't wait for the result
+      val nrsPayload = Json.toJson(returnCreateRequest)
+
+      // Queue work item - NRS submission will be processed by scheduler
+      nrsService.makeWorkItemAndQueue(nrsPayload, NOTABLE_EVENT_SUBMIT_RETURN, returnCreateRequest.periodKey)
+        .recover { case ex =>
+          // Log NRS queueing failures but don't affect the returns submission response
+          logger.warn(s"Failed to queue NRS work item for vpdId: $vpdId, periodKey: $periodKey", ex)
+          ()
+        }
+    } else {
+      logger.info(s"NRS generation disabled - skipping for vpdId: $vpdId, periodKey: $periodKey")
+    }
   }
 }

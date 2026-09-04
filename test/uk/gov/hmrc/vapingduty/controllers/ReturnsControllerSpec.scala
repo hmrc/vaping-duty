@@ -73,25 +73,25 @@ class ReturnsControllerSpec extends SpecBase {
     "submitReturn must" - {
       "return 200 OK with submission response when service succeeds" in {
         reset(mockReturnsSubmissionService)
-        when(mockReturnsSubmissionService.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(any(), any()))
+        when(mockReturnsSubmissionService.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(using any(), any()))
           .thenReturn(Future.successful(returnSubmittedResponse))
 
         val result = controller.submitReturn(vpdId, periodKey).apply(fakeRequestWithJsonBody(Json.toJson(returnCreateRequest)))
 
         status(result) mustBe OK
         contentAsJson(result) mustBe Json.toJson(returnSubmittedResponse)
-        verify(mockReturnsSubmissionService, times(1)).submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(any(), any())
+        verify(mockReturnsSubmissionService, times(1)).submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(using any(), any())
       }
 
       "return 500 INTERNAL_SERVER_ERROR when service fails" in {
         reset(mockReturnsSubmissionService)
-        when(mockReturnsSubmissionService.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(any(), any()))
+        when(mockReturnsSubmissionService.submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(using any(), any()))
           .thenReturn(Future.failed(InternalServerException("Service error")))
 
         val result = controller.submitReturn(vpdId, periodKey).apply(fakeRequestWithJsonBody(Json.toJson(returnCreateRequest)))
 
         status(result) mustBe INTERNAL_SERVER_ERROR
-        verify(mockReturnsSubmissionService, times(1)).submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(any(), any())
+        verify(mockReturnsSubmissionService, times(1)).submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(using any(), any())
       }
     }
   }
