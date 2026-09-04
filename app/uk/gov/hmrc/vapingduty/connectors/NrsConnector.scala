@@ -18,15 +18,15 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import org.apache.pekko.pattern.CircuitBreaker
 import play.api.Logging
-import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
+import play.api.http.Status.ACCEPTED
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.HttpErrorFunctions.is5xx
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.models.nrs.NrsPayload
+import uk.gov.hmrc.vapingduty.models.nrs.{NrsPayload, NrsSubmissionResult}
 import uk.gov.hmrc.vapingduty.utils.RandomUUIDGenerator
 
 import javax.inject.{Inject, Singleton}
@@ -62,7 +62,7 @@ class NrsConnector @Inject()(
     case Failure(_) => true
   }
 
-  def submitToNrs(payload: NrsPayload)(implicit hc: HeaderCarrier): Future[Either[UpstreamErrorResponse, Unit]] = {
+  def submitToNrs(payload: NrsPayload)(implicit hc: HeaderCarrier): Future[NrsSubmissionResult] = {
     val hcWithCorrelationId = enforceCorrelationId(hc)
     val correlationId = hcWithCorrelationId
       .headers(Seq(CORRELATION_ID_HEADER))
@@ -85,15 +85,18 @@ class NrsConnector @Inject()(
         response.status match {
           case ACCEPTED =>
             logger.info(s"NRS submission successful for CorrelationId: $correlationId")
-            Right(())
+            NrsSubmissionResult.Success
+          case status if is5xx(status) =>
+            logger.warn(s"NRS submission failed with retryable 5xx status: $status for CorrelationId: $correlationId")
+            NrsSubmissionResult.RetryableFailure
           case status =>
-            logger.warn(s"NRS submission failed with status: $status for CorrelationId: $correlationId")
-            Left(UpstreamErrorResponse(response.body, status))
+            logger.warn(s"NRS submission failed with permanent 4xx status: $status for CorrelationId: $correlationId")
+            NrsSubmissionResult.PermanentFailure
         }
       }
       .recover { case e: Exception =>
         logger.error(s"NRS submission failed with error for CorrelationId: $correlationId: ${e.getMessage}", e)
-        Left(UpstreamErrorResponse(e.getMessage, INTERNAL_SERVER_ERROR))
+        NrsSubmissionResult.RetryableFailure
       }
   }
 }
