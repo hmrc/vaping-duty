@@ -54,56 +54,56 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
       }
       verifyPost(url)
     }
-  }
 
-  "return RetryableFailure when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
-    val nrsPayload: NrsPayload = createTestPayload()
+    "return RetryableFailure when NRS returns INTERNAL_SERVER_ERROR" in new SetUp {
+      val nrsPayload: NrsPayload = createTestPayload()
 
-    stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
+      stubPost(url, INTERNAL_SERVER_ERROR, Json.toJson(nrsPayload).toString, "Internal server error")
 
-    whenReady(connector.submitToNrs(nrsPayload)) { result =>
-      result mustBe NrsSubmissionResult.RetryableFailure
-    }
-    verifyPost(url)
-  }
-
-  "return RetryableFailure when NRS returns an unexpected 5xx error" in new SetUp {
-    val nrsPayload: NrsPayload = createTestPayload()
-
-    stubPost(url, SERVICE_UNAVAILABLE, Json.toJson(nrsPayload).toString, "Unexpected error")
-
-    whenReady(connector.submitToNrs(nrsPayload)) { result =>
-      result mustBe NrsSubmissionResult.RetryableFailure
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result mustBe NrsSubmissionResult.RetryableFailure
+      }
       verifyPost(url)
     }
-  }
 
-  "return RetryableFailure when a network fault occurs" in new SetUp {
-    val nrsPayload: NrsPayload = createTestPayload()
+    "return RetryableFailure when NRS returns an unexpected 5xx error" in new SetUp {
+      val nrsPayload: NrsPayload = createTestPayload()
 
-    import com.github.tomakehurst.wiremock.http.Fault
+      stubPost(url, SERVICE_UNAVAILABLE, Json.toJson(nrsPayload).toString, "Unexpected error")
 
-    val requestBody: String = Json.toJson(nrsPayload).toString
-    stubPostFault(url, requestBody, Fault.CONNECTION_RESET_BY_PEER)
-
-    whenReady(connector.submitToNrs(nrsPayload)) { result =>
-      result mustBe NrsSubmissionResult.RetryableFailure
-      verifyPost(url)
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result mustBe NrsSubmissionResult.RetryableFailure
+        verifyPost(url)
+      }
     }
-  }
 
-  "use existing correlation ID when present in header carrier" in new SetUp {
-    val nrsPayload: NrsPayload = createTestPayload()
-    val existingCorrelationId = "existing-correlation-id-123"
-    implicit val hcWithCorrelationId: HeaderCarrier = hc.withExtraHeaders(
-      "X-Correlation-Id" -> existingCorrelationId
-    )
+    "return RetryableFailure when a network fault occurs" in new SetUp {
+      val nrsPayload: NrsPayload = createTestPayload()
 
-    stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
+      import com.github.tomakehurst.wiremock.http.Fault
 
-    whenReady(connector.submitToNrs(nrsPayload)) { result =>
-      result mustBe NrsSubmissionResult.Success
-      verifyPostWithHeader(url, "X-Correlation-Id", existingCorrelationId)
+      val requestBody: String = Json.toJson(nrsPayload).toString
+      stubPostFault(url, requestBody, Fault.CONNECTION_RESET_BY_PEER)
+
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result mustBe NrsSubmissionResult.RetryableFailure
+        verifyPost(url)
+      }
+    }
+
+    "use existing correlation ID when present in header carrier" in new SetUp {
+      val nrsPayload: NrsPayload = createTestPayload()
+      val existingCorrelationId = "existing-correlation-id-123"
+      implicit val hcWithCorrelationId: HeaderCarrier = hc.withExtraHeaders(
+        "X-Correlation-Id" -> existingCorrelationId
+      )
+
+      stubPost(url, ACCEPTED, Json.toJson(nrsPayload).toString, "")
+
+      whenReady(connector.submitToNrs(nrsPayload)) { result =>
+        result mustBe NrsSubmissionResult.Success
+        verifyPostWithHeader(url, "X-Correlation-Id", existingCorrelationId)
+      }
     }
   }
 
