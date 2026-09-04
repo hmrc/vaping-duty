@@ -130,7 +130,7 @@ class NrsConnectorISpec extends ISpecBase with ConnectorTestHelpers {
         ),
         userAuthToken = "Bearer token123",
         headerData = Map.empty[String, String],
-        searchKeys = Map("vpdReference" -> "XMVPD0000000123")
+        searchKeys = Map("zvpd" -> "XMVPD0000000123")
       )
     )
   }
