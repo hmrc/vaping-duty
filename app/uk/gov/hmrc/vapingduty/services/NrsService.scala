@@ -22,7 +22,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
-import uk.gov.hmrc.mongo.workitem.ProcessingStatus
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, WorkItem}
 import uk.gov.hmrc.vapingduty.connectors.NrsConnector
 import uk.gov.hmrc.vapingduty.models.nrs.{IdentityData, NrsMetadata, NrsPayload, NrsSubmissionResult, NrsSubmissionWorkItem}
 import uk.gov.hmrc.vapingduty.models.requests.IdentifierRequest
@@ -97,17 +97,15 @@ class NrsService @Inject()(
    * @param hc      HeaderCarrier for HTTP context
    * @return Future[NrsSubmissionResult]
    */
-  def submitToNrs(
-                   payload: NrsPayload
-                 )(using hc: HeaderCarrier): Future[NrsSubmissionResult] = {
+  def submitToNrs(payload: NrsPayload)(using hc: HeaderCarrier): Future[NrsSubmissionResult] = {
     nrsConnector.submitToNrs(payload).map {
       case NrsSubmissionResult.Success =>
         logger.info(s"Successfully submitted to NRS for notable event: ${payload.metadata.notableEvent}")
         NrsSubmissionResult.Success
-      case failure @ NrsSubmissionResult.RetryableFailure =>
+      case failure@NrsSubmissionResult.RetryableFailure =>
         logger.error(s"Failed to submit to NRS (retryable) for notable event: ${payload.metadata.notableEvent}")
         failure
-      case failure @ NrsSubmissionResult.PermanentFailure =>
+      case failure@NrsSubmissionResult.PermanentFailure =>
         logger.error(s"Failed to submit to NRS (permanent) for notable event: ${payload.metadata.notableEvent}")
         failure
     }
@@ -130,32 +128,33 @@ class NrsService @Inject()(
           Future.successful(())
         case Some(workItem) =>
           logger.info(s"Processing NRS work item: ${workItem.id}")
-          val processResult = submitToNrs(workItem.item.payload).flatMap {
-            case NrsSubmissionResult.Success =>
-              nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
-                logger.info(s"Successfully processed NRS work item: ${workItem.id}")
-                ()
-              }
-            case NrsSubmissionResult.RetryableFailure =>
-              nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
-                logger.warn(s"Failed to process NRS work item: ${workItem.id} with retryable error. Will retry with exponential backoff.")
-                ()
-              }
-            case NrsSubmissionResult.PermanentFailure =>
-              nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.PermanentlyFailed).map { _ =>
-                logger.warn(s"Permanently failed to process NRS work item: ${workItem.id} with permanent error. Will not retry.")
-                ()
-              }
-          }.recoverWith { case ex =>
-            logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
-            nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
-          }
-
-          // Continue processing next item after this one completes
-          processResult.flatMap(_ => processNext())
+          processResult(workItem).flatMap(_ => processNext())
       }
 
     processNext()
+  }
+
+  private def processResult(workItem: WorkItem[NrsSubmissionWorkItem])(using hc: HeaderCarrier) = {
+    submitToNrs(workItem.item.payload).flatMap {
+      case NrsSubmissionResult.Success =>
+        nrsWorkItemRepository.complete(workItem.id, ProcessingStatus.Succeeded).map { _ =>
+          logger.info(s"Successfully processed NRS work item: ${workItem.id}")
+          ()
+        }
+      case NrsSubmissionResult.RetryableFailure =>
+        nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map { _ =>
+          logger.warn(s"Failed to process NRS work item: ${workItem.id} with retryable error. Will retry with exponential backoff.")
+          ()
+        }
+      case NrsSubmissionResult.PermanentFailure =>
+        nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.PermanentlyFailed).map { _ =>
+          logger.warn(s"Permanently failed to process NRS work item: ${workItem.id} with permanent error. Will not retry.")
+          ()
+        }
+    }.recoverWith { case ex =>
+      logger.error(s"Error processing NRS work item: ${workItem.id}", ex)
+      nrsWorkItemRepository.markAs(workItem.id, ProcessingStatus.Failed).map(_ => ())
+    }
   }
 
   private def retrieveUserAuthToken()(using hc: HeaderCarrier): String = {
