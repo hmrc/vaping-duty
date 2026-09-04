@@ -17,8 +17,10 @@
 package uk.gov.hmrc.vapingduty
 
 import play.api.{Configuration, Environment}
-import play.api.inject.{Binding, Module => AppModule}
-import uk.gov.hmrc.vapingduty.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import play.api.inject.{Binding, Module as AppModule}
+import controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
+import uk.gov.hmrc.vapingduty.connectors.{NrsCircuitBreakerProvider, NrsConnector}
+import uk.gov.hmrc.vapingduty.scheduling.NrsScheduledService
 
 import java.time.Clock
 
@@ -28,7 +30,9 @@ class Module extends AppModule {
                          environment: Environment,
                          configuration: Configuration
                        ): Seq[Binding[_]] =
-      bind[Clock].toInstance(Clock.systemDefaultZone) ::
+    bind[Clock].toInstance(Clock.systemDefaultZone) ::
       bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
+      bind[NrsConnector.NrsCircuitBreaker].toProvider(classOf[NrsCircuitBreakerProvider]) ::
+      bind[NrsScheduledService].toSelf.eagerly() ::
       Nil
 }

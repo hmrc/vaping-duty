@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.requests
+package uk.gov.hmrc.vapingduty.models.nrs
 
-import play.api.mvc.{Request, WrappedRequest}
+sealed trait NrsSubmissionResult
 
-case class IdentifierRequest[A](request: Request[A], vpdId: String, userId: String) extends WrappedRequest[A](request)
+object NrsSubmissionResult {
+  case object Success extends NrsSubmissionResult
+  case object RetryableFailure extends NrsSubmissionResult
+  case object PermanentFailure extends NrsSubmissionResult
+}

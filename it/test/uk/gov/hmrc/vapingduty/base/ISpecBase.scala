@@ -22,12 +22,14 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.{OptionValues, TryValues}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mdc.MdcExecutionContext
 import utils.TestData
 
+import java.time.Clock
 import scala.concurrent.ExecutionContext
 
 trait ISpecBase
@@ -42,6 +44,12 @@ trait ISpecBase
     with IntegrationPatience 
     with TestData {
   
+  override def fakeApplication() = 
+    new GuiceApplicationBuilder()
+      .configure("mongodb.uri" -> "mongodb://localhost:27017/vaping-duty-integration-test")
+      .overrides(bind[Clock].toInstance(clock))
+      .build()
+
   protected def applicationBuilder(): GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 

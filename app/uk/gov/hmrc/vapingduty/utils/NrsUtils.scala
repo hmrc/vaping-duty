@@ -14,8 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.requests
+package uk.gov.hmrc.vapingduty.utils
 
-import play.api.mvc.{Request, WrappedRequest}
+import java.lang.String.format
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest.getInstance
+import java.util.Base64
 
-case class IdentifierRequest[A](request: Request[A], vpdId: String, userId: String) extends WrappedRequest[A](request)
+class NrsUtils {
+
+  def encode(str: String): String =
+    Base64.getEncoder.encodeToString(str.getBytes(StandardCharsets.UTF_8))
+
+  def sha256Hash(text: String): String =
+    format(
+      "%064x",
+      new BigInteger(
+        1,
+        getInstance("SHA-256")
+          .digest(text.getBytes(StandardCharsets.UTF_8))
+      )
+    )
+}

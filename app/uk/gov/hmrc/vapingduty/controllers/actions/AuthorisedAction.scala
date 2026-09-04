@@ -37,16 +37,16 @@ import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthorisedAction
-    extends ActionBuilder[IdentifierRequest, AnyContent]
+  extends ActionBuilder[IdentifierRequest, AnyContent]
     with BackendHeaderCarrierProvider
     with ActionFunction[Request, IdentifierRequest]
 
 class BaseAuthorisedAction @Inject() (
-  override val authConnector: AuthConnector,
-  config: AppConfig,
-  val parser: BodyParsers.Default
-)(implicit val executionContext: ExecutionContext)
-    extends AuthorisedAction
+                                       override val authConnector: AuthConnector,
+                                       config: AppConfig,
+                                       val parser: BodyParsers.Default
+                                     )(implicit val executionContext: ExecutionContext)
+  extends AuthorisedAction
     with BackendHeaderCarrierProvider
     with AuthorisedFunctions
     with Logging {
