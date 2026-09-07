@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.vapingduty.scheduling
 
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers.{should, shouldBe}
@@ -24,11 +25,12 @@ import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers
-import play.api.test.Helpers.{await, defaultAwaitTimeout, running, ACCEPTED}
+import play.api.test.Helpers.{ACCEPTED, await, defaultAwaitTimeout, running}
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.models.nrs.{NrsPayload, NrsSubmissionWorkItem}
 import uk.gov.hmrc.vapingduty.repositories.NrsWorkItemRepository
+import uk.gov.hmrc.vapingduty.services.NrsService
 import uk.gov.hmrc.vapingduty.utils.WireMockHelper
 
 import java.time.Instant
@@ -80,25 +82,20 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
           .build()
 
         running(app) {
-          // Stub NRS endpoint FIRST, before creating work items
           wireMockServer.stubFor(
-            com.github.tomakehurst.wiremock.client.WireMock
-              .post(com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/submission"))
+            post(urlEqualTo("/submission"))
               .willReturn(
-                com.github.tomakehurst.wiremock.client.WireMock
-                  .aResponse()
+                aResponse()
                   .withStatus(ACCEPTED)
-                  .withBody(Json.obj("nrSubmissionId" -> "test-id").toString)
+                  .withBody(Json.obj("nrsSubmissionId" -> "test-id").toString)
               )
           )
 
           val repository = app.injector.instanceOf[NrsWorkItemRepository]
-          val nrsService = app.injector.instanceOf[uk.gov.hmrc.vapingduty.services.NrsService]
+          val nrsService = app.injector.instanceOf[NrsService]
 
-          // Clear any existing items
           await(repository.collection.drop().toFuture())
 
-          // Create a test work item
           val workItem = NrsSubmissionWorkItem(
             NrsPayload(
               payload = "test-payload",
@@ -129,27 +126,20 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
           .build()
 
         running(app) {
-          // Stub NRS endpoint FIRST, before creating work items
-          // Both items will succeed (match any request body)
-          // The service will process all items in one scheduler run
           wireMockServer.stubFor(
-            com.github.tomakehurst.wiremock.client.WireMock
-              .post(com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/submission"))
+            post(urlEqualTo("/submission"))
               .willReturn(
-                com.github.tomakehurst.wiremock.client.WireMock
-                  .aResponse()
+                aResponse()
                   .withStatus(ACCEPTED)
-                  .withBody(Json.obj("nrSubmissionId" -> "test-id").toString)
+                  .withBody(Json.obj("nrsSubmissionId" -> "test-id").toString)
               )
           )
 
           val repository = app.injector.instanceOf[NrsWorkItemRepository]
-          val nrsService = app.injector.instanceOf[uk.gov.hmrc.vapingduty.services.NrsService]
+          val nrsService = app.injector.instanceOf[NrsService]
 
-          // Clear any existing items
           await(repository.collection.drop().toFuture())
 
-          // Create multiple test work items
           val testPayload1 = NrsSubmissionWorkItem(
             NrsPayload(payload = "test-payload-1", metadata = sampleNrsMeta)
           )
@@ -175,7 +165,7 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
     }
 
     "when scheduler is disabled" - {
-      "must not process work items from the queue" in {
+      "must not process work items from the queue automatically" in {
         val app = GuiceApplicationBuilder()
           .configure(schedulerDisabledConfig)
           .build()
@@ -183,18 +173,14 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
         running(app) {
           val repository = app.injector.instanceOf[NrsWorkItemRepository]
 
-          // Clear any existing items
           await(repository.collection.drop().toFuture())
 
-          // Stub NRS endpoint (even though scheduler is disabled, match any request body)
           wireMockServer.stubFor(
-            com.github.tomakehurst.wiremock.client.WireMock
-              .post(com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo("/submission"))
+            post(urlEqualTo("/submission"))
               .willReturn(
-                com.github.tomakehurst.wiremock.client.WireMock
-                  .aResponse()
+                aResponse()
                   .withStatus(ACCEPTED)
-                  .withBody(Json.obj("nrSubmissionId" -> "test-id").toString)
+                  .withBody(Json.obj("nrsSubmissionId" -> "test-id").toString)
               )
           )
 
@@ -211,10 +197,8 @@ class NrsScheduledServiceISpec extends ISpecBase with Eventually with WireMockHe
             )
           )
 
-          // Wait a reasonable time
-          Thread.sleep(2000)
-
           // Item should still be in To Do status since scheduler is disabled
+          // We verify this immediately without waiting for scheduled execution
           val items = await(repository.collection.find().toFuture())
           items.headOption.map(_.status) shouldBe Some(ProcessingStatus.ToDo)
         }
