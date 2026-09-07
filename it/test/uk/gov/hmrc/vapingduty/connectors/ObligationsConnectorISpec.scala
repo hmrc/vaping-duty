@@ -124,6 +124,13 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
   abstract class SetUp extends ConnectorFixture {
     val connector       = app.injector.instanceOf[ObligationsConnector]
-    val url             = config.getObligationsUrl(vpdId)
+    lazy val url        = {
+      val ukZone = java.time.ZoneId.of("Europe/London")
+      val today = java.time.LocalDate.now(clock.withZone(ukZone))
+      val fromDate = today.minusYears(config.obligationsYearsToLookBack)
+      val fromDateStr = uk.gov.hmrc.vapingduty.utils.DateTimeHelper.formatLocalDate(fromDate)
+      val toDateStr = uk.gov.hmrc.vapingduty.utils.DateTimeHelper.formatLocalDate(today)
+      config.getObligationsUrl(vpdId, fromDateStr, toDateStr)
+    }
   }
 }
