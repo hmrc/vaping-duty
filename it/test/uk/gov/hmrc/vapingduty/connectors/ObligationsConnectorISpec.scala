@@ -22,7 +22,9 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
-import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
+import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, DateTimeHelper, WireMockHelper}
+
+import java.time.{LocalDate, ZoneId}
 
 class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
   protected val endpointName = "obligations"
@@ -125,11 +127,11 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
   abstract class SetUp extends ConnectorFixture {
     val connector       = app.injector.instanceOf[ObligationsConnector]
     lazy val url        = {
-      val ukZone = java.time.ZoneId.of("Europe/London")
-      val today = java.time.LocalDate.now(clock.withZone(ukZone))
+      val ukZone = ZoneId.of("Europe/London")
+      val today = LocalDate.now(clock.withZone(ukZone))
       val fromDate = today.minusYears(config.obligationsYearsToLookBack)
-      val fromDateStr = uk.gov.hmrc.vapingduty.utils.DateTimeHelper.formatLocalDate(fromDate)
-      val toDateStr = uk.gov.hmrc.vapingduty.utils.DateTimeHelper.formatLocalDate(today)
+      val fromDateStr = DateTimeHelper.formatLocalDate(fromDate)
+      val toDateStr = DateTimeHelper.formatLocalDate(today)
       config.getObligationsUrl(vpdId, fromDateStr, toDateStr)
     }
   }
