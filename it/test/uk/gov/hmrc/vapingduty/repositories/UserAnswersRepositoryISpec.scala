@@ -66,7 +66,7 @@ class UserAnswersRepositoryISpec
     clock = stubClock
   )
 
-  override def beforeEach(): Unit = repository.clear(VpdId(userAnswers.vpdId), PeriodKey(userAnswers.periodKey))
+  override def beforeEach(): Unit = repository.clear(VpdId(userAnswers.vpdId), PeriodKey(userAnswers.periodKey)).futureValue
   
   ".set" - {
 
