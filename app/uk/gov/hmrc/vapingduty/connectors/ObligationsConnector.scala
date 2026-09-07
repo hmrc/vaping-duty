@@ -65,7 +65,7 @@ class ObligationsConnector @Inject()(
             Future.failed(InternalServerException(parsingError))
         }
       case Left(error) =>
-        logger.warn(s"Unexpected response from obligations API. Status: ${error.statusCode}")
+        logger.warn(s"Unexpected response from obligations API. Status: ${error.statusCode} Message: ${error.message}")
         Future.failed(InternalServerException("Failed to get obligations"))
     }
   }
