@@ -25,7 +25,7 @@ import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
-import java.time.{Clock, Instant}
+import java.time.{Clock, Instant, LocalDate, ZoneId}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -40,10 +40,21 @@ class ObligationsConnector @Inject()(
     with Logging {
 
   private val parsingError = "Unable to parse obligations response"
+  private val UK_ZONE = "Europe/London"
   
-  def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] =
+  private def calculateDateRange(): (String, String) = {
+    val ukZone = ZoneId.of(UK_ZONE)
+    val today = LocalDate.now(clock.withZone(ukZone))
+    val fromDate = today.minusYears(config.obligationsYearsToLookBack)
+    
+    (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(today))
+  }
+  
+  def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] = {
+    val (fromDate, toDate) = calculateDateRange()
+    
     httpClient
-      .get(url"${config.getObligationsUrl(vpdId)}")
+      .get(url"${config.getObligationsUrl(vpdId, fromDate, toDate)}")
       .setHeader(createObligationHeaders: _*)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
       .recoverWith { case _: Exception =>
@@ -51,6 +62,7 @@ class ObligationsConnector @Inject()(
         Future.failed(InternalServerException("Failed to get obligations"))
       }
       .flatMap(response => responseParser(response))
+  }
 
   private def responseParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ObligationsResponse] = {
     response match {

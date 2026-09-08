@@ -21,8 +21,10 @@ import org.scalatest.matchers.must.Matchers
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
+import uk.gov.hmrc.vapingduty.utils.DateTimeHelper
 
-import scala.concurrent.duration._
+import java.time.LocalDate
+import scala.concurrent.duration.*
 
 class AppConfigSpec extends AnyFreeSpec with Matchers {
 
@@ -114,10 +116,13 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     }
 
     "getObligationsUrl" - {
+      val fromDate = DateTimeHelper.formatLocalDate(LocalDate.now())
+      val toDate = DateTimeHelper.formatLocalDate(LocalDate.now().minusYears(3))
+      
       "must return the correct URL for obligations" in {
         val config = buildAppConfig()
         val vpdId = VpdId("XMVPD0000000123")
-        val result = config.getObligationsUrl(vpdId)
+        val result = config.getObligationsUrl(vpdId, fromDate, toDate)
 
         result must include("http://localhost:9999")
         result must include("/obligations/vpd")
@@ -129,7 +134,7 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       "must handle different vpdId values" in {
         val config = buildAppConfig()
         val vpdId = VpdId("XMVPD9999999999")
-        val result = config.getObligationsUrl(vpdId)
+        val result = config.getObligationsUrl(vpdId, fromDate, toDate)
 
         result must include("referenceNumber=XMVPD9999999999")
       }

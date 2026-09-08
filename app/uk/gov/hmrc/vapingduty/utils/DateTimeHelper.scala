@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.vapingduty.utils
 
-import java.time.Instant
+import java.time.{Instant, LocalDate}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 object DateTimeHelper {
   def formatISOInstantSeconds(now: Instant): String =
     DateTimeFormatter.ISO_INSTANT.format(now.truncatedTo(ChronoUnit.SECONDS))
+
+  def formatLocalDate(localDate: LocalDate): String =
+    localDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
 }
