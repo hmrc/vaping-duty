@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.requests
+package uk.gov.hmrc.vapingduty.models.nrs
 
-import play.api.mvc.{Request, WrappedRequest}
+import play.api.libs.json.{Json, JsObject, OFormat}
 
-case class IdentifierRequest[A](request: Request[A], vpdId: String, userId: String) extends WrappedRequest[A](request)
+final case class NrsPayload(
+  payload: String,
+  metadata: NrsMetadata
+) {
+  def toJsObject: JsObject = Json.toJson(this).as[JsObject]
+}
+
+object NrsPayload {
+  given format: OFormat[NrsPayload] = Json.format[NrsPayload]
+}

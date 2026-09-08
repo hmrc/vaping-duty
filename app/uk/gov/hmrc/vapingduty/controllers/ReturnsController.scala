@@ -23,18 +23,19 @@ import play.api.mvc.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.vapingduty.connectors.{GetReturnsConnector, SubmitReturnsConnector}
+import uk.gov.hmrc.vapingduty.connectors.GetReturnsConnector
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.submit.ReturnCreateRequest
+import uk.gov.hmrc.vapingduty.services.ReturnsSubmissionService
 
 import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject()(
                                    cc: ControllerComponents,
-                                   submitConnector: SubmitReturnsConnector,
                                    getConnector: GetReturnsConnector,
-                                   authorise: AuthorisedAction
+                                   authorise: AuthorisedAction,
+                                   returnsSubmissionService: ReturnsSubmissionService
                                  )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def getReturn(periodKey: PeriodKey, vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
@@ -45,14 +46,18 @@ class ReturnsController @Inject()(
       .recover { _ => InternalServerError("There was an issue retrieving returns data") }
 
   }
-  
+
   def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
-      withJsonBody[ReturnCreateRequest] { returnSubmission =>
-        submitConnector.submitReturn(returnSubmission, vpdId)
-          .map(successResponse => Ok(Json.toJson(successResponse)))
-          .recover(errorResponse => InternalServerError)
+      given HeaderCarrier = HeaderCarrierConverter.fromRequest(request = request.request)
 
+      withJsonBody[ReturnCreateRequest] { returnCreateRequest =>
+        returnsSubmissionService.submitReturn(returnCreateRequest, vpdId, periodKey)
+          .map(response => Ok(Json.toJson(response)))
+          .recover { _ =>
+            logger.error(s"Failed to submit return for vpdId: $vpdId, periodKey: $periodKey")
+            InternalServerError
+          }
       }
     }
   }

@@ -46,7 +46,7 @@ class AuthorisedActionSpec extends AnyFreeSpec
   with Matchers
   with Results
   with ScalaFutures {
-  
+
   val enrolment               = "HMRC-VPD-ORG"
   val vpdIdKey                = "ZVPD"
   val vpdId                   = "XMADP9876543210"

@@ -119,6 +119,12 @@ trait WireMockHelper extends WireMockSupport {
   def verifyPost(url: String): Unit =
     wireMockServer.verify(postRequestedFor(urlEqualTo(stripToPath(url))))
 
+  def verifyPostWithHeader(url: String, headerName: String, headerValue: String): Unit =
+    wireMockServer.verify(
+      postRequestedFor(urlEqualTo(stripToPath(url)))
+        .withHeader(headerName, new EqualToPattern(headerValue))
+    )
+
   def verifyPut(url: String): Unit =
     wireMockServer.verify(putRequestedFor(urlEqualTo(stripToPath(url))))
   

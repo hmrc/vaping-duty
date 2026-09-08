@@ -29,7 +29,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.*
 import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeHeaders, FakeRequest, ResultExtractors}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.vapingduty.config.AppConfig
 import uk.gov.hmrc.vapingduty.controllers.actions.FakeAuthorisedAction
 import utils.TestData
@@ -74,5 +74,5 @@ trait SpecBase
   def fakeRequestWithJsonBody(json: JsValue): FakeRequest[JsValue] = FakeRequest("", "/", FakeHeaders(), json)
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  implicit val hc: HeaderCarrier    = HeaderCarrier(authorization = Some(Authorization("test-auth-token")))
 }

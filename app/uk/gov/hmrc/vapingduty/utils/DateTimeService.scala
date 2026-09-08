@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.requests
+package uk.gov.hmrc.vapingduty.utils
 
-import play.api.mvc.{Request, WrappedRequest}
+import java.time.{Clock, Instant, ZonedDateTime}
+import java.time.format.DateTimeFormatter
+import javax.inject.{Inject, Singleton}
 
-case class IdentifierRequest[A](request: Request[A], vpdId: String, userId: String) extends WrappedRequest[A](request)
+@Singleton
+class DateTimeService @Inject() (clock: Clock) {
+
+  private val ISO_INSTANT_FORMATTER = DateTimeFormatter.ISO_INSTANT
+
+  def timestamp: String = 
+    ZonedDateTime.now(clock).format(ISO_INSTANT_FORMATTER)
+
+  def now: Instant = 
+    Instant.now(clock)
+}
