@@ -18,10 +18,22 @@ package uk.gov.hmrc.vapingduty.models.obligations
 
 import play.api.libs.json.{Json, OFormat}
 
+import java.time.LocalDate
+
 final case class ObligationsResponse(
   obligation: Seq[ObligationItem]
 )
 
 object ObligationsResponse {
   given format: OFormat[ObligationsResponse] = Json.format[ObligationsResponse]
+}
+
+final case class ObligationsErrorResponse(
+  processingDate: LocalDate,
+  code: String,
+  text: String
+)
+
+object ObligationsErrorResponse {
+  given format: OFormat[ObligationsErrorResponse] = Json.format[ObligationsErrorResponse]
 }
