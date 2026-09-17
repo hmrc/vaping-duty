@@ -21,12 +21,11 @@ import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSAB
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
-import uk.gov.hmrc.vapingduty.models.obligations.{ObligationsErrorResponse, ObligationsResponse}
+import uk.gov.hmrc.vapingduty.models.ConnectorErrorResponse
+import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, DateTimeHelper, WireMockHelper}
 
 import java.time.{LocalDate, ZoneId}
-
-import java.time.LocalDate
 
 class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
   protected val endpointName = "obligations"
@@ -75,7 +74,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
         stubGet(
           url,
           UNPROCESSABLE_ENTITY,
-          Json.toJson(ObligationsErrorResponse(
+          Json.toJson(ConnectorErrorResponse(
             processingDate = LocalDate.of(2026, 8, 25),
             code           = "001",
             text           = "Regime missing or invalid")).toString()

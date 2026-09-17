@@ -18,13 +18,12 @@ package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
 import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
-import play.api.libs.json.Json
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
-import uk.gov.hmrc.vapingduty.models.obligations.{ObligationsErrorResponse, ObligationsResponse}
+import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
 import java.time.{Clock, Instant, LocalDate, ZoneId}
@@ -39,7 +38,8 @@ class ObligationsConnector @Inject()(
                                       implicit val httpClient: HttpClientV2
                                     )(using ExecutionContext)
   extends HttpReadsInstances
-    with Logging {
+    with Logging
+    with UnprocessableEntityLogging {
 
   private val UK_ZONE = "Europe/London"
   
@@ -71,25 +71,11 @@ class ObligationsConnector @Inject()(
       case OK =>
         Future.successful(response)
       case UNPROCESSABLE_ENTITY  =>
-        parseObligationsErrorResponse(response.body).flatMap(errorBody => {
-          logger.warn(s"Unprocessable Entity (422) when requesting obligations ${errorBody.processingDate}, ${errorBody.code}, ${errorBody.text}")
-          Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
-        })
+        logger.warn(unprocessableEntityMessage("Obligations API", response))
+        Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
       case statusCode =>
         logger.warn(s"Unexpected response from obligations API. Status: $statusCode")
         Future.failed(InternalServerException("Failed to get obligations"))
-    }
-  }
-
-  private def parseObligationsErrorResponse(errorBody: String) = {
-    Try {
-      Json.parse(errorBody).as[ObligationsErrorResponse]
-    } match {
-      case Success(error) =>
-        Future.successful(error)
-      case Failure(_) =>
-        logger.warn("Failed to parse error body for Unprocessable Entity (422)")
-        Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
     }
   }
 

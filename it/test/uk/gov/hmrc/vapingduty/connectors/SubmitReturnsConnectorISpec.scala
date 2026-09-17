@@ -21,7 +21,10 @@ import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSAB
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
+import uk.gov.hmrc.vapingduty.models.ConnectorErrorResponse
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
+
+import java.time.LocalDate
 
 class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with ConnectorTestHelpers {
   protected val endpointName = "submit-return"
@@ -73,7 +76,10 @@ class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with Con
           submitReturnUrl,
           UNPROCESSABLE_ENTITY,
           Json.toJson(returnsCreateRequest).toString(),
-          ""
+          Json.toJson(ConnectorErrorResponse(
+            processingDate = LocalDate.of(2026, 8, 25),
+            code           = "001",
+            text           = "Regime missing or invalid")).toString()
         )
 
         val result = connector.submitReturn(returnsCreateRequest, vpdId)
