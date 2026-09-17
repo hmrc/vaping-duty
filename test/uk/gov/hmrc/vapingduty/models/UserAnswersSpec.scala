@@ -44,8 +44,7 @@ class UserAnswersSpec extends SpecBase {
       "must show errors if json is not in the correct structure" in {
         val result = Json.parse(errorJson).validate[UserAnswers](UserAnswers.httpFormat)
         val errors = Seq[(JsPath, Seq[JsonValidationError])](
-          (JsPath \ "startedTime", Seq(JsonValidationError("error.path.missing"))),
-          (JsPath \ "data", Seq(JsonValidationError("error.path.missing")))
+          (JsPath \ "startedTime", Seq(JsonValidationError("error.path.missing")))
         )
         result mustBe JsError(errors)
       }

@@ -17,6 +17,8 @@
 package uk.gov.hmrc.vapingduty.repositories
 
 import org.mockito.Mockito.when
+import org.mongodb.scala.ObservableFuture
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters
 import org.scalactic.source.Position
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -117,8 +119,8 @@ class UserAnswersRepositoryISpec
 
       repository.set(userAnswers.copy(data = testData)).futureValue
 
-      // Use the MongoDB driver directly to get raw document to verify encryption
-      val rawCollection = repository.collection
+      // Use the MongoDB driver directly to get raw BSON document to verify encryption
+      val rawCollection = repository.collection.withDocumentClass[BsonDocument]()
       val rawDocs = rawCollection.find(Filters.and(
         Filters.equal("vpdId", userAnswers.vpdId),
         Filters.equal("periodKey", userAnswers.periodKey)
@@ -129,10 +131,10 @@ class UserAnswersRepositoryISpec
       
       // The data field should be encrypted (a string, not an object)
       val dataField = rawDoc.get("data")
-      dataField mustBe defined
-      dataField.get.isString mustBe true
+      dataField must not be null
+      dataField.isString mustBe true
       
-      val dataFieldString = dataField.get.asString().getValue
+      val dataFieldString = dataField.asString().getValue
       dataFieldString must not include "secretKey"
       dataFieldString must not include "secretValue"
       dataFieldString must not include "sensitive"

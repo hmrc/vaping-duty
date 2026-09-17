@@ -18,13 +18,11 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, Json, OFormat}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
-import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.vapingduty.base.SpecBase
-import uk.gov.hmrc.vapingduty.crypto.CryptoProvider
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
@@ -34,13 +32,10 @@ import scala.concurrent.Future
 class UserAnswersControllerSpec extends SpecBase {
 
   val mockUserAnswersRepository: UserAnswersRepository = mock[UserAnswersRepository]
-
-  implicit val cryptoProvider: CryptoProvider = CryptoProvider(appConfig)
   
   val controller = new UserAnswersController(
     cc,
     mockUserAnswersRepository,
-    cryptoProvider,
     fakeAuthorisedAction
   )
 
