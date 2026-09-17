@@ -37,8 +37,6 @@ class AppConfig @Inject()(
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
   val enrolmentIdentifierKey: String = config.get[String]("enrolment.identifierKey")
 
-  def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
-
   // Obligations
   private val obligationsHost: String = servicesConfig.baseUrl("obligations")
   private val obligationsUrl: String = config.get[String]("microservice.services.obligations.url")
@@ -109,4 +107,9 @@ class AppConfig @Inject()(
 
   def nrsCircuitBreakerExponentialBackoffFactor: Double =
     config.get[Double]("microservice.services.nrs.exponential-backoff-factor")
+
+  // Mongo
+  def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
+  val cryptoEnabled: Boolean = config.get[Boolean]("crypto.enabled")
+  val cryptoKey: String = config.get[String]("crypto.key")
 }

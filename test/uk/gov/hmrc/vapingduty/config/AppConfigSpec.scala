@@ -59,7 +59,9 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "nrs-submission-scheduler.interval" -> "30 seconds",
     "nrs-submission-scheduler.initial-delay" -> "1 minute",
     "features.nrs-submission-enabled" -> true,
-    "features.nrs-generation-enabled" -> true
+    "features.nrs-generation-enabled" -> true,
+    "crypto.enabled" -> true,
+    "crypto.key" -> "crypto-key"
   )
 
   private def buildAppConfig(overrides: Map[String, Any] = Map.empty): AppConfig = {
@@ -149,6 +151,30 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       "must handle different duration formats" in {
         val config = buildAppConfig(Map("mongodb.timeToLive" -> "7 days"))
         config.timeToLive mustBe 7
+      }
+    }
+
+    "cryptoEnabled" - {
+      "must return true when feature is enabled" in {
+        val config = buildAppConfig()
+        config.cryptoEnabled mustBe true
+      }
+
+      "must return false when feature is disabled" in {
+        val config = buildAppConfig(Map("crypto.enabled" -> false))
+        config.cryptoEnabled mustBe false
+      }
+    }
+
+    "cryptoKey`" - {
+      "must return the crypto key" in {
+        val config = buildAppConfig()
+        config.cryptoKey mustBe "crypto-key"
+      }
+
+      "must handle different API keys" in {
+        val config = buildAppConfig(Map("crypto.key" -> "different-key"))
+        config.cryptoKey mustBe "different-key"
       }
     }
 

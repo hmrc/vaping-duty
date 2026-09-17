@@ -29,6 +29,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.mdc.MdcExecutionContext
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.crypto.CryptoProvider
 import uk.gov.hmrc.vapingduty.models.*
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import utils.TestData
@@ -57,12 +58,17 @@ class UserAnswersRepositoryISpec
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.timeToLive) thenReturn 1L
+  when(mockAppConfig.cryptoEnabled) thenReturn true
+  when(mockAppConfig.cryptoKey) thenReturn "gvBoGdgzqG1AarzF1LY0zQ=="
+
+  private val cryptoProvider = new CryptoProvider(mockAppConfig)
 
   implicit val productionLikeTestMdcExecutionContext: ExecutionContext = MdcExecutionContext()
 
   protected override val repository: UserAnswersRepository = new UserAnswersRepository(
     mongoComponent = mongoComponent,
     appConfig = mockAppConfig,
+    cryptoProvider = cryptoProvider,
     clock = stubClock
   )
 
@@ -104,6 +110,36 @@ class UserAnswersRepositoryISpec
       val updatedResult = repository.set(userAnswers.copy(data = Json.obj())).futureValue
 
       updatedResult mustBe UpdateSuccess
+    }
+
+    "store data encrypted in MongoDB" in {
+      val testData = Json.obj("secretKey" -> "secretValue", "nested" -> Json.obj("data" -> "sensitive"))
+
+      repository.set(userAnswers.copy(data = testData)).futureValue
+
+      // Use the MongoDB driver directly to get raw document to verify encryption
+      val rawCollection = repository.collection
+      val rawDocs = rawCollection.find(Filters.and(
+        Filters.equal("vpdId", userAnswers.vpdId),
+        Filters.equal("periodKey", userAnswers.periodKey)
+      )).toFuture().futureValue
+
+      rawDocs.size mustBe 1
+      val rawDoc = rawDocs.head
+      
+      // The data field should be encrypted (a string, not an object)
+      val dataField = rawDoc.get("data")
+      dataField mustBe defined
+      dataField.get.isString mustBe true
+      
+      val dataFieldString = dataField.get.asString().getValue
+      dataFieldString must not include "secretKey"
+      dataFieldString must not include "secretValue"
+      dataFieldString must not include "sensitive"
+
+      // Verify decryption works correctly
+      val retrieved = repository.get(testVpdId, testPeriodKey).futureValue
+      retrieved.value.data mustBe testData
     }
 
     mustPreserveMdc(repository.set(userAnswers))

@@ -18,7 +18,11 @@ package uk.gov.hmrc.vapingduty.models
 
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
+import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.crypto.json.JsonEncryption
 
 import java.time.{Instant, Month}
 
@@ -35,14 +39,32 @@ final case class UserAnswers(
 object UserAnswers {
 
   private implicit val monthFormat: Format[Month] = implicitly[Format[String]].inmap(Month.valueOf, _.toString)
-  
-  implicit val format: OFormat[UserAnswers] = (
+
+  // HTTP format - used by controllers for request/response JSON (no encryption)
+  implicit val httpFormat: OFormat[UserAnswers] = {
+    implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+    Json.format[UserAnswers]
+  }
+
+  // MongoDB format - used by repository for database storage (with encryption)
+  def mongoFormat(implicit crypto: Encrypter with Decrypter): OFormat[UserAnswers] = {
+    implicit val sensitiveFormat: Format[SensitiveString] = sensitiveStringFormat
+    
+    (
       (__ \ "vpdId").format[String] and
       (__ \ "periodKey").format[String] and
       (__ \ "returnPeriod").formatNullable[Month] and
       (__ \ "year").formatNullable[String] and
-      (__ \ "data").formatWithDefault[JsObject](Json.obj()) and
+      (__ \ "data").format[SensitiveString]
+        .inmap[JsObject](
+          s => Json.parse(s.decryptedValue).as[JsObject],
+          js => SensitiveString(Json.stringify(js))
+        ) and
       (__ \ "startedTime").format(MongoJavatimeFormats.instantFormat) and
       (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)
-  )(UserAnswers.apply, o => Tuple.fromProductTyped(o))
+    )(UserAnswers.apply, o => Tuple.fromProductTyped(o))
+  }
+
+  private def sensitiveStringFormat(implicit crypto: Encrypter with Decrypter): Format[SensitiveString] =
+    JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 }

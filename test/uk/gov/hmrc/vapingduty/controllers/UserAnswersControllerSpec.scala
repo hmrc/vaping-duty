@@ -22,7 +22,9 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.vapingduty.base.SpecBase
+import uk.gov.hmrc.vapingduty.crypto.CryptoProvider
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateSuccess, UserAnswers}
 import uk.gov.hmrc.vapingduty.repositories.UserAnswersRepository
 
@@ -33,18 +35,24 @@ class UserAnswersControllerSpec extends SpecBase {
 
   val mockUserAnswersRepository: UserAnswersRepository = mock[UserAnswersRepository]
 
+  implicit val cryptoProvider: CryptoProvider = CryptoProvider(appConfig)
+  
   val controller = new UserAnswersController(
     cc,
     mockUserAnswersRepository,
+    cryptoProvider,
     fakeAuthorisedAction
   )
+
+  // Controller uses httpFormat, not mongoFormat
+  implicit val userAnswersFormat: OFormat[UserAnswers] = UserAnswers.httpFormat
 
   val returnsUserAnswers = UserAnswers(
     vpdId = vpdId.toString,
     periodKey = periodKey.toString,
     data = JsObject.empty,
-    startedTime = Instant.now(),
-    lastUpdated = Instant.now()
+    startedTime = Instant.now(clock),
+    lastUpdated = Instant.now(clock)
   )
 
   "getUserAnswers must" - {
