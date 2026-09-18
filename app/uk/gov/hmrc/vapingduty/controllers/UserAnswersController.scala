@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import com.google.inject.Inject
 import play.api.Logging
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.*
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
@@ -33,6 +33,9 @@ class UserAnswersController @Inject()(
                                        userAnswersRepository: UserAnswersRepository,
                                        authorise: AuthorisedAction
                                      )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+
+  // Use httpFormat for HTTP request/response JSON (no encryption at HTTP layer)
+  implicit private val userAnswersFormat: OFormat[UserAnswers] = UserAnswers.httpFormat
 
   def getUserAnswers(vpdId: VpdId, periodKey: PeriodKey): Action[AnyContent] = authorise.async { _ =>
     userAnswersRepository.get(vpdId, periodKey).map {
@@ -49,7 +52,9 @@ class UserAnswersController @Inject()(
           case UpdateSuccess => NoContent
           case UpdateFailure => NotModified
         }
-        case JsError(errors) => Future.successful(BadRequest)
+        case JsError(errors) =>
+          logger.warn(s"Failed to validate UserAnswers: $errors")
+          Future.successful(BadRequest)
   }
 
   def clear(vpdId: VpdId, periodKey: PeriodKey): Action[AnyContent] = authorise.async {

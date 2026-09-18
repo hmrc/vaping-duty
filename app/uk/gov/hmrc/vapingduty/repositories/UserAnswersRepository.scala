@@ -24,6 +24,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.vapingduty.config.AppConfig
+import uk.gov.hmrc.vapingduty.crypto.CryptoProvider
 import uk.gov.hmrc.vapingduty.models.identifiers.*
 import uk.gov.hmrc.vapingduty.models.{UpdateFailure, UpdateResult, UpdateSuccess, UserAnswers}
 
@@ -36,12 +37,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserAnswersRepository @Inject()(
                                        mongoComponent: MongoComponent,
                                        appConfig: AppConfig,
+                                       cryptoProvider: CryptoProvider,
                                        clock: Clock
-                                  )(implicit ec: ExecutionContext)
+                                   )(implicit ec: ExecutionContext)
   extends PlayMongoRepository[UserAnswers](
     collectionName = "user-answers",
     mongoComponent = mongoComponent,
-    domainFormat = UserAnswers.format,
+    domainFormat = UserAnswers.mongoFormat(cryptoProvider.getCrypto),
     indexes = Seq(
       IndexModel(
         Indexes.compoundIndex(

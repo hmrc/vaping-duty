@@ -20,6 +20,7 @@ import play.api.{Configuration, Environment}
 import play.api.inject.{Binding, Module as AppModule}
 import controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 import uk.gov.hmrc.vapingduty.connectors.{NrsCircuitBreakerProvider, NrsConnector}
+import uk.gov.hmrc.vapingduty.crypto.CryptoProvider
 import uk.gov.hmrc.vapingduty.scheduling.NrsScheduledService
 
 import java.time.Clock
@@ -32,6 +33,7 @@ class Module extends AppModule {
                        ): Seq[Binding[_]] =
     bind[Clock].toInstance(Clock.systemDefaultZone) ::
       bind[AuthorisedAction].to(classOf[BaseAuthorisedAction]) ::
+      bind[CryptoProvider].toSelf.eagerly() ::
       bind[NrsConnector.NrsCircuitBreaker].toProvider(classOf[NrsCircuitBreakerProvider]) ::
       bind[NrsScheduledService].toSelf.eagerly() ::
       Nil

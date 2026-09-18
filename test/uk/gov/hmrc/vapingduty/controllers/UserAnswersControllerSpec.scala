@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, Json, OFormat}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
@@ -32,19 +32,22 @@ import scala.concurrent.Future
 class UserAnswersControllerSpec extends SpecBase {
 
   val mockUserAnswersRepository: UserAnswersRepository = mock[UserAnswersRepository]
-
+  
   val controller = new UserAnswersController(
     cc,
     mockUserAnswersRepository,
     fakeAuthorisedAction
   )
 
+  // Controller uses httpFormat, not mongoFormat
+  implicit val userAnswersFormat: OFormat[UserAnswers] = UserAnswers.httpFormat
+
   val returnsUserAnswers = UserAnswers(
     vpdId = vpdId.toString,
     periodKey = periodKey.toString,
     data = JsObject.empty,
-    startedTime = Instant.now(),
-    lastUpdated = Instant.now()
+    startedTime = Instant.now(clock),
+    lastUpdated = Instant.now(clock)
   )
 
   "getUserAnswers must" - {
