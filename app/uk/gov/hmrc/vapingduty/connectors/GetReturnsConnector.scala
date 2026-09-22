@@ -17,10 +17,11 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
+import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.models.returns.view.ReturnDisplayResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -35,7 +36,8 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
   implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
   extends HttpReadsInstances
-    with Logging {
+    with Logging
+    with UnprocessableEntityLogging {
 
   private val parsingError = "Parsing failed for VPD return get response"
 
@@ -44,7 +46,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
     httpClient
       .get(url"${config.getReturnUrl(vpdId, periodKey)}")
       .setHeader(createReturnHeaders: _*)
-      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .execute[HttpResponse]
       .recoverWith { case e: Exception =>
         logger.warn(s"Exception while getting return: ${e.getMessage}")
         Future.failed(InternalServerException("Failed to get return"))
@@ -52,11 +54,15 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
       .flatMap(getReturn)
       .flatMap(parseJson)
 
-  private def getReturn(response: Either[UpstreamErrorResponse, HttpResponse]): Future[HttpResponse] = {
-    response match {
-      case Right(response) => Future.successful(response)
-      case Left(error) =>
-        logger.warn(s"Unexpected response from VPD return get API. Status: ${error.statusCode} Message: ${error.message}")
+  private def getReturn(response: HttpResponse): Future[HttpResponse] = {
+    response.status match {
+      case OK =>
+        Future.successful(response)
+      case UNPROCESSABLE_ENTITY =>
+        logger.warn(unprocessableEntityMessage("VPD return get API", response))
+        Future.failed(InternalServerException("Failed to get VPD return"))
+      case statusCode =>
+        logger.warn(s"Unexpected response from VPD return get API. Status: $statusCode")
         Future.failed(InternalServerException("Failed to get VPD return"))
     }
   }

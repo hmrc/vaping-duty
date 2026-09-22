@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.vapingduty.models.obligations
+package uk.gov.hmrc.vapingduty.models
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ObligationsResponse(
-  obligation: Seq[ObligationItem]
+import java.time.LocalDate
+
+final case class ConnectorErrorResponse(
+  processingDate: LocalDate,
+  code: String,
+  text: String
 )
 
-object ObligationsResponse {
-  given format: OFormat[ObligationsResponse] = Json.format[ObligationsResponse]
+object ConnectorErrorResponse {
+  given format: OFormat[ConnectorErrorResponse] = Json.format[ConnectorErrorResponse]
 }

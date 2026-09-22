@@ -17,10 +17,11 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
+import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -37,9 +38,9 @@ class ObligationsConnector @Inject()(
                                       implicit val httpClient: HttpClientV2
                                     )(using ExecutionContext)
   extends HttpReadsInstances
-    with Logging {
+    with Logging
+    with UnprocessableEntityLogging {
 
-  private val parsingError = "Unable to parse obligations response"
   private val UK_ZONE = "Europe/London"
   
   private def calculateDateRange(): (String, String) = {
@@ -52,44 +53,53 @@ class ObligationsConnector @Inject()(
   
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] = {
     val (fromDate, toDate) = calculateDateRange()
-    
+
     httpClient
       .get(url"${config.getObligationsUrl(vpdId, fromDate, toDate)}")
       .setHeader(createObligationHeaders: _*)
-      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .execute[HttpResponse]
       .recoverWith { case _: Exception =>
         logger.warn("An exception was returned while trying to fetch obligations")
         Future.failed(InternalServerException("Failed to get obligations"))
       }
-      .flatMap(response => responseParser(response))
+      .flatMap(processHttpStatus)
+      .flatMap(parseHttpResponse)
   }
 
-  private def responseParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ObligationsResponse] = {
-    response match {
-      case Right(httpResponse) =>
-        Try {
-          httpResponse.json.as[ObligationsResponse]
-        } match {
-          case Success(obligations) =>
-            Future.successful(obligations)
-          case Failure(_) =>
-            logger.warn(parsingError)
-            Future.failed(InternalServerException(parsingError))
-        }
-      case Left(error) =>
-        logger.warn(s"Unexpected response from obligations API. Status: ${error.statusCode} Message: ${error.message}")
+  private def processHttpStatus(response: HttpResponse): Future[HttpResponse] = {
+    response.status match {
+      case OK =>
+        Future.successful(response)
+      case UNPROCESSABLE_ENTITY  =>
+        logger.warn(unprocessableEntityMessage("Obligations API", response))
+        Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
+      case statusCode =>
+        logger.warn(s"Unexpected response from obligations API. Status: $statusCode")
         Future.failed(InternalServerException("Failed to get obligations"))
+    }
+  }
+
+  private def parseHttpResponse(httpResponse: HttpResponse): Future[ObligationsResponse] = {
+    Try {
+      httpResponse.json.as[ObligationsResponse]
+    } match {
+      case Success(obligations) =>
+        Future.successful(obligations)
+      case Failure(_) =>
+        val parsingError = "Unable to parse obligations response"
+        logger.warn(parsingError)
+        Future.failed(InternalServerException(parsingError))
     }
   }
 
   private def createObligationHeaders: Seq[(String, String)] =
     Seq(
       (HeaderNames.authorisation, HIPAuth(config).authorizationForObligations()),
-      ("correlationid", randomUUIDGenerator.uuid),
-      ("X-Message-Type", "GetObligations"),
-      ("X-Originating-System", "MDTP"),
-      ("X-Receipt-Date", DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
-      ("X-Regime", "VPD"),
-      ("X-Transmitting-System", "HIP")
+      ("correlationid"          , randomUUIDGenerator.uuid),
+      ("X-Message-Type"         , "GetObligations"),
+      ("X-Originating-System"   , "MDTP"),
+      ("X-Receipt-Date"         , DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
+      ("X-Regime"               , "VPD"),
+      ("X-Transmitting-System"  , "HIP")
     )
 }

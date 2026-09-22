@@ -17,12 +17,13 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
+import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.HIPAuth
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -37,7 +38,8 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
   implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
   extends HttpReadsInstances
-    with Logging {
+    with Logging
+    with UnprocessableEntityLogging {
 
   private val parsingError = "Parsing failed for VPD return submission response"
 
@@ -47,16 +49,16 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
       .post(url"${config.submitReturnUrl()}")
       .setHeader(createReturnHeaders(vpdId): _*)
       .withBody(Json.toJson(returnRequest))
-      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .execute[HttpResponse]
       .recoverWith { case e: Exception =>
         logger.warn(s"Exception while submitting VPD return: ${e.getMessage}")
         Future.failed(InternalServerException("Failed to submit VPD return"))
       }
       .flatMap(response => submitReturnParser(response))
 
-  private def submitReturnParser(response: Either[UpstreamErrorResponse, HttpResponse]): Future[ReturnSubmittedResponse] = {
-    response match {
-      case Right(response) =>
+  private def submitReturnParser(response: HttpResponse): Future[ReturnSubmittedResponse] = {
+    response.status match {
+      case OK =>
         Try {
           response.json.as[ReturnCreateResponse]
         } match {
@@ -66,8 +68,11 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
             logger.warn(parsingError)
             Future.failed(InternalServerException(parsingError))
         }
-      case Left(error) =>
-        logger.warn(s"Unexpected response from VPD return submission API. Status: ${error.statusCode} Message: ${error.message}")
+      case UNPROCESSABLE_ENTITY =>
+        logger.warn(unprocessableEntityMessage("VPD return submission API", response))
+        Future.failed(InternalServerException("Failed to submit VPD return"))
+      case statusCode =>
+        logger.warn(s"Unexpected response from VPD return submission API. Status: $statusCode")
         Future.failed(InternalServerException("Failed to submit VPD return"))
     }
   }
