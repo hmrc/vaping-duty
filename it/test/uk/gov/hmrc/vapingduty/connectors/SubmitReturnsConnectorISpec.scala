@@ -17,7 +17,7 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import com.github.tomakehurst.wiremock.http.Fault
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, CREATED, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
@@ -34,7 +34,7 @@ class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with Con
       "successfully submit a return" in new SetUp {
         stubPost(
           submitReturnUrl,
-          OK,
+          CREATED,
           Json.toJson(returnsCreateRequest).toString(),
           Json.toJson(returnCreateResponseSuccess).toString()
         )
@@ -45,7 +45,7 @@ class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with Con
       }
 
       "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
-        stubPost(submitReturnUrl, OK, Json.toJson(returnsCreateRequest).toString(), "invalid")
+        stubPost(submitReturnUrl, CREATED, Json.toJson(returnsCreateRequest).toString(), "invalid")
 
         val result = connector.submitReturn(returnsCreateRequest, vpdId)
 

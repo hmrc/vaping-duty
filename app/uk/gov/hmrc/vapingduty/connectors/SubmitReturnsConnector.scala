@@ -17,7 +17,7 @@
 package uk.gov.hmrc.vapingduty.connectors
 
 import play.api.Logging
-import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{CREATED, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
@@ -58,7 +58,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
 
   private def submitReturnParser(response: HttpResponse): Future[ReturnSubmittedResponse] = {
     response.status match {
-      case OK =>
+      case CREATED =>
         Try {
           response.json.as[ReturnCreateResponse]
         } match {
