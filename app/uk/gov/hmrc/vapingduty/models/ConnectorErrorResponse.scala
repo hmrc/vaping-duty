@@ -20,10 +20,16 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.Instant
 
-final case class Errors(errors: ConnectorErrorResponse)
+// The Obligations and Returns 422 responses differ in 'error' and 'errors'
+final case class ObligationsErrors(errors: ConnectorErrorResponse)
+final case class ReturnsError(error: ConnectorErrorResponse)
 
-object Errors {
-  given format: OFormat[Errors] = Json.format[Errors]
+object ObligationsErrors {
+  given format: OFormat[ObligationsErrors] = Json.format[ObligationsErrors]
+}
+
+object ReturnsError {
+  given format: OFormat[ReturnsError] = Json.format[ReturnsError]
 }
 
 final case class ConnectorErrorResponse(

@@ -18,14 +18,14 @@ package uk.gov.hmrc.vapingduty.connectors.helpers
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, Errors}
+import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, ObligationsErrors, ReturnsError}
 
 import scala.util.Try
 
 trait UnprocessableEntityLogging {
 
-  protected def unprocessableEntityMessage(apiName: String, response: HttpResponse): String = {
-    parseErrorMessage(response.body) match {
+  protected def obligationsUnprocessableEntityMessage(apiName: String, response: HttpResponse): String = {
+    parseObligationsErrorMessage(response.body) match {
       case Some(error) =>
         s"$apiName returned 422 Unprocessable Entity. processingDate=${error.processingDate}, code=${error.code}, text=${error.text}"
       case None =>
@@ -33,7 +33,21 @@ trait UnprocessableEntityLogging {
     }
   }
 
-  def parseErrorMessage(body: String): Option[ConnectorErrorResponse] = {
-    Try(Json.parse(body)).toOption.flatMap(_.validate[Errors].asOpt).map(_.errors)
+  def parseObligationsErrorMessage(body: String): Option[ConnectorErrorResponse] = {
+    Try(Json.parse(body)).toOption.flatMap(_.validate[ObligationsErrors].asOpt).map(_.errors)
   }
+
+  protected def returnsUnprocessableEntityMessage(apiName: String, response: HttpResponse): String = {
+    parseReturnsErrorMessage(response.body) match {
+      case Some(error) =>
+        s"$apiName returned 422 Unprocessable Entity. processingDate=${error.processingDate}, code=${error.code}, text=${error.text}"
+      case None =>
+        s"$apiName returned 422 Unprocessable Entity but the error body could not be parsed. Body: ${response.body}"
+    }
+  }
+
+  def parseReturnsErrorMessage(body: String): Option[ConnectorErrorResponse] = {
+    Try(Json.parse(body)).toOption.flatMap(_.validate[ReturnsError].asOpt).map(_.error)
+  }
+
 }

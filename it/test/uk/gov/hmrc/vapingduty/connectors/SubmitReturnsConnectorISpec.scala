@@ -21,7 +21,7 @@ import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, UNPROC
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
-import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, Errors}
+import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, ReturnsError}
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, WireMockHelper}
 
 import java.time.Instant
@@ -77,7 +77,7 @@ class SubmitReturnsConnectorISpec extends ISpecBase with WireMockHelper with Con
           UNPROCESSABLE_ENTITY,
           Json.toJson(returnsCreateRequest).toString(),
           Json.toJson(
-            Errors(
+            ReturnsError(
               ConnectorErrorResponse(
                 processingDate = Instant.parse("2026-08-25T09:42:05Z"),
                 code           = "001",

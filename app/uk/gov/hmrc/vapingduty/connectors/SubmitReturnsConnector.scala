@@ -69,7 +69,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
             Future.failed(InternalServerException(parsingError))
         }
       case UNPROCESSABLE_ENTITY =>
-        logger.warn(unprocessableEntityMessage("VPD return submission API", response))
+        logger.warn(returnsUnprocessableEntityMessage("VPD return submission API", response))
         Future.failed(InternalServerException("Failed to submit VPD return"))
       case statusCode =>
         logger.warn(s"Unexpected response from VPD return submission API. Status: $statusCode")

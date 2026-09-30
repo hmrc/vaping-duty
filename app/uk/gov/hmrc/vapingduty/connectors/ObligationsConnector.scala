@@ -71,7 +71,7 @@ class ObligationsConnector @Inject()(
       case OK =>
         Future.successful(response)
       case UNPROCESSABLE_ENTITY  =>
-        logger.warn(unprocessableEntityMessage("Obligations API", response))
+        logger.warn(obligationsUnprocessableEntityMessage("Obligations API", response))
         Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
       case statusCode =>
         logger.warn(s"Unexpected response from obligations API. Status: $statusCode")

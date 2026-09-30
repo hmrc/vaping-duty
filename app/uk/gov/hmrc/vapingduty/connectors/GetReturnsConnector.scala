@@ -59,7 +59,7 @@ class GetReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator, cl
       case OK =>
         Future.successful(response)
       case UNPROCESSABLE_ENTITY =>
-        logger.warn(unprocessableEntityMessage("VPD return get API", response))
+        logger.warn(returnsUnprocessableEntityMessage("VPD return get API", response))
         Future.failed(InternalServerException("Failed to get VPD return"))
       case statusCode =>
         logger.warn(s"Unexpected response from VPD return get API. Status: $statusCode")

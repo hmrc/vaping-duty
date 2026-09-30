@@ -25,7 +25,7 @@ class UnprocessableEntityLoggingSpec extends SpecBase {
 
   "UnprocessableEntityLogging" - {
     "should parse a valid Obligations 422 error body" in {
-      new UnprocessableEntityLogging {}.parseErrorMessage(body =
+      new UnprocessableEntityLogging {}.parseObligationsErrorMessage(body =
         """
           |{
           | "errors":{
@@ -43,7 +43,7 @@ class UnprocessableEntityLoggingSpec extends SpecBase {
     }
 
     "should parse a valid POST Returns 422 error body" in {
-      new UnprocessableEntityLogging {}.parseErrorMessage(body =
+      new UnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
         """
           |{
           |  "error": {
@@ -61,7 +61,7 @@ class UnprocessableEntityLoggingSpec extends SpecBase {
     }
 
     "should parse a valid GET Returns 422 error body" in {
-      new UnprocessableEntityLogging {}.parseErrorMessage(body =
+      new UnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
         """
           |{
           |  "error": {
