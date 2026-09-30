@@ -21,29 +21,12 @@ import uk.gov.hmrc.vapingduty.models.ConnectorErrorResponse
 
 import java.time.Instant
 
-class UnprocessableEntityLoggingSpec extends SpecBase {
+class ReturnsUnprocessableEntityLoggingSpec extends SpecBase {
 
   "UnprocessableEntityLogging" - {
-    "should parse a valid Obligations 422 error body" in {
-      new UnprocessableEntityLogging {}.parseObligationsErrorMessage(body =
-        """
-          |{
-          | "errors":{
-          |   "processingDate":"2026-09-30T09:42:05Z",
-          |   "code":"025",
-          |   "text":"No associated data found."
-          | }
-          |}
-          |""".stripMargin  
-      ) mustBe Some(
-        ConnectorErrorResponse(
-          Instant.parse("2026-09-30T09:42:05Z"),
-          code = "025",
-          text = "No associated data found."))
-    }
 
     "should parse a valid POST Returns 422 error body" in {
-      new UnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
+      new ReturnsUnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
         """
           |{
           |  "error": {
@@ -61,7 +44,7 @@ class UnprocessableEntityLoggingSpec extends SpecBase {
     }
 
     "should parse a valid GET Returns 422 error body" in {
-      new UnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
+      new ReturnsUnprocessableEntityLogging {}.parseReturnsErrorMessage(body =
         """
           |{
           |  "error": {
