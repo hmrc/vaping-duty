@@ -20,6 +20,12 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.Instant
 
+final case class Errors(errors: ConnectorErrorResponse)
+
+object Errors {
+  given format: OFormat[Errors] = Json.format[Errors]
+}
+
 final case class ConnectorErrorResponse(
   processingDate: Instant,
   code: String,

@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.connectors.helpers
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.vapingduty.models.ConnectorErrorResponse
+import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, Errors}
 
 import scala.util.Try
 
@@ -34,6 +34,6 @@ trait UnprocessableEntityLogging {
   }
 
   def parseErrorMessage(body: String): Option[ConnectorErrorResponse] = {
-    Try(Json.parse(body)).toOption.flatMap(_.validate[ConnectorErrorResponse].asOpt)
+    Try(Json.parse(body)).toOption.flatMap(_.validate[Errors].asOpt).map(_.errors)
   }
 }
