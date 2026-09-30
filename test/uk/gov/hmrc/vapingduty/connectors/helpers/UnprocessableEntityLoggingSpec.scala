@@ -19,8 +19,7 @@ package uk.gov.hmrc.vapingduty.connectors.helpers
 import uk.gov.hmrc.vapingduty.base.SpecBase
 import uk.gov.hmrc.vapingduty.models.ConnectorErrorResponse
 
-import java.time.{Instant, LocalDate}
-import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+import java.time.Instant
 
 class UnprocessableEntityLoggingSpec extends SpecBase {
 
@@ -41,6 +40,42 @@ class UnprocessableEntityLoggingSpec extends SpecBase {
           Instant.parse("2026-09-30T09:42:05Z"),
           code = "025",
           text = "No associated data found."))
+    }
+
+    "should parse a valid POST Returns 422 error body" in {
+      new UnprocessableEntityLogging {}.parseErrorMessage(body =
+        """
+          |{
+          |  "error": {
+          |    "code": "001",
+          |    "processingDate": "2022-01-31T09:26:17Z",
+          |    "text": "REGIME missing or invalid"
+          |  }
+          |}
+          |""".stripMargin  
+      ) mustBe Some(
+        ConnectorErrorResponse(
+          Instant.parse("2022-01-31T09:26:17Z"),
+          code = "001",
+          text = "REGIME missing or invalid"))
+    }
+
+    "should parse a valid GET Returns 422 error body" in {
+      new UnprocessableEntityLogging {}.parseErrorMessage(body =
+        """
+          |{
+          |  "error": {
+          |    "code": "002",
+          |    "processingDate": "2026-01-31T09:26:17Z",
+          |    "text": "ID Number missing or invalid"
+          |  }
+          |}
+          |""".stripMargin  
+      ) mustBe Some(
+        ConnectorErrorResponse(
+          Instant.parse("2026-01-31T09:26:17Z"),
+          code = "002",
+          text = "ID Number missing or invalid"))
     }
   }
 
