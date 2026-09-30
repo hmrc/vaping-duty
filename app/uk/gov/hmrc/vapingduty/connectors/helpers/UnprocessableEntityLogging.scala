@@ -24,11 +24,16 @@ import scala.util.Try
 
 trait UnprocessableEntityLogging {
 
-  protected def unprocessableEntityMessage(apiName: String, response: HttpResponse): String =
-    Try(Json.parse(response.body)).toOption.flatMap(_.validate[ConnectorErrorResponse].asOpt) match {
+  protected def unprocessableEntityMessage(apiName: String, response: HttpResponse): String = {
+    parseErrorMessage(response.body) match {
       case Some(error) =>
         s"$apiName returned 422 Unprocessable Entity. processingDate=${error.processingDate}, code=${error.code}, text=${error.text}"
       case None =>
         s"$apiName returned 422 Unprocessable Entity but the error body could not be parsed. Body: ${response.body}"
     }
+  }
+
+  def parseErrorMessage(body: String): Option[ConnectorErrorResponse] = {
+    Try(Json.parse(body)).toOption.flatMap(_.validate[ConnectorErrorResponse].asOpt)
+  }
 }

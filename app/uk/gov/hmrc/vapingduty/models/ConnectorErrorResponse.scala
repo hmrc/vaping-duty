@@ -18,10 +18,10 @@ package uk.gov.hmrc.vapingduty.models
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
+import java.time.Instant
 
 final case class ConnectorErrorResponse(
-  processingDate: LocalDate,
+  processingDate: Instant,
   code: String,
   text: String
 )
