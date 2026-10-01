@@ -54,7 +54,7 @@ trait TestData {
 
   val periodKey = PeriodKey("26AB")
   val vpdReferenceNumber = "XMVPD0000100021"
-  val submissionId = "SUB123456789"
+  val submissionId = 123456789012L
   val chargeReference = "CHG987654321"
 
   val nilReturnNoProducts: NilReturn = NilReturn(
@@ -107,7 +107,7 @@ trait TestData {
   )
 
   val returnSubmittedResponse: ReturnSubmittedResponse = ReturnSubmittedResponse(
-    processingDate = Instant.now(clock),
+    processingDate = LocalDateTime.now(clock),
     vpdReferenceNumber = vpdReferenceNumber,
     submissionId = Some(submissionId),
     chargeReference = Some(chargeReference),
@@ -122,7 +122,7 @@ trait TestData {
   // GET endpoint test data
   val idDetails: IdDetails = IdDetails(
     vpdReferenceNumber = vpdReferenceNumber,
-    submissionId = submissionId
+    submissionId = submissionId.toString
   )
 
   val chargeDetails: ChargeDetails = ChargeDetails(
