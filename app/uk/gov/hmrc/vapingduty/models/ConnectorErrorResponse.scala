@@ -18,10 +18,22 @@ package uk.gov.hmrc.vapingduty.models
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
+import java.time.Instant
+
+// The Obligations and Returns 422 responses differ in 'error' and 'errors'
+final case class ObligationsErrors(errors: ConnectorErrorResponse)
+final case class ReturnsError(error: ConnectorErrorResponse)
+
+object ObligationsErrors {
+  given format: OFormat[ObligationsErrors] = Json.format[ObligationsErrors]
+}
+
+object ReturnsError {
+  given format: OFormat[ReturnsError] = Json.format[ReturnsError]
+}
 
 final case class ConnectorErrorResponse(
-  processingDate: LocalDate,
+  processingDate: Instant,
   code: String,
   text: String
 )

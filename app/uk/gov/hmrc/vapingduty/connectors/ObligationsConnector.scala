@@ -21,7 +21,7 @@ import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsUnprocessableEntityLogging, ReturnsUnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -39,7 +39,7 @@ class ObligationsConnector @Inject()(
                                     )(using ExecutionContext)
   extends HttpReadsInstances
     with Logging
-    with UnprocessableEntityLogging {
+    with ObligationsUnprocessableEntityLogging {
 
   private val UK_ZONE = "Europe/London"
   
@@ -71,7 +71,7 @@ class ObligationsConnector @Inject()(
       case OK =>
         Future.successful(response)
       case UNPROCESSABLE_ENTITY  =>
-        logger.warn(unprocessableEntityMessage("Obligations API", response))
+        logger.warn(obligationsUnprocessableEntityMessage("Obligations API", response))
         Future.failed(InternalServerException("Unprocessable Entity (422) when requesting obligations"))
       case statusCode =>
         logger.warn(s"Unexpected response from obligations API. Status: $statusCode")
