@@ -60,7 +60,7 @@ class NrsMetadataSpec extends SpecBase {
         )
 
         result.businessId mustBe "vpd"
-        result.notableEvent mustBe "returnSubmitted"
+        result.notableEvent mustBe "vpd-return-submitted"
         result.payloadContentType mustBe "application/json"
         result.payloadSha256Checksum mustBe testSha256Hash
         result.userSubmissionTimestamp mustBe testTimestamp
@@ -101,7 +101,7 @@ class NrsMetadataSpec extends SpecBase {
       val json = Json.toJson(metadata)
 
       (json \ "businessId").as[String] mustBe "vpd"
-      (json \ "notableEvent").as[String] mustBe "returnSubmitted"
+      (json \ "notableEvent").as[String] mustBe "vpd-return-submitted"
       (json \ "payloadContentType").as[String] mustBe "application/json"
       (json \ "payloadSha256Checksum").as[String] mustBe testSha256Hash
       (json \ "userSubmissionTimestamp").as[String] mustBe testTimestamp
@@ -113,7 +113,7 @@ class NrsMetadataSpec extends SpecBase {
     "must deserialize from JSON correctly" in {
       val json = Json.obj(
         "businessId" -> "vpd",
-        "notableEvent" -> "returnSubmitted",
+        "notableEvent" -> "vpd-return-submitted",
         "payloadContentType" -> "application/json",
         "payloadSha256Checksum" -> testSha256Hash,
         "userSubmissionTimestamp" -> testTimestamp,
@@ -134,7 +134,7 @@ class NrsMetadataSpec extends SpecBase {
       val result = json.as[NrsMetadata]
 
       result.businessId mustBe "vpd"
-      result.notableEvent mustBe "returnSubmitted"
+      result.notableEvent mustBe "vpd-return-submitted"
       result.payloadSha256Checksum mustBe testSha256Hash
       result.searchKeys("zvpd") mustBe testVpdId
       result.searchKeys("periodKey") mustBe testPeriodKey
