@@ -32,7 +32,7 @@ final case class NrsMetadata(
 
 object NrsMetadata {
   private val BUSINESS_ID = "vpd"
-  private val NOTABLE_EVENT = "returnSubmitted"
+  private val NOTABLE_EVENT = "vpd-return-submitted"
   private val SEARCH_KEY_ZVPD = "zvpd"
   private val SEARCH_KEY_PERIOD = "periodKey"
   private val PAYLOAD_CONTENT_TYPE = "application/json"

@@ -56,7 +56,7 @@ class NrsPayloadSpec extends SpecBase {
         result mustBe a[JsObject]
         (result \ "payload").as[String] mustBe testEncodedPayload
         (result \ "metadata" \ "businessId").as[String] mustBe "vpd"
-        (result \ "metadata" \ "notableEvent").as[String] mustBe "returnSubmitted"
+        (result \ "metadata" \ "notableEvent").as[String] mustBe "vpd-return-submitted"
       }
 
       "must include all metadata fields in JsObject" in {
@@ -80,7 +80,7 @@ class NrsPayloadSpec extends SpecBase {
       
       (json \ "payload").as[String] mustBe testEncodedPayload
       (json \ "metadata" \ "businessId").as[String] mustBe "vpd"
-      (json \ "metadata" \ "notableEvent").as[String] mustBe "returnSubmitted"
+      (json \ "metadata" \ "notableEvent").as[String] mustBe "vpd-return-submitted"
     }
 
     "must deserialize from JSON correctly" in {
@@ -88,7 +88,7 @@ class NrsPayloadSpec extends SpecBase {
         "payload" -> testEncodedPayload,
         "metadata" -> Json.obj(
           "businessId" -> "vpd",
-          "notableEvent" -> "returnSubmitted",
+          "notableEvent" -> "vpd-return-submitted",
           "payloadContentType" -> "application/json",
           "payloadSha256Checksum" -> testSha256Hash,
           "userSubmissionTimestamp" -> testTimestamp,
@@ -110,7 +110,7 @@ class NrsPayloadSpec extends SpecBase {
       
       result.payload mustBe testEncodedPayload
       result.metadata.businessId mustBe "vpd"
-      result.metadata.notableEvent mustBe "returnSubmitted"
+      result.metadata.notableEvent mustBe "vpd-return-submitted"
     }
 
     "must round-trip through JSON" in {
