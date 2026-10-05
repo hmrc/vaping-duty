@@ -51,13 +51,17 @@ class ObligationsControllerSpec extends SpecBase {
       contentAsJson(result) mustBe Json.toJson(ObligationsResponse(Seq.empty))
     }
 
-    "return INTERNAL_SERVER_ERROR when the connector fails" in {
+    "allow failures from the connector to pass to the framework for logging and handling" in {
 
-      when(mockConnector.getObligations(any())(any())).thenReturn(Future.failed(InternalServerException("")))
+      when(mockConnector.getObligations(any())(any()))
+        .thenReturn(Future.failed[ObligationsResponse](InternalServerException("Failed to get Obligations")))
 
       val result: Future[Result] = controller.get(vpdId)(fakeRequest)
 
-      status(result) mustBe INTERNAL_SERVER_ERROR
+      whenReady(result.failed) { exception =>
+        exception mustBe an[InternalServerException]
+        exception.getMessage mustBe "Failed to get Obligations"
+      }
     }
   }
 }
