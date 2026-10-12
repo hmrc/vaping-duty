@@ -23,7 +23,7 @@ import play.api.libs.ws.JsonBodyWritables.*
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, UnprocessableEntityLogging}
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ReturnsUnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.returns.submit.{ReturnCreateRequest, ReturnCreateResponse, ReturnSubmittedResponse}
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -39,7 +39,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
 )(implicit ec: ExecutionContext)
   extends HttpReadsInstances
     with Logging
-    with UnprocessableEntityLogging {
+    with ReturnsUnprocessableEntityLogging {
 
   private val parsingError = "Parsing failed for VPD return submission response"
 
@@ -69,7 +69,7 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
             Future.failed(InternalServerException(parsingError))
         }
       case UNPROCESSABLE_ENTITY =>
-        logger.warn(unprocessableEntityMessage("VPD return submission API", response))
+        logger.warn(returnsUnprocessableEntityMessage("VPD return submission API", response))
         Future.failed(InternalServerException("Failed to submit VPD return"))
       case statusCode =>
         logger.warn(s"Unexpected response from VPD return submission API. Status: $statusCode")
