@@ -69,4 +69,7 @@ class AppConfig @Inject()(
   def timeToLive: Long = Duration(config.get[String]("mongodb.timeToLive")).toDays.toInt
   val cryptoEnabled: Boolean = config.get[Boolean]("crypto.enabled")
   val cryptoKey: String = config.get[String]("crypto.key")
+
+  // Obligations months ahead for testing
+  val obligationsMonthsAhead: Int = config.get[Int]("obligationsMonthsAhead")
 }
