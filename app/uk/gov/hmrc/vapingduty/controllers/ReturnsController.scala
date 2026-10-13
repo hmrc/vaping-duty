@@ -49,7 +49,6 @@ class ReturnsController @Inject()(
 
   def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
     authorise(parse.json).async { implicit request =>
-      given HeaderCarrier = HeaderCarrierConverter.fromRequest(request = request.request)
 
       withJsonBody[ReturnCreateRequest] { returnCreateRequest =>
         returnsSubmissionService.submitReturn(returnCreateRequest, vpdId, periodKey)
