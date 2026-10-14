@@ -47,7 +47,6 @@ class ObligationsConnector @Inject()(
     val ukZone = ZoneId.of(UK_ZONE)
 
     val toDate = LocalDate.now(clock.withZone(ukZone))
-      .minusMonths(1)
       // Adding months for e2e testing
       .plusMonths(config.obligationsMonthsAhead)
 
