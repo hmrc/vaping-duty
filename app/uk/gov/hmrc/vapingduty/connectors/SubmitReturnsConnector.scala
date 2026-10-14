@@ -41,8 +41,6 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
     with Logging
     with ReturnsUnprocessableEntityLogging {
 
-  private val parsingError = "Parsing failed for VPD return submission response"
-
   def submitReturn(returnRequest: ReturnCreateRequest, vpdId: VpdId)
                   (implicit hc: HeaderCarrier): Future[ReturnSubmittedResponse] =
     httpClient
@@ -65,8 +63,8 @@ class SubmitReturnsConnector @Inject()(randomUUIDGenerator: RandomUUIDGenerator,
           case Success(createResponse) =>
             Future.successful(createResponse.success)
           case Failure(_) =>
-            logger.warn(parsingError)
-            Future.failed(InternalServerException(parsingError))
+            logger.warn("Parsing failed for VPD return submission response: " + response.body)
+            Future.failed(InternalServerException("Parsing failed for VPD return submission response"))
         }
       case UNPROCESSABLE_ENTITY =>
         logger.warn(returnsUnprocessableEntityMessage("VPD return submission API", response))
