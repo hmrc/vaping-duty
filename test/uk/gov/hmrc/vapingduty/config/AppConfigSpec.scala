@@ -24,7 +24,6 @@ import uk.gov.hmrc.vapingduty.models.identifiers.{PeriodKey, VpdId}
 import uk.gov.hmrc.vapingduty.utils.DateTimeHelper
 
 import java.time.LocalDate
-import scala.concurrent.duration.*
 
 class AppConfigSpec extends AnyFreeSpec with Matchers {
 
@@ -34,10 +33,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "enrolment.serviceName" -> "HMRC-VPD-ORG",
     "enrolment.identifierKey" -> "VPDReference",
     "mongodb.timeToLive" -> "28 days",
-    "mongodb.nrs-work-item.ttl" -> "7 days",
-    "mongodb.nrs-work-item.retry-after" -> "1 hour",
-    "mongodb.nrs-work-item.max-retries" -> 3,
-    "mongodb.nrs-work-item.exponential-backoff-factor" -> 2.0,
     "microservice.services.obligations.protocol" -> "http",
     "microservice.services.obligations.host" -> "localhost",
     "microservice.services.obligations.port" -> 9999,
@@ -46,20 +41,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.submit-return.host" -> "localhost",
     "microservice.services.submit-return.port" -> 8888,
     "microservice.services.submit-return.url.submitReturn" -> "/vpd/return",
-    "microservice.services.nrs.protocol" -> "https",
-    "microservice.services.nrs.host" -> "nrs.service",
-    "microservice.services.nrs.port" -> 443,
-    "microservice.services.nrs.url" -> "/submission",
-    "microservice.services.nrs.api-key" -> "test-api-key-12345",
-    "microservice.services.nrs.max-failures" -> 5,
-    "microservice.services.nrs.call-timeout" -> "30 seconds",
-    "microservice.services.nrs.reset-timeout" -> "60 seconds",
-    "microservice.services.nrs.max-reset-timeout" -> "300 seconds",
-    "microservice.services.nrs.exponential-backoff-factor" -> 2.0,
-    "nrs-submission-scheduler.interval" -> "30 seconds",
-    "nrs-submission-scheduler.initial-delay" -> "1 minute",
-    "features.nrs-submission-enabled" -> true,
-    "features.nrs-generation-enabled" -> true,
     "crypto.enabled" -> true,
     "crypto.key" -> "crypto-key"
   )
@@ -92,35 +73,11 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
         config.enrolmentIdentifierKey mustBe "VPDReference"
       }
     }
-    
-    "nrsSubmissionEnabled" - {
-      "must return true when feature is enabled" in {
-        val config = buildAppConfig()
-        config.nrsSubmissionEnabled mustBe true
-      }
-      
-      "must return false when feature is disabled" in {
-        val config = buildAppConfig(Map("features.nrs-submission-enabled" -> false))
-        config.nrsSubmissionEnabled mustBe false
-      }
-    }
-
-    "nrsGenerationEnabled" - {
-      "must return true when feature is enabled" in {
-        val config = buildAppConfig()
-        config.nrsGenerationEnabled mustBe true
-      }
-
-      "must return false when feature is disabled" in {
-        val config = buildAppConfig(Map("features.nrs-generation-enabled" -> false))
-        config.nrsGenerationEnabled mustBe false
-      }
-    }
 
     "getObligationsUrl" - {
       val fromDate = DateTimeHelper.formatLocalDate(LocalDate.now())
       val toDate = DateTimeHelper.formatLocalDate(LocalDate.now().minusYears(3))
-      
+
       "must return the correct URL for obligations" in {
         val config = buildAppConfig()
         val vpdId = VpdId("XMVPD0000000123")
@@ -217,106 +174,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       }
     }
 
-    "nrsSubmissionUrl" - {
-      "must return the correct URL for NRS submission" in {
-        val config = buildAppConfig()
-        config.nrsSubmissionUrl mustBe "https://nrs.service:443/submission"
-      }
-
-      "must handle different NRS configuration" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.host" -> "nrs-prod.service",
-          "microservice.services.nrs.port" -> 8443,
-          "microservice.services.nrs.url" -> "/nrs/submission"
-        ))
-        config.nrsSubmissionUrl mustBe "https://nrs-prod.service:8443/nrs/submission"
-      }
-    }
-
-    "nrsApiKey" - {
-      "must return the NRS API key" in {
-        val config = buildAppConfig()
-        config.nrsApiKey mustBe "test-api-key-12345"
-      }
-
-      "must handle different API keys" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.api-key" -> "different-key"
-        ))
-        config.nrsApiKey mustBe "different-key"
-      }
-    }
-
-    "nrsWorkItemTTL" - {
-      "must return the configured work item TTL in days" in {
-        val config = buildAppConfig()
-        config.nrsWorkItemTTL mustBe 7
-      }
-
-      "must handle different TTL values" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.ttl" -> "14 days"
-        ))
-        config.nrsWorkItemTTL mustBe 14
-      }
-    }
-
-    "nrsWorkItemRetryAfter" - {
-      "must return the configured retry after duration" in {
-        val config = buildAppConfig()
-        config.nrsWorkItemRetryAfter mustBe 1.hour
-      }
-
-      "must handle different retry durations" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.retry-after" -> "30 minutes"
-        ))
-        config.nrsWorkItemRetryAfter mustBe 30.minutes
-      }
-    }
-
-    "nrsWorkItemMaxRetries" - {
-      "must return the configured max retries" in {
-        val config = buildAppConfig()
-        config.nrsWorkItemMaxRetries mustBe 3
-      }
-
-      "must handle zero retries" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.max-retries" -> 0
-        ))
-        config.nrsWorkItemMaxRetries mustBe 0
-      }
-
-      "must handle higher retry counts" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.max-retries" -> 10
-        ))
-        config.nrsWorkItemMaxRetries mustBe 10
-      }
-    }
-
-    "nrsWorkItemExponentialBackoffFactor" - {
-      "must return the configured exponential backoff factor" in {
-        val config = buildAppConfig()
-        config.nrsWorkItemExponentialBackoffFactor mustBe 2.0
-      }
-
-      "must handle different factors" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.exponential-backoff-factor" -> 1.5
-        ))
-        config.nrsWorkItemExponentialBackoffFactor mustBe 1.5
-      }
-
-      "must handle factor of 3.0" in {
-        val config = buildAppConfig(Map(
-          "mongodb.nrs-work-item.exponential-backoff-factor" -> 3.0
-        ))
-        config.nrsWorkItemExponentialBackoffFactor mustBe 3.0
-      }
-    }
-
     "getConfStringAndThrowIfNotFound" - {
       "must throw RuntimeException when key is not found" in {
         val config = buildAppConfig()
@@ -330,104 +187,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       }
     }
 
-    "nrsSchedulerInitialDelay" - {
-      "must return the configured initial delay" in {
-        val config = buildAppConfig()
-        config.nrsSchedulerInitialDelay mustBe 1.minute
-      }
-
-      "must handle different initial delay values" in {
-        val config = buildAppConfig(Map(
-          "nrs-submission-scheduler.initial-delay" -> "2 minutes"
-        ))
-        config.nrsSchedulerInitialDelay mustBe 2.minutes
-      }
-    }
-
-    "nrsSchedulerInterval" - {
-      "must return the configured interval" in {
-        val config = buildAppConfig()
-        config.nrsSchedulerInterval mustBe 30.seconds
-      }
-
-      "must handle different interval values" in {
-        val config = buildAppConfig(Map(
-          "nrs-submission-scheduler.interval" -> "1 minute"
-        ))
-        config.nrsSchedulerInterval mustBe 1.minute
-      }
-    }
-
-    "nrsCircuitBreakerMaxFailures" - {
-      "must return the configured max failures" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerMaxFailures mustBe 5
-      }
-
-      "must handle different max failures values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.max-failures" -> 10
-        ))
-        config.nrsCircuitBreakerMaxFailures mustBe 10
-      }
-    }
-
-    "nrsCircuitBreakerCallTimeout" - {
-      "must return the configured call timeout" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
-      }
-
-      "must handle different call timeout values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.call-timeout" -> "45 seconds"
-        ))
-        config.nrsCircuitBreakerCallTimeout mustBe 45.seconds
-      }
-    }
-
-    "nrsCircuitBreakerResetTimeout" - {
-      "must return the configured reset timeout" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
-      }
-
-      "must handle different reset timeout values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.reset-timeout" -> "90 seconds"
-        ))
-        config.nrsCircuitBreakerResetTimeout mustBe 90.seconds
-      }
-    }
-
-    "nrsCircuitBreakerMaxResetTimeout" - {
-      "must return the configured max reset timeout" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerMaxResetTimeout mustBe 300.seconds
-      }
-
-      "must handle different max reset timeout values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.max-reset-timeout" -> "600 seconds"
-        ))
-        config.nrsCircuitBreakerMaxResetTimeout mustBe 600.seconds
-      }
-    }
-
-    "nrsCircuitBreakerExponentialBackoffFactor" - {
-      "must return the configured exponential backoff factor" in {
-        val config = buildAppConfig()
-        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 2.0
-      }
-
-      "must handle different exponential backoff factor values" in {
-        val config = buildAppConfig(Map(
-          "microservice.services.nrs.exponential-backoff-factor" -> 1.5
-        ))
-        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 1.5
-      }
-    }
-
     "integration tests" - {
       "must handle complete configuration with all values" in {
         val config = buildAppConfig()
@@ -436,19 +195,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
         config.enrolmentServiceName mustBe "HMRC-VPD-ORG"
         config.enrolmentIdentifierKey mustBe "VPDReference"
         config.timeToLive mustBe 28
-        config.nrsWorkItemTTL mustBe 7
-        config.nrsWorkItemMaxRetries mustBe 3
-        config.nrsApiKey mustBe "test-api-key-12345"
-        config.nrsWorkItemRetryAfter mustBe 1.hour
-        config.nrsWorkItemExponentialBackoffFactor mustBe 2.0
-        config.nrsSubmissionEnabled mustBe true
-        config.nrsSchedulerInitialDelay mustBe 1.minute
-        config.nrsSchedulerInterval mustBe 30.seconds
-        config.nrsCircuitBreakerMaxFailures mustBe 5
-        config.nrsCircuitBreakerCallTimeout mustBe 30.seconds
-        config.nrsCircuitBreakerResetTimeout mustBe 60.seconds
-        config.nrsCircuitBreakerMaxResetTimeout mustBe 300.seconds
-        config.nrsCircuitBreakerExponentialBackoffFactor mustBe 2.0
       }
     }
   }
