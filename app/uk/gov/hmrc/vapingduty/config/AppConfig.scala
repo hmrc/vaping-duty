@@ -38,14 +38,8 @@ class AppConfig @Inject()(
   val enrolmentIdentifierKey: String = config.get[String]("enrolment.identifierKey")
 
   // Obligations
-  private val obligationsHost: String = servicesConfig.baseUrl("obligations")
-  private val obligationsUrl: String = config.get[String]("microservice.services.obligations.url")
-  private val allObligations = "A"
-  private def obligationsQueryString(vpdId: VpdId, fromDate: String, toDate: String) =
-    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=$enrolmentIdentifierKey&fromDate=$fromDate&toDate=$toDate"
-
-  def getObligationsUrl(vpdId: VpdId, fromDate: String, toDate: String): String =
-    s"$obligationsHost$obligationsUrl${obligationsQueryString(vpdId, fromDate, toDate)}"
+  val obligationsHost: String = servicesConfig.baseUrl("obligations")
+  val obligationsUrl: String = config.get[String]("microservice.services.obligations.url")
 
   def obligationsYearsToLookBack: Int = config.get[Int]("microservice.services.obligations.yearsToLookBack")
 

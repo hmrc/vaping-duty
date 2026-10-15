@@ -138,7 +138,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
       val fromDate = today.minusYears(config.obligationsYearsToLookBack)
       val fromDateStr = DateTimeHelper.formatLocalDate(fromDate)
       val toDateStr = DateTimeHelper.formatLocalDate(today)
-      config.getObligationsUrl(vpdId, fromDateStr, toDateStr)
+      connector.getObligationsUrl(vpdId, fromDateStr, toDateStr)
     }
   }
 }

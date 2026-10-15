@@ -61,7 +61,7 @@ class ObligationsConnector @Inject()(
     val (fromDate, toDate) = calculateDateRange()
 
     httpClient
-      .get(url"${config.getObligationsUrl(vpdId, fromDate, toDate)}")
+      .get(url"${getObligationsUrl(vpdId, fromDate, toDate)}")
       .setHeader(createObligationHeaders: _*)
       .execute[HttpResponse]
       .recoverWith { case _: Exception =>
@@ -70,6 +70,14 @@ class ObligationsConnector @Inject()(
       }
       .flatMap(processHttpStatus)
       .flatMap(parseHttpResponse)
+  }
+
+  def getObligationsUrl(vpdId: VpdId, fromDate: String, toDate: String): String =
+    s"${config.obligationsHost}${config.obligationsUrl}${obligationsQueryString(vpdId, fromDate, toDate)}"
+
+  private def obligationsQueryString(vpdId: VpdId, fromDate: String, toDate: String) = {
+    val allObligations = "A"
+    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=$config.enrolmentIdentifierKey&fromDate=$fromDate&toDate=$toDate"
   }
 
   private def processHttpStatus(response: HttpResponse): Future[HttpResponse] = {
