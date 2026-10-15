@@ -45,10 +45,14 @@ class ObligationsConnector @Inject()(
   
   private def calculateDateRange(): (String, String) = {
     val ukZone = ZoneId.of(UK_ZONE)
-    val today = LocalDate.now(clock.withZone(ukZone))
-    val fromDate = today.minusYears(config.obligationsYearsToLookBack)
+
+    val toDate = LocalDate.now(clock.withZone(ukZone))
+      // Adding months for e2e testing
+      .plusMonths(config.obligationsMonthsAhead)
+
+    val fromDate = toDate.minusYears(config.obligationsYearsToLookBack)
     
-    (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(today))
+    (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(toDate))
   }
   
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] = {

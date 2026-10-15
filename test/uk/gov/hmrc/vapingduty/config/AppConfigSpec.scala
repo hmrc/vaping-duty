@@ -42,7 +42,8 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
     "microservice.services.submit-return.port" -> 8888,
     "microservice.services.submit-return.url.submitReturn" -> "/vpd/return",
     "crypto.enabled" -> true,
-    "crypto.key" -> "crypto-key"
+    "crypto.key" -> "crypto-key",
+    "obligationsMonthsAhead" -> 0
   )
 
   private def buildAppConfig(overrides: Map[String, Any] = Map.empty): AppConfig = {
