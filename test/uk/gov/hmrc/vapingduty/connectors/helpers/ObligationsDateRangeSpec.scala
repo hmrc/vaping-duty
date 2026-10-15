@@ -29,18 +29,18 @@ class ObligationsDateRangeSpec extends SpecBase with TableDrivenPropertyChecks {
   private def date(s: String): LocalDate = LocalDate.parse(s)
 
   private val scenarios = Table(
-    ("description", "today", "expectedFrom", "expectedTo"),
-    ("mid-month", "2024-06-11", "2021-06-30", "2024-05-01"),
-    ("the 1st of January (toDate rolls back a year)", "2025-01-01", "2022-01-31", "2024-12-01"),
-    ("the 31st of December", "2024-12-31", "2021-12-31", "2024-11-01"),
-    ("a leap day, where 3 years ago is not a leap year", "2024-02-29", "2021-02-28", "2024-01-01"),
-    ("the 28th of February with no leap years involved", "2025-02-28", "2022-02-28", "2025-01-01"),
-    ("the 28th of February, where 3 years ago is a leap year", "2027-02-28", "2024-02-29", "2027-01-01"),
-    ("the 1st of March, with toDate in a non-leap February", "2025-03-01", "2022-03-31", "2025-02-01"),
-    ("the 31st of March, with toDate in a leap February", "2024-03-31", "2021-03-31", "2024-02-01"),
-    ("the 1st of the month", "2026-10-01", "2023-10-31", "2026-09-01"),
-    ("the last day of the month", "2026-10-31", "2023-10-31", "2026-09-01"),
-    ("mid-October 2026 (October must be excluded)", "2026-10-15", "2023-10-31", "2026-09-01")
+    ("description"                                            , "today"      , "expectedFrom" , "expectedTo"),
+    ("mid-month"                                              , "2024-06-11" , "2021-06-30"   , "2024-05-01"),
+    ("the 31st of December (last day of the year)"            , "2025-12-31" , "2022-12-31"   , "2025-11-01"),
+    ("the 1st of January (toDate rolls back a year)"          , "2026-01-01" , "2023-01-31"   , "2025-12-01"),
+    ("a leap day, where 3 years ago is not a leap year"       , "2024-02-29" , "2021-02-28"   , "2024-01-01"),
+    ("the 28th of February with no leap years involved"       , "2025-02-28" , "2022-02-28"   , "2025-01-01"),
+    ("the 28th of February, where 3 years ago is a leap year" , "2027-02-28" , "2024-02-29"   , "2027-01-01"),
+    ("the 1st of March, with toDate in a non-leap February"   , "2025-03-01" , "2022-03-31"   , "2025-02-01"),
+    ("the 31st of March, with toDate in a leap February"      , "2024-03-31" , "2021-03-31"   , "2024-02-01"),
+    ("the 1st of the month"                                   , "2026-10-01" , "2023-10-31"   , "2026-09-01"),
+    ("the last day of the month"                              , "2026-10-31" , "2023-10-31"   , "2026-09-01"),
+    ("mid-October 2026 (October must be excluded)"            , "2026-10-15" , "2023-10-31"   , "2026-09-01")
   )
 
   "ObligationsDateRange" - {
@@ -63,9 +63,28 @@ class ObligationsDateRangeSpec extends SpecBase with TableDrivenPropertyChecks {
       }
     }
 
-    "must shift the range forward by the configured months ahead" in {
-      ObligationsDateRange(date("2024-06-11"), yearsToLookBack, monthsAhead = 1) mustBe
-        ObligationsDateRange(date("2021-07-31"), date("2024-06-01"))
+    "when time travelling with monthsAhead" - {
+      "must make the current month's obligation visible when moved ahead one month" in {
+        val today       = date("2026-10-15")
+        val october     = date("2026-10-01")
+        val november    = date("2026-11-01")
+
+        val withoutTimeTravel = ObligationsDateRange(today, yearsToLookBack, noMonthsAhead)
+        withoutTimeTravel mustBe ObligationsDateRange(date("2023-10-31"), date("2026-09-01"))
+        withoutTimeTravel.toDate.isBefore(october) mustBe true
+
+        val withTimeTravel = ObligationsDateRange(today, yearsToLookBack, monthsAhead = 1)
+        withTimeTravel mustBe ObligationsDateRange(date("2023-11-30"), date("2026-10-01"))
+        withTimeTravel.toDate.isBefore(october) mustBe false
+        withTimeTravel.toDate.isBefore(november) mustBe true
+      }
+
+      "must behave as if today were N months later, including across a year end" in {
+        val timeTravelled = ObligationsDateRange(date("2026-11-15"), yearsToLookBack, monthsAhead = 3)
+
+        timeTravelled mustBe ObligationsDateRange(date("2027-02-15"), yearsToLookBack, noMonthsAhead)
+        timeTravelled mustBe ObligationsDateRange(date("2024-02-29"), date("2027-01-01"))
+      }
     }
 
     "must look back by the configured number of years" in {
