@@ -83,7 +83,7 @@ trait TestData {
 
   val vapingProductsProducedRegular: VapingProductsProduced = VapingProductsProduced(
     vapingProdManufactured = "1",
-    returns = Seq(regularReturn)
+    returns = Some(Seq(regularReturn))
   )
 
   val sampleDeclarationDetails: DeclarationDetails = DeclarationDetails(
