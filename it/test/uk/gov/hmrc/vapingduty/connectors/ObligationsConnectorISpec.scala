@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.ISpecBase
 import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, ObligationsErrors}
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
+import uk.gov.hmrc.vapingduty.connectors.helpers.ObligationsDateRange
 import uk.gov.hmrc.vapingduty.utils.{ConnectorTestHelpers, DateTimeHelper, WireMockHelper}
 
 import java.time.{Instant, LocalDate, ZoneId}
@@ -33,31 +34,33 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
   "ObligationsConnector when" - {
     "getObligations is called must" - {
       "successfully get obligations" in new SetUp {
-        stubGet(
+        stubGetWithParameters(
           url,
+          parameters,
           OK,
           Json.toJson(ObligationsResponse(Seq.empty)).toString()
         )
         whenReady(connector.getObligations(vpdId)) { result =>
           result mustBe ObligationsResponse(Seq.empty)
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
 
       "fail with InternalServerException if the call returns an invalid response json" in new SetUp {
-        stubGet(url, OK, Json.toJson("invalid").toString)
+        stubGetWithParameters(url, parameters, OK, Json.toJson("invalid").toString)
 
         val result = connector.getObligations(vpdId)
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Unable to parse obligations response")
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
 
       "fail with InternalServerException if the call returns a 400 response" in new SetUp {
-        stubGet(
+        stubGetWithParameters(
           url,
+          parameters,
           BAD_REQUEST,
           Json.toJson(ObligationsResponse(Seq.empty)).toString(),
         )
@@ -66,13 +69,14 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to get obligations")
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
 
       "fail with InternalServerException if the call returns a 422 response" in new SetUp {
-        stubGet(
+        stubGetWithParameters(
           url,
+          parameters,
           UNPROCESSABLE_ENTITY,
           Json.toJson(
             ObligationsErrors(
@@ -86,13 +90,14 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Unprocessable Entity (422) when requesting obligations")
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
 
       "fail with InternalServerException if the call returns a 500 response" in new SetUp {
-        stubGet(
+        stubGetWithParameters(
           url,
+          parameters,
           INTERNAL_SERVER_ERROR,
           Json.toJson(ObligationsResponse(Seq.empty)).toString()
         )
@@ -101,13 +106,14 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to get obligations")
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
 
       "fail with InternalServerException when a network fault occurs" in new SetUp {
-        stubGetFault(
+        stubGetFaultWithParameters(
           url,
+          parameters,
           Fault.EMPTY_RESPONSE
         )
 
@@ -115,7 +121,7 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
         whenReady(result.failed) { exception =>
           assertExceptionMessage(exception, "Failed to get obligations")
-          verifyGet(url)
+          verifyGetWithParameters(url, parameters)
         }
       }
     }
@@ -132,13 +138,17 @@ class ObligationsConnectorISpec extends ISpecBase with WireMockHelper with Conne
 
   abstract class SetUp extends ConnectorFixture {
     val connector       = app.injector.instanceOf[ObligationsConnector]
-    lazy val url        = {
-      val ukZone = ZoneId.of("Europe/London")
-      val today = LocalDate.now(clock.withZone(ukZone))
-      val fromDate = today.minusYears(config.obligationsYearsToLookBack)
-      val fromDateStr = DateTimeHelper.formatLocalDate(fromDate)
-      val toDateStr = DateTimeHelper.formatLocalDate(today)
-      connector.getObligationsUrl(vpdId, fromDateStr, toDateStr)
+    lazy val url        = s"${config.obligationsHost}${config.obligationsUrl}"
+    lazy val parameters: Seq[(String, String)] = {
+      val today = LocalDate.now(clock.withZone(ZoneId.of("Europe/London")))
+      val range = ObligationsDateRange(today, config.obligationsYearsToLookBack, config.obligationsMonthsAhead)
+      Seq(
+        "displayRequest"  -> "A",
+        "referenceNumber" -> vpdId.toString,
+        "referenceType"   -> config.enrolmentIdentifierKey,
+        "fromDate"        -> DateTimeHelper.formatLocalDate(range.fromDate),
+        "toDate"          -> DateTimeHelper.formatLocalDate(range.toDate)
+      )
     }
   }
 }

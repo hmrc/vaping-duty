@@ -21,12 +21,11 @@ import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsUnprocessableEntityLogging}
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsDateRange, ObligationsUnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
-import java.time.temporal.TemporalAdjusters.*
 import java.time.{Clock, Instant, LocalDate, ZoneId}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,16 +44,10 @@ class ObligationsConnector @Inject()(
   private val UK_ZONE = "Europe/London"
   
   private def calculateDateRange(): (String, String) = {
-    val ukZone = ZoneId.of(UK_ZONE)
-    val now = LocalDate.now(clock.withZone(ukZone))
+    val today = LocalDate.now(clock.withZone(ZoneId.of(UK_ZONE)))
+    val range = ObligationsDateRange(today, config.obligationsYearsToLookBack, config.obligationsMonthsAhead)
 
-    // Adding months for e2e testing
-    val datum = now.plusMonths(config.obligationsMonthsAhead)
-
-    val fromDate = datum.minusYears(config.obligationsYearsToLookBack).`with`(lastDayOfMonth())
-    val toDate   = datum.minusMonths(1).`with`(firstDayOfMonth())
-    
-    (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(toDate))
+    (DateTimeHelper.formatLocalDate(range.fromDate), DateTimeHelper.formatLocalDate(range.toDate))
   }
   
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] = {
@@ -72,12 +65,12 @@ class ObligationsConnector @Inject()(
       .flatMap(parseHttpResponse)
   }
 
-  def getObligationsUrl(vpdId: VpdId, fromDate: String, toDate: String): String =
+  private def getObligationsUrl(vpdId: VpdId, fromDate: String, toDate: String): String =
     s"${config.obligationsHost}${config.obligationsUrl}${obligationsQueryString(vpdId, fromDate, toDate)}"
 
   private def obligationsQueryString(vpdId: VpdId, fromDate: String, toDate: String) = {
     val allObligations = "A"
-    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=$config.enrolmentIdentifierKey&fromDate=$fromDate&toDate=$toDate"
+    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=${config.enrolmentIdentifierKey}&fromDate=$fromDate&toDate=$toDate"
   }
 
   private def processHttpStatus(response: HttpResponse): Future[HttpResponse] = {
