@@ -21,7 +21,7 @@ import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsUnprocessableEntityLogging, ReturnsUnprocessableEntityLogging}
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsDateRange, ObligationsUnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
@@ -44,22 +44,17 @@ class ObligationsConnector @Inject()(
   private val UK_ZONE = "Europe/London"
   
   private def calculateDateRange(): (String, String) = {
-    val ukZone = ZoneId.of(UK_ZONE)
+    val today = LocalDate.now(clock.withZone(ZoneId.of(UK_ZONE)))
+    val range = ObligationsDateRange(today, config.obligationsYearsToLookBack, config.obligationsMonthsAhead)
 
-    val toDate = LocalDate.now(clock.withZone(ukZone))
-      // Adding months for e2e testing
-      .plusMonths(config.obligationsMonthsAhead)
-
-    val fromDate = toDate.minusYears(config.obligationsYearsToLookBack)
-    
-    (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(toDate))
+    (DateTimeHelper.formatLocalDate(range.fromDate), DateTimeHelper.formatLocalDate(range.toDate))
   }
   
   def getObligations(vpdId: VpdId)(implicit hc: HeaderCarrier): Future[ObligationsResponse] = {
     val (fromDate, toDate) = calculateDateRange()
 
     httpClient
-      .get(url"${config.getObligationsUrl(vpdId, fromDate, toDate)}")
+      .get(url"${getObligationsUrl(vpdId, fromDate, toDate)}")
       .setHeader(createObligationHeaders: _*)
       .execute[HttpResponse]
       .recoverWith { case _: Exception =>
@@ -68,6 +63,14 @@ class ObligationsConnector @Inject()(
       }
       .flatMap(processHttpStatus)
       .flatMap(parseHttpResponse)
+  }
+
+  private def getObligationsUrl(vpdId: VpdId, fromDate: String, toDate: String): String =
+    s"${config.obligationsHost}${config.obligationsUrl}${obligationsQueryString(vpdId, fromDate, toDate)}"
+
+  private def obligationsQueryString(vpdId: VpdId, fromDate: String, toDate: String) = {
+    val allObligations = "A"
+    s"?displayRequest=$allObligations&referenceNumber=$vpdId&referenceType=${config.enrolmentIdentifierKey}&fromDate=$fromDate&toDate=$toDate"
   }
 
   private def processHttpStatus(response: HttpResponse): Future[HttpResponse] = {

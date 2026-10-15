@@ -75,31 +75,6 @@ class AppConfigSpec extends AnyFreeSpec with Matchers {
       }
     }
 
-    "getObligationsUrl" - {
-      val fromDate = DateTimeHelper.formatLocalDate(LocalDate.now())
-      val toDate = DateTimeHelper.formatLocalDate(LocalDate.now().minusYears(3))
-
-      "must return the correct URL for obligations" in {
-        val config = buildAppConfig()
-        val vpdId = VpdId("XMVPD0000000123")
-        val result = config.getObligationsUrl(vpdId, fromDate, toDate)
-
-        result must include("http://localhost:9999")
-        result must include("/obligations/vpd")
-        result must include("displayRequest=A")
-        result must include("referenceNumber=XMVPD0000000123")
-        result must include("referenceType=VPDReference")
-      }
-
-      "must handle different vpdId values" in {
-        val config = buildAppConfig()
-        val vpdId = VpdId("XMVPD9999999999")
-        val result = config.getObligationsUrl(vpdId, fromDate, toDate)
-
-        result must include("referenceNumber=XMVPD9999999999")
-      }
-    }
-
     "timeToLive" - {
       "must return the configured time to live in days" in {
         val config = buildAppConfig()
