@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.connectors.helpers
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
-import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, ObligationsErrors, ReturnsError}
+import uk.gov.hmrc.vapingduty.models.{ConnectorErrorResponse, ReturnsError}
 
 import scala.util.Try
 
