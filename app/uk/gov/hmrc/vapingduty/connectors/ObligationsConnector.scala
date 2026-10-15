@@ -21,11 +21,12 @@ import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
 import uk.gov.hmrc.http.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.vapingduty.config.AppConfig
-import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsUnprocessableEntityLogging, ReturnsUnprocessableEntityLogging}
+import uk.gov.hmrc.vapingduty.connectors.helpers.{HIPAuth, ObligationsUnprocessableEntityLogging}
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
 import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
 import uk.gov.hmrc.vapingduty.utils.{DateTimeHelper, RandomUUIDGenerator}
 
+import java.time.temporal.TemporalAdjusters.*
 import java.time.{Clock, Instant, LocalDate, ZoneId}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,12 +46,13 @@ class ObligationsConnector @Inject()(
   
   private def calculateDateRange(): (String, String) = {
     val ukZone = ZoneId.of(UK_ZONE)
+    val now = LocalDate.now(clock.withZone(ukZone))
 
-    val toDate = LocalDate.now(clock.withZone(ukZone))
-      // Adding months for e2e testing
-      .plusMonths(config.obligationsMonthsAhead)
+    // Adding months for e2e testing
+    val datum = now.plusMonths(config.obligationsMonthsAhead)
 
-    val fromDate = toDate.minusYears(config.obligationsYearsToLookBack)
+    val fromDate = datum.minusYears(config.obligationsYearsToLookBack).`with`(lastDayOfMonth())
+    val toDate   = datum.minusMonths(1).`with`(firstDayOfMonth())
     
     (DateTimeHelper.formatLocalDate(fromDate), DateTimeHelper.formatLocalDate(toDate))
   }
