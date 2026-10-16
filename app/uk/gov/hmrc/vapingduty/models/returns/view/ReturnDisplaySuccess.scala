@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.vapingduty.models.returns.view
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.*
 import uk.gov.hmrc.vapingduty.models.returns.*
 
 import java.time.Instant
@@ -35,5 +35,29 @@ final case class ReturnDisplaySuccess(
 )
 
 object ReturnDisplaySuccess {
-  given format: OFormat[ReturnDisplaySuccess] = Json.format[ReturnDisplaySuccess]
+  // Standard reads for deserialization from API
+  given reads: Reads[ReturnDisplaySuccess] = Json.reads[ReturnDisplaySuccess]
+  
+  // Custom writes that normalizes VapingProductsProduced.returns for frontend
+  given writes: Writes[ReturnDisplaySuccess] = (success: ReturnDisplaySuccess) => {
+    Json.obj(
+      "processingDate" -> success.processingDate,
+      "idDetails" -> success.idDetails,
+      "chargeDetails" -> success.chargeDetails,
+      "vapingProductsProduced" -> success.vapingProductsProduced.map { vpp =>
+        Json.obj(
+          "vapingProdManufactured" -> vpp.vapingProdManufactured,
+          "returns" -> vpp.normalizedReturns  // Always returns a Seq, never None
+        )
+      },
+      "overDeclaration" -> success.overDeclaration,
+      "underDeclaration" -> success.underDeclaration,
+      "spoiltProduct" -> success.spoiltProduct,
+      "totalDutyDue" -> success.totalDutyDue,
+      "otherOptions" -> success.otherOptions,
+      "declaration" -> success.declaration
+    )
+  }
+  
+  given format: Format[ReturnDisplaySuccess] = Format(reads, writes)
 }

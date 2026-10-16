@@ -20,9 +20,13 @@ import play.api.libs.json.{Json, OFormat}
 
 case class VapingProductsProduced(
   vapingProdManufactured: String,
-  returns: Seq[RegularReturn]
+  returns: Option[Seq[RegularReturn]]
 )
 
 object VapingProductsProduced {
   given format: OFormat[VapingProductsProduced] = Json.format[VapingProductsProduced]
+  
+  // Helper to normalize None to empty Seq for frontend compatibility
+  extension (vpp: VapingProductsProduced)
+    def normalizedReturns: Seq[RegularReturn] = vpp.returns.getOrElse(Seq.empty)
 }
