@@ -18,7 +18,7 @@ package uk.gov.hmrc.vapingduty.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.{reset, times, verify, when}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.http.InternalServerException
@@ -58,15 +58,17 @@ class ReturnsControllerSpec extends SpecBase {
         verify(mockGetReturnsConnector, times(1)).getReturn(eqTo(periodKey), eqTo(vpdId))(any())
       }
 
-      "return 500 INTERNAL_SERVER_ERROR when connector fails" in {
+      "allow failures from the connector to pass to the framework for logging and handling" in {
         reset(mockGetReturnsConnector)
         when(mockGetReturnsConnector.getReturn(eqTo(periodKey), eqTo(vpdId))(any()))
           .thenReturn(Future.failed(new RuntimeException("Connector error")))
 
         val result = controller.getReturn(periodKey, vpdId).apply(fakeRequest)
 
-        status(result) mustBe INTERNAL_SERVER_ERROR
-        verify(mockGetReturnsConnector, times(1)).getReturn(eqTo(periodKey), eqTo(vpdId))(any())
+        whenReady(result.failed) { exception =>
+          exception mustBe a[RuntimeException]
+          exception.getMessage mustBe "Connector error"
+        }
       }
     }
 
@@ -90,8 +92,11 @@ class ReturnsControllerSpec extends SpecBase {
 
         val result = controller.submitReturn(vpdId, periodKey).apply(fakeRequestWithJsonBody(Json.toJson(returnCreateRequest)))
 
-        status(result) mustBe INTERNAL_SERVER_ERROR
-        verify(mockReturnsSubmissionService, times(1)).submitReturn(eqTo(returnCreateRequest), eqTo(vpdId), eqTo(periodKey))(using any(), any())
+
+        whenReady(result.failed) { exception =>
+          exception mustBe an[InternalServerException]
+          exception.getMessage mustBe "Service error"
+        }
       }
     }
   }

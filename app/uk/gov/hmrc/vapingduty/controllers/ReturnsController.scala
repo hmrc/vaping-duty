@@ -43,8 +43,6 @@ class ReturnsController @Inject()(
 
     getConnector.getReturn(periodKey, vpdId)
       .map(returns => Ok(Json.toJson(returns)))
-      .recover { _ => InternalServerError("There was an issue retrieving returns data") }
-
   }
 
   def submitReturn(vpdId: VpdId, periodKey: PeriodKey): Action[JsValue] = {
@@ -53,10 +51,6 @@ class ReturnsController @Inject()(
       withJsonBody[ReturnCreateRequest] { returnCreateRequest =>
         returnsSubmissionService.submitReturn(returnCreateRequest, vpdId, periodKey)
           .map(response => Ok(Json.toJson(response)))
-          .recover { _ =>
-            logger.error(s"Failed to submit return for vpdId: $vpdId, periodKey: $periodKey")
-            InternalServerError
-          }
       }
     }
   }

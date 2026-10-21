@@ -38,7 +38,7 @@ class ObligationsController @Inject()(
   def get(vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
 
-    connector.getObligations(vpdId).map(obligations => Ok(Json.toJson(obligations)))
-      .recover { _ => InternalServerError("There was an issue retrieving obligations data") }
+    connector.getObligations(vpdId)
+      .map(obligations => Ok(Json.toJson(obligations)))
   }
 }
