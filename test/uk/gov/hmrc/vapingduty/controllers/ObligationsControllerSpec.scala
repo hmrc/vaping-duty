@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,38 +23,60 @@ import play.api.mvc.Result
 import play.api.test.Helpers.*
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.vapingduty.base.SpecBase
-import uk.gov.hmrc.vapingduty.connectors.ObligationsConnector
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
-import uk.gov.hmrc.vapingduty.models.obligations.ObligationsResponse
+import uk.gov.hmrc.vapingduty.models.obligations.ObligationDetails
+import uk.gov.hmrc.vapingduty.services.ObligationsService
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class ObligationsControllerSpec extends SpecBase {
   private val vpdId = VpdId("vpdId")
 
-  val mockConnector: ObligationsConnector = mock[ObligationsConnector]
+  val mockObligationsService: ObligationsService = mock[ObligationsService]
 
   val controller = new ObligationsController(
     cc,
-    mockConnector,
+    mockObligationsService,
     fakeAuthorisedAction
   )
 
-  "get must" - {
-    "return OK with obligation data" in {
+  private val obligation = ObligationDetails(
+    openOrFulfilledStatus = "O",
+    iCFromDate            = LocalDate.of(2026, 1, 1),
+    iCToDate              = LocalDate.of(2026, 1, 31),
+    iCDateReceived        = None,
+    iCDueDate             = LocalDate.of(2026, 2, 7),
+    periodKey             = "26AA"
+  )
 
-      when(mockConnector.getObligations(any())(any())).thenReturn(Future.successful(ObligationsResponse(Seq.empty)))
+  "get must" - {
+    "return OK with the obligations as a list" in {
+
+      when(mockObligationsService.getObligations(any())(using any())).thenReturn(Future.successful(Seq(obligation)))
 
       val result: Future[Result] = controller.get(vpdId)(fakeRequest)
 
       status(result)        mustBe OK
-      contentAsJson(result) mustBe Json.toJson(ObligationsResponse(Seq.empty))
+      contentAsJson(result) mustBe Json.parse(
+        """[{"openOrFulfilledStatus":"O","iCFromDate":"2026-01-01","iCToDate":"2026-01-31","iCDueDate":"2026-02-07","periodKey":"26AA"}]"""
+      )
     }
 
-    "allow failures from the connector to pass to the framework for logging and handling" in {
+    "return OK with an empty list when there are no obligations" in {
 
-      when(mockConnector.getObligations(any())(any()))
-        .thenReturn(Future.failed[ObligationsResponse](InternalServerException("Failed to get Obligations")))
+      when(mockObligationsService.getObligations(any())(using any())).thenReturn(Future.successful(Seq.empty))
+
+      val result: Future[Result] = controller.get(vpdId)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.arr()
+    }
+
+    "allow failures from the service to pass to the framework for logging and handling" in {
+
+      when(mockObligationsService.getObligations(any())(using any()))
+        .thenReturn(Future.failed[Seq[ObligationDetails]](InternalServerException("Failed to get Obligations")))
 
       val result: Future[Result] = controller.get(vpdId)(fakeRequest)
 
