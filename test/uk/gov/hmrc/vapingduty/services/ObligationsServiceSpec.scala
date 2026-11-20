@@ -53,50 +53,50 @@ class ObligationsServiceSpec extends SpecBase {
 
   "getObligations must" - {
     "return the obligation details for the matching VPD identification" in {
-      givenConnectorReturns(item("ZVPD", vpdId.id, obligation("26AA"), obligation("26AB", "F")))
+      givenConnectorReturns(item("ZVPD", vpdId.id, obligation("26KA"), obligation("26KB", "F")))
 
-      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26AA"), obligation("26AB", "F"))
+      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26KA"), obligation("26KB", "F"))
     }
 
     "exclude obligations for a different reference number" in {
       givenConnectorReturns(
-        item("ZVPD", "GBWK0000000WK", obligation("25AL")),
-        item("ZVPD", vpdId.id, obligation("26AA"))
+        item("ZVPD", "GBWK0000000WK", obligation("25KL")),
+        item("ZVPD", vpdId.id, obligation("26KA"))
       )
 
-      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26AA"))
+      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26KA"))
     }
 
     "exclude obligations for a different reference type" in {
       givenConnectorReturns(
-        item("NINO", vpdId.id, obligation("25AL")),
-        item("ZVPD", vpdId.id, obligation("26AA"))
+        item("NINO", vpdId.id, obligation("25KL")),
+        item("ZVPD", vpdId.id, obligation("26KA"))
       )
 
-      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26AA"))
+      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26KA"))
     }
 
     "exclude obligations without an identification" in {
       givenConnectorReturns(
-        ObligationItem(None, Seq(obligation("25AL"))),
-        item("ZVPD", vpdId.id, obligation("26AA"))
+        ObligationItem(None, Seq(obligation("25KL"))),
+        item("ZVPD", vpdId.id, obligation("26KA"))
       )
 
-      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26AA"))
+      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26KA"))
     }
 
     "flatten multiple matching items into a single list, preserving order" in {
       givenConnectorReturns(
-        item("ZVPD", vpdId.id, obligation("26AA"), obligation("26AB")),
-        item("IOSS", "IM8260001234", obligation("25AL")),
-        item("ZVPD", vpdId.id, obligation("26AC"))
+        item("ZVPD", vpdId.id, obligation("26KA"), obligation("26KB")),
+        item("IOSS", "IM8260001234", obligation("25KL")),
+        item("ZVPD", vpdId.id, obligation("26KC"))
       )
 
-      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26AA"), obligation("26AB"), obligation("26AC"))
+      service.getObligations(vpdId).futureValue mustBe Seq(obligation("26KA"), obligation("26KB"), obligation("26KC"))
     }
 
     "return an empty list when there are no matching obligations" in {
-      givenConnectorReturns(item("NINO", "AB123456C", obligation("25AL")))
+      givenConnectorReturns(item("NINO", "AB123456C", obligation("25KL")))
 
       service.getObligations(vpdId).futureValue mustBe Seq.empty
     }
