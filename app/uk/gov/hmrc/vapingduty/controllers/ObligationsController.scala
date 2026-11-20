@@ -23,22 +23,22 @@ import play.api.mvc.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.vapingduty.connectors.ObligationsConnector
 import uk.gov.hmrc.vapingduty.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.vapingduty.models.identifiers.VpdId
+import uk.gov.hmrc.vapingduty.services.ObligationsService
 
 import scala.concurrent.ExecutionContext
 
 class ObligationsController @Inject()(
                                        cc: ControllerComponents,
-                                       connector: ObligationsConnector,
+                                       obligationsService: ObligationsService,
                                        authorise: AuthorisedAction
                                      )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def get(vpdId: VpdId): Action[AnyContent] = authorise.async { request =>
     given HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request.request)
 
-    connector.getObligations(vpdId)
+    obligationsService.getObligations(vpdId)
       .map(obligations => Ok(Json.toJson(obligations)))
   }
 }
